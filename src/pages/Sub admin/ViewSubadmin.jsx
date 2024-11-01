@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import {  deleteSubAdmin, editSubAdmin, getSubAdmins } from '../services/allApi';
+import {  deleteSubAdmin, editSubAdmin, getSubAdmins } from '../../services/allApi';
 
 function ViewSubAdmin() {
   const [subAdmins, setSubAdmins] = useState([]);
@@ -92,7 +92,7 @@ function ViewSubAdmin() {
                 <TableCell></TableCell>
                 <TableCell></TableCell>
                 <TableCell></TableCell>
-                <TableCell>? 'Active' </TableCell>
+                <TableCell> </TableCell>
                 <TableCell>
                   <IconButton onClick={() => handleOpenEditDialog()} aria-label={`Edit `}>
                     <EditIcon />

@@ -66,6 +66,39 @@ const AddSubcategory = () => {
               required
             />
           </Grid>
+          <Grid item xs={4}>
+          <TextField
+            fullWidth
+            label="Size"
+            variant="outlined"
+            
+            
+          />
+        </Grid>
+        <Grid item xs={4}>
+          <TextField
+            fullWidth
+            label="Length"
+            variant="outlined"
+            
+            
+          />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+            <FormControl fullWidth>
+              <InputLabel>Select Offer</InputLabel>
+              <Select
+                label="Select offer"
+                required
+              >
+                
+                  <MenuItem >
+                    hot sails
+                  </MenuItem>
+                
+              </Select>
+            </FormControl>
+          </Grid>
 
           {/* Image Upload */}
           <Grid item xs={12}>

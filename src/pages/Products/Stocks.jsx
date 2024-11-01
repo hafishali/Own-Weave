@@ -94,7 +94,7 @@ function Stocks() {
               <TableCell><b>Category Name</b></TableCell>
               <TableCell><b>Sub Category</b></TableCell>
               <TableCell><b>Quantity</b></TableCell>
-              <TableCell><b>Weight Measurement</b></TableCell>
+              <TableCell><b>Length Measurement</b></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

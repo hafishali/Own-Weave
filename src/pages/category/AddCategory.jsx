@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, Typography, Grid, Alert } from '@mui/material';
+import { Box, TextField, Button, Typography, Grid, Alert,FormControl,MenuItem,Select,InputLabel } from '@mui/material';
 
 function AddCategory() {
   const [categoryName, setCategoryName] = useState('');
@@ -37,6 +37,40 @@ function AddCategory() {
             onChange={(e) => setCategoryName(e.target.value)}
           />
         </Grid>
+        <Grid item xs={4}>
+          <TextField
+            fullWidth
+            label="Size"
+            variant="outlined"
+            
+            
+          />
+        </Grid>
+        <Grid item xs={4}>
+          <TextField
+            fullWidth
+            label="Length"
+            variant="outlined"
+            
+            
+          />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+            <FormControl fullWidth>
+              <InputLabel>Select Offer</InputLabel>
+              <Select
+                label="Select offer"
+                required
+              >
+                
+                  <MenuItem >
+                    hot sails
+                  </MenuItem>
+                
+              </Select>
+            </FormControl>
+          </Grid>
+        
         <Grid item xs={12}>
           <Button
             variant="contained"

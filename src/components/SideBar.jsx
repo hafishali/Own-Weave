@@ -13,8 +13,9 @@ import { useTheme, Typography } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { 
   Category, AddBox, ViewList, People, Payment, Notifications, 
-  Dashboard, ShoppingCart, Assessment 
+  Dashboard, ShoppingCart, Assessment,
 } from '@mui/icons-material';
+import ImageIcon from '@mui/icons-material/Image';
 import ProductionQuantityLimitsIcon from '@mui/icons-material/ProductionQuantityLimits';
 import Divider from '@mui/material/Divider';
 import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
@@ -88,10 +89,37 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
         { text: 'View Stocks', icon: <ProductionQuantityLimitsIcon />, action: 'viewStocks' },
       ],
     },
-    { text: 'Orders', icon: <ShoppingCart />, action: 'viewOrders' },
+    { text: 'Orders', icon: <ShoppingCart />, action: null,
+      children: [
+        { text: 'View Orders', icon: <ShoppingCart />, action: 'viewOrders' },
+        { text: 'View Returns', icon: <ShoppingCart />, action: 'ViewReturns' },
+        
+      ],
+     },
     { text: 'Delivery Boy', icon: <DeliveryDiningIcon />, action: 'viewDelivery' },
     { text: 'Customers', icon: <People />, action: 'viewCustomers' },
     { text: 'Payments', icon: <Payment />, action: 'viewPayments' },
+    {
+      text: 'Add Carousal',
+      icon: <ImageIcon />,
+      action: null,
+      
+      children: [
+        { text: 'Add Carousal', icon: <AddBox />, action: 'addCarosal' },
+        { text: 'Add Poster', icon: <AddBox />, action: 'addPoster' },
+        { text: 'Add Home Image', icon: <AddBox />, action: 'addHomeImage' },
+      ],
+    },
+    {
+      text: 'Sub Admin',
+      icon: <People />,
+      action: null,
+     
+      children: [
+        { text: 'Add Sub Admin', icon: <AddBox />, action: 'addSubAdmin' },
+        { text: 'View Sub Admin', icon: <ViewList />, action: 'viewSubAdmin' },
+      ],
+    },
     { text: 'Notification', icon: <Notifications />, action: 'notifications' },
     { text: 'Send Notifications', icon: <Notifications />, action: 'sendNotifications' },
   ];

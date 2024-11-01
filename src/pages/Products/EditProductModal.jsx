@@ -6,7 +6,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { fetchCategories, fetchSubCategories } from '../services/allApi'; // Ensure fetchSubCategories is correctly imported
+import { fetchCategories, fetchSubCategories } from '../../services/allApi'; // Ensure fetchSubCategories is correctly imported
 
 function EditProductModal({ open, onClose, product, onChange, onSubmit, categories: propCategories, // Pass categories as props to avoid redundant fetching
 }) {
@@ -244,12 +244,10 @@ function EditProductModal({ open, onClose, product, onChange, onSubmit, categori
           <Grid item xs={6}>
             <TextField
               margin="dense"
-              label="Weight Measurement"
-              name="weight_measurement"
+              label="Length"
+              name="Length"
               fullWidth
               variant="outlined"
-              value={product.weight_measurement || ''}
-              onChange={handleInputChange}
               required
             />
           </Grid>
@@ -315,62 +313,11 @@ function EditProductModal({ open, onClose, product, onChange, onSubmit, categori
           )}
           {/* Add Weights and Prices */}
           <Grid item xs={12}>
-  <Box mt={2}>
-    <Typography variant="h6">Edit Weights and Prices:</Typography>
-    <Grid container spacing={2}>
-      <Grid item xs={4}>
-        <TextField
-          fullWidth
-          label="Weight"
-          variant="outlined"
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={4}>
-        <TextField
-          fullWidth
-          label="Price"
-          variant="outlined"
-          type="number"
-          value={weightPrice}
-          onChange={(e) => setWeightPrice(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={4}>
-        <TextField
-          fullWidth
-          label="Quantity"
-          variant="outlined"
-          type="number"
-          value={weightQuantity}
-          onChange={(e) => setWeightQuantity(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <FormControl component="fieldset">
-          <FormLabel component="legend">In Stock</FormLabel>
-          <RadioGroup
-            row
-            value={isWeightInStock}
-            onChange={(e) => setIsWeightInStock(e.target.value)}
-          >
-            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-            <FormControlLabel value="no" control={<Radio />} label="No" />
-          </RadioGroup>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12}>
-        <Button variant="contained" color="primary" onClick={handleAddWeight}>
-          {isEditing ? "Update" : "Add"}
-        </Button>
-      </Grid>
-    </Grid>
-  </Box>
+  
 </Grid>
 
 {/* Display Weights */}
-<Grid item xs={12}>
+{/* <Grid item xs={12}>
   {weights.map((w, index) => (
     <Box
       key={index}
@@ -403,7 +350,7 @@ function EditProductModal({ open, onClose, product, onChange, onSubmit, categori
       </Box>
     </Box>
   ))}
-</Grid>
+</Grid> */}
 
 
         </Grid>

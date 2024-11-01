@@ -3,8 +3,9 @@ import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton,
   Dialog, DialogActions, DialogContent, DialogTitle, Button, Select, CircularProgress,
   DialogContentText, FormControl, InputLabel, MenuItem,
-  TextField
+  TextField,Modal
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import EditProductModal from './EditProductModal';
@@ -28,6 +29,7 @@ function ViewProduct() {
   const [isInStock, setIsInStock] = useState(true);
   const [stockFilter, setStockFilter] = useState('all'); // New stock filter state
   const [searchQuery, setSearchQuery] = useState(''); // New search query state
+  const [openFeatures,setOpenFeatures]=useState(false)
 
 
   const resultsPerPage = 10;
@@ -192,12 +194,12 @@ function ViewProduct() {
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Product Name</b></TableCell>
               <TableCell><b>Category</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Sub Category</b></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Price (Weight)</b></TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Price (Length)</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Offer Price</b></TableCell>
               <TableCell><b>Discount</b></TableCell>
               {/* <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Stock</b></TableCell> */}
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Stock Status</b></TableCell>
-              <TableCell><b>Description</b></TableCell>
+              <TableCell><b>Features</b></TableCell>
               <TableCell><b>Actions</b></TableCell>
             </TableRow>
           </TableHead>
@@ -226,13 +228,8 @@ function ViewProduct() {
                 <TableCell style={{ textAlign: 'center' }}>
                   {/* Display Stock Status */}
                 </TableCell>
-                <TableCell style={{
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  maxWidth: '150px' // You can adjust the width according to your design
-                }}>
-                  
+                <TableCell sx={{color:'blue',textAlign: 'center',cursor:"pointer" }} onClick={()=>setOpenFeatures(true)} >
+                  <u>View</u>
                 </TableCell>
 
                 <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
@@ -290,6 +287,71 @@ function ViewProduct() {
          
         />
       )}
+      {/* modal for view features */}
+      <Modal open={openFeatures} onClose={()=>setOpenFeatures(false)}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 600,
+            bgcolor: 'background.paper',
+            p: 4,
+            boxShadow: 24,
+            position: 'relative',
+            maxHeight: '80vh', // Limit height of modal
+            overflowY: 'auto',  // Enable vertical scrolling
+          }}
+        >
+          <IconButton
+            aria-label="close"
+            onClick={()=>setOpenFeatures(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'grey.500',
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+            <>
+              <Typography sx={{display:"flex",justifyContent:"center"}} variant="h6" gutterBottom>
+                Product Features
+              </Typography>
+              <Typography>
+                <b>description: </b> 
+              </Typography>
+              <Typography>
+                <b>Fabric:</b> 
+              </Typography>
+              <Typography>
+                <b>Pattern:</b> 
+              </Typography>
+              <Typography>
+                <b>Fabric Composition:</b> 
+              </Typography>
+              <Typography>
+                <b>Fit:</b> 
+              </Typography>
+              <Typography>
+                <b>style:</b> 
+              </Typography>
+              <Typography>
+                <b>state:</b> 
+              </Typography>
+              <Typography>
+                <b>Sleeve type</b>
+              </Typography>
+             
+              
+
+              
+            </>
+          
+        </Box>
+      </Modal>
 
       {/* Delete Product Confirmation Modal */}
       <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>

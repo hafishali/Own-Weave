@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button, Typography, MenuItem, Grid, CircularProgress, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, IconButton, Switch, Autocomplete } from '@mui/material';
+import { Box, TextField, Button, Typography, MenuItem, Grid, CircularProgress, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, IconButton, Switch, Autocomplete,InputLabel,Select } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { toast, ToastContainer } from 'react-toastify';
 
@@ -29,7 +29,7 @@ function AddProduct() {
   const [weightQuantity, setWeightQuantity] = useState('');
   const [isWeightInStock, setIsWeightInStock] = useState(true); // Default to in stock
 
- 
+
 
 
 
@@ -41,10 +41,10 @@ function AddProduct() {
   const [weightPrice, setWeightPrice] = useState('');
   const [weights, setWeights] = useState([]);
 
- 
 
 
- 
+
+
 
   const handleProductImageUpload = (event) => {
     const file = event.target.files[0];
@@ -63,11 +63,11 @@ function AddProduct() {
 
 
 
-  
 
-  
 
-  
+
+
+
 
   const handleDeleteMainImage = () => {
     setImagePreview(null); // Clears the main product image preview
@@ -90,24 +90,32 @@ function AddProduct() {
         boxShadow: 3,
       }}
     >
-      <Typography variant="h4" gutterBottom>
-        <b>Add Product</b>
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }} >
+        <Typography variant="h4" gutterBottom>
+          <b>Add Product</b>
+        </Typography>
+        <Button variant="contained" component="label">
+          import excel file
+          <input type="file" hidden />
+        </Button>
+      </Box>
+
+
       <Grid container spacing={2}>
-      <Grid item xs={4}>
-  <Autocomplete
-    freeSolo
-    options={['product']} // Add your options here
-    renderInput={(params) => (
-      <TextField
-        {...params}
-        fullWidth
-        label="Product Name"
-        variant="outlined"
-      />
-    )}
-  />
-</Grid>
+        <Grid item xs={4}>
+          <Autocomplete
+            freeSolo
+            options={['product']} // Add your options here
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                fullWidth
+                label="Product Name"
+                variant="outlined"
+              />
+            )}
+          />
+        </Grid>
 
         <Grid item xs={4}>
           <TextField
@@ -118,11 +126,11 @@ function AddProduct() {
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
-           
-              <MenuItem >
-                
-              </MenuItem>
-           
+
+            <MenuItem >
+
+            </MenuItem>
+
           </TextField>
         </Grid>
         <Grid item xs={4}>
@@ -134,16 +142,16 @@ function AddProduct() {
             value={subcategory}
             onChange={(e) => setSubcategory(e.target.value)}
           >
-          
-                <MenuItem >
-                  
-                </MenuItem>
-              
-             
-              <MenuItem value="" disabled>
-                No subcategories available
-              </MenuItem>
-            
+
+            <MenuItem >
+
+            </MenuItem>
+
+
+            <MenuItem value="" disabled>
+              No subcategories available
+            </MenuItem>
+
           </TextField>
         </Grid>
 
@@ -205,7 +213,7 @@ function AddProduct() {
         <Grid item xs={6}>
           <TextField
             fullWidth
-            label="Actual Price"
+            label="Actual Price per meter"
             variant="outlined"
             type="number"
             value={actualPrice}
@@ -215,10 +223,9 @@ function AddProduct() {
         <Grid item xs={6}>
           <TextField
             fullWidth
-            label="Weight Measurement"
+            label="Length"
             variant="outlined"
-            value={weightMeasurement}
-            onChange={(e) => setWeightMeasurement(e.target.value)}
+
           />
         </Grid>
         <Grid item xs={6}>
@@ -227,7 +234,7 @@ function AddProduct() {
             label="Discount Percentage"
             variant="outlined"
             type="number"
-            
+
           />
         </Grid>
         <Grid item xs={6}>
@@ -236,28 +243,29 @@ function AddProduct() {
             label="Offer Price"
             variant="outlined"
             type="number"
-            
+
           />
         </Grid>
-        
+
         <Grid item xs={4}>
           <FormControl component="fieldset">
             <FormLabel component="legend">Is Popular</FormLabel>
             <RadioGroup
               row
-             
+
             >
               <FormControlLabel value="yes" control={<Radio />} label="Yes" />
               <FormControlLabel value="no" control={<Radio />} label="No" />
             </RadioGroup>
           </FormControl>
         </Grid>
+
         <Grid item xs={4}>
           <FormControl component="fieldset">
             <FormLabel component="legend">Is Offer Product</FormLabel>
             <RadioGroup
               row
-             
+
             >
               <FormControlLabel value="yes" control={<Radio />} label="Yes" />
               <FormControlLabel value="no" control={<Radio />} label="No" />
@@ -284,98 +292,119 @@ function AddProduct() {
           />
         </Grid>
 
+
         <Grid item xs={12}>
-  <Box mt={2}>
-    <Typography variant="h6">Add Weights and Prices:</Typography>
-    <Grid container spacing={2}>
-      <Grid item xs={4}>
-        <TextField
-          fullWidth
-          label="Weight"
-          variant="outlined"
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={4}>
-        <TextField
-          fullWidth
-          label="Price"
-          variant="outlined"
-          type="number"
-          value={weightPrice}
-          onChange={(e) => setWeightPrice(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={4}>
-        <TextField
-          fullWidth
-          label="Quantity"
-          variant="outlined"
-          type="number"
-          value={weightQuantity}
-          onChange={(e) => setWeightQuantity(e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <FormControl component="fieldset">
-          <FormLabel component="legend">In Stock</FormLabel>
-          <RadioGroup
-            row
-            value={isWeightInStock}
-            onChange={(e) => setIsWeightInStock(e.target.value)}
-          >
-            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-            <FormControlLabel value="no" control={<Radio />} label="No" />
-          </RadioGroup>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12}>
-        <Button
-          variant="contained"
-          color="primary"
-          
-        >
-          Add
-        </Button>
-      </Grid>
-    </Grid>
-  </Box>
-</Grid>
+          <Box mt={2}>
+            <Typography variant="h6">Product Features:</Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={4}>
+                <TextField
+                  fullWidth
+                  label="Fabric"
+                  variant="outlined"
 
-{/* Display Weights */}
-<Grid item xs={12}>
-   
-    <Box
-      
-      mt={2}
-      sx={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        border: '1px solid #ccc',
-        p: 2,
-        borderRadius: 1,
-      }}
-    >
-      <Typography>
-       
-      </Typography>
-      <IconButton
-        aria-label="delete"
-         
-      >
-        <DeleteIcon />
-      </IconButton>
-    </Box>
- 
-</Grid>
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  fullWidth
+                  label="Pattern"
+                  variant="outlined"
+                  type="text"
 
+
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  fullWidth
+                  label="Fabric Composition"
+                  variant="outlined"
+                  type="text"
+                />
+              </Grid>
+             
+                <Grid item xs={4}>
+                  <TextField
+                    fullWidth
+                    label="Fit"
+                    variant="outlined"
+                    type="text"
+                  />
+                </Grid>
+                <Grid item xs={4}>
+                  <TextField
+                    fullWidth
+                    label="Style"
+                    variant="outlined"
+                    type="text"
+                  />
+                
+              </Grid>
+              <Grid item xs={4}>
+              <FormControl fullWidth>
+              <InputLabel>Select Sleeve Type</InputLabel>
+              <Select
+                label="Select offer"
+                required
+              >
+                
+                  <MenuItem >
+                    Full Sleeve
+                  </MenuItem>
+                  <MenuItem >
+                    Half Sleeve
+                  </MenuItem>
+                
+              </Select>
+            </FormControl>
+                
+              </Grid>
+              <Grid item xs={12}>
+                <Button
+                  variant="contained"
+                  color="primary"
+
+                >
+                  Add
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
+        </Grid>
+
+        {/* Display Weights */}
+        <Grid item xs={12}>
+          {weights.map((w, index) => ( // Use weights directly
+            <Box
+              key={index} // Use index as the key (if weights don't have a unique ID)
+              mt={2}
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                border: '1px solid #ccc',
+                p: 2,
+                borderRadius: 1,
+              }}
+            >
+              <Typography>
+                Weight: {w.weight} - Price: {w.price} - Quantity: {w.quantity} - In Stock: {w.is_in_stock ? "Yes" : "No"}
+              </Typography>
+              <IconButton
+                aria-label="delete"
+              // Pass the index directly
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+          ))}
+        </Grid>
         <Grid item xs={12} mt={2}>
           <Button
             variant="contained"
             color="primary"
-           
+
             disabled={loading}
           >
             {loading ? <CircularProgress size={24} /> : 'Submit Product'}

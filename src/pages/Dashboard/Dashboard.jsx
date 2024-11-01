@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Container, Grid, Typography, Paper, CircularProgress } from '@mui/material';
 import { Line, Bar, Pie } from 'react-chartjs-2';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import {
   Chart as ChartJS,
   Title,
@@ -74,7 +75,7 @@ function Dashboard() {
   };
 
   const pieData = {
-    labels: ['Red', 'Blue', 'Yellow', 'Green'],
+    labels: ['Palakkad', 'Thrissur', 'Kozhikkode', 'Ernakulam'],
     datasets: [
       {
         label: '# of Votes',
@@ -134,7 +135,7 @@ function Dashboard() {
           <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>
-                Total Payments
+                Total Revenue
               </Typography>
               
                 
@@ -142,6 +143,52 @@ function Dashboard() {
                 <Typography color="error"></Typography>
            
                 <Typography variant="h4"></Typography>
+            
+            </Paper>
+          </Grid>
+        </Grid>
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} md={4}>
+            <Paper elevation={3} sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Paid Orders
+              </Typography>
+             
+                <Typography color="error"></Typography>
+             
+                <Typography variant="h4">10</Typography>
+                <Typography  variant="h6" sx={{textAlign:"center",}}><VisibilityIcon/></Typography>
+                
+              
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper elevation={3} sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Shop Orders
+              </Typography>
+              
+                
+              
+                <Typography color="error"></Typography>
+              
+                <Typography variant="h4">10</Typography>
+                <Typography  variant="h6" sx={{textAlign:"center",}}><VisibilityIcon/></Typography>
+             
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper elevation={3} sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Cash On Delivery
+              </Typography>
+              
+                
+
+                <Typography color="error"></Typography>
+           
+                <Typography variant="h4">10</Typography>
+                <Typography  variant="h6" sx={{textAlign:"center",}}><VisibilityIcon/></Typography>
             
             </Paper>
           </Grid>

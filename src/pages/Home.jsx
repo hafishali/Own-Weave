@@ -3,26 +3,27 @@ import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Header from '../components/Header';
 import SideBar from '../components/SideBar';
-import AddProduct from './AddProduct';
-import AddCategory from './AddCategory';
-import ViewProduct from './ViewProducts';
-import ViewCategory from './ViewCategory';
-import ViewCustomers from './ViewCustomers';
-import ViewPayments from './ViewPayments';
-import Dashboard from './Dashboard';
-import ViewOrders from './ViewOrders';
-import Notifications from './Notifications';
+import AddProduct from './Products/AddProduct';
+import AddCategory from './category/AddCategory';
+import ViewProduct from './Products/ViewProducts';
+import ViewCategory from './category/ViewCategory';
+import ViewCustomers from './customers/ViewCustomers';
+import ViewPayments from './Payments/ViewPayments';
+import Dashboard from './Dashboard/Dashboard';
+import ViewOrders from './Orders/ViewOrders';
+import Notifications from './Notifications/Notifications';
 import AddImagePage from './AddImage';
-import AddSubcategory from './AddSubCategory';
-import ViewSubcategory from './ViewSubCategory';
-import AddSubAdmin from './AddSubadmin';
-import ViewSubAdmin from './ViewSubadmin';
-import SendNotification from './SendNotifications';
-import Stocks from './Stocks';
-import AnalyticalReport from './AnalyticalReport';
+import AddSubcategory from './category/AddSubCategory';
+import ViewSubcategory from './category/ViewSubCategory';
+import AddSubAdmin from './Sub admin/AddSubadmin';
+import ViewSubAdmin from './Sub admin/ViewSubadmin';
+import SendNotification from './Notifications/SendNotifications';
+import Stocks from './Products/Stocks';
+import AnalyticalReport from './Analytical report/AnalyticalReport';
 import AddPoster from './AddPoster';
 import AddHomeImage from './AddHomeImage';
 import DeliveryBoyManagement from './DeliveryBoy';
+import ViewReturn from './Orders/ViewReturn';
 
 function Home() {
     const [selectedOption, setSelectedOption] = useState('dashboard'); // Default to dashboard
@@ -57,6 +58,8 @@ function Home() {
                 return <Dashboard />;
             case 'viewOrders':
                 return <ViewOrders />;
+            case 'ViewReturns':
+                return <ViewReturn/>
             case 'viewDelivery':
                     return <DeliveryBoyManagement />;
             case 'notifications':

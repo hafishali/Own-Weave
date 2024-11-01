@@ -1,21 +1,21 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import './App.css';
 import Home from './pages/Home';
-import AddProduct from './pages/AddProduct';
-import AddCategory from './pages/AddCategory';
-import ViewProduct from './pages/ViewProducts';
-import ViewCategory from './pages/ViewCategory';
-import ViewPayments from './pages/ViewPayments';
+import AddProduct from './pages/Products/AddProduct';
+import AddCategory from './pages/category/AddCategory';
+import ViewProduct from './pages/Products/ViewProducts';
+import ViewCategory from './pages/category/ViewCategory';
+import ViewPayments from './pages/Payments/ViewPayments';
 import LoginPage from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import ViewOrders from './pages/ViewOrders';
-import Notifications from './pages/Notifications';
+import Dashboard from './pages/Dashboard/Dashboard';
+import ViewOrders from './pages/Orders/ViewOrders';
+import Notifications from './pages/Notifications/Notifications';
 import AddImagePage from './pages/AddImage';
-import AddSubcategory from './pages/AddSubCategory';
-import ViewSubcategory from './pages/ViewSubCategory';
-import AddSubAdmin from './pages/AddSubadmin';
-import ViewSubAdmin from './pages/ViewSubadmin';
-import SendNotification from './pages/SendNotifications';
+import AddSubcategory from './pages/category/AddSubCategory';
+import ViewSubcategory from './pages/category/ViewSubCategory';
+import AddSubAdmin from './pages/Sub admin/AddSubadmin';
+import ViewSubAdmin from './pages/Sub admin/ViewSubadmin';
+import SendNotification from './pages/Notifications/SendNotifications';
 
 function App() {
   // const isAdminLoggedIn = () => {

@@ -67,7 +67,10 @@ function ViewSubcategory() {
               <TableCell>Image</TableCell>
               <TableCell>Subcategory Name</TableCell>
               <TableCell>Main Category</TableCell>
+              <TableCell>Size</TableCell>
+              <TableCell>Length</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell>offers</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -83,9 +86,10 @@ function ViewSubcategory() {
                   </TableCell>
                   <TableCell></TableCell>
                   <TableCell></TableCell>
-                  <TableCell>
-                   
-                  </TableCell>
+                  <TableCell></TableCell>
+                  <TableCell></TableCell>
+                  <TableCell></TableCell>
+                  <TableCell></TableCell>
                   <TableCell>
                     <IconButton color="primary" onClick={() => handleEdit()}>
                       <EditIcon />
@@ -149,6 +153,35 @@ function ViewSubcategory() {
              
             </Select>
           </FormControl>
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Size"
+            variant="outlined"
+          
+            
+          />
+           <TextField
+            fullWidth
+            margin="normal"
+            label="Length"
+            variant="outlined"
+           
+            
+          />
+          <FormControl fullWidth sx={{marginBottom:"5px"}}>
+              <InputLabel>Select Offer</InputLabel>
+              <Select
+                label="Select offer"
+                required
+              >
+                
+                  <MenuItem >
+                    hot sails
+                  </MenuItem>
+                
+              </Select>
+            </FormControl>
           <FormControlLabel
             control={
               <Checkbox

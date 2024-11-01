@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, TextField, Checkbox, FormControlLabel, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, TextField, Checkbox, FormControlLabel, Select, MenuItem, InputLabel, FormControl,Grid } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
@@ -74,6 +74,9 @@ function ViewCategory() {
               <TableCell><b>Image</b></TableCell>
               <TableCell><b>Category Name</b></TableCell>
               <TableCell><b>Status</b></TableCell>
+              <TableCell><b>size</b></TableCell>
+              <TableCell><b>length</b></TableCell>
+              <TableCell><b>offers</b></TableCell>
               <TableCell><b>Actions</b></TableCell>
             </TableRow>
           </TableHead>
@@ -87,6 +90,9 @@ function ViewCategory() {
                     style={{ width: 50, height: 50, objectFit: 'cover' }}
                   /> */}
                 </TableCell>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
                 <TableCell></TableCell>
                 <TableCell></TableCell>
                 <TableCell>
@@ -133,6 +139,35 @@ function ViewCategory() {
             value={categoryName}
             onChange={(e) => setCategoryName(e.target.value)}
           />
+          <TextField
+            fullWidth
+            margin="normal"
+            label="size"
+            variant="outlined"
+          />
+          <TextField
+            fullWidth
+            margin="normal"
+            label="length"
+            variant="outlined"
+          />
+          <FormControl fullWidth sx={{marginBottom:"5px"}}>
+              <InputLabel>Select Offer</InputLabel>
+              <Select
+                label="Select offer"
+                required
+              >
+                
+                  <MenuItem >
+                    hot sails
+                  </MenuItem>
+                
+              </Select>
+            </FormControl>
+          
+        
+           
+       
           <Button
             variant="contained"
             component="label"
