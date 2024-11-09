@@ -23,6 +23,7 @@ function ViewPayments() {
               <TableCell>Payment ID</TableCell>
               <TableCell>Customer Name</TableCell>
               <TableCell>Amount</TableCell>
+              <TableCell>Payment Type</TableCell>
               <TableCell>Date</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
@@ -34,7 +35,9 @@ function ViewPayments() {
                 <TableCell>{payment.id}</TableCell>
                 <TableCell>{payment.customerName}</TableCell>
                 <TableCell>${payment.amount}</TableCell>
+                <TableCell>UPI</TableCell>
                 <TableCell>{payment.date}</TableCell>
+
                 <TableCell>{payment.status}</TableCell>
                 <TableCell>
                   <IconButton color="primary" aria-label="edit">

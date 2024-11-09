@@ -13,7 +13,11 @@ import MenuItem from '@mui/material/MenuItem';
 import InputBase from '@mui/material/InputBase';
 import { alpha, styled } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { adminLogout } from '../services/allApi';
+
+// Utility function to get a cookie by name
+
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -45,7 +49,6 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   color: 'inherit',
   '& .MuiInputBase-input': {
     padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create('width'),
     width: '100%',
@@ -61,6 +64,8 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 function Header({ handleDrawerToggle }) {
   const [anchorEl, setAnchorEl] = useState(null);
 
+
+  const navigate = useNavigate()
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -69,7 +74,19 @@ function Header({ handleDrawerToggle }) {
     setAnchorEl(null);
   };
 
-  const open = Boolean(anchorEl);
+  const handleLogout = async () => {
+    try {
+      const response = await adminLogout()
+      if (response.status === 200) {
+        setAnchorEl(null);
+        localStorage.removeItem('access')
+        localStorage.removeItem('refresh')
+        navigate('/login')
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
     <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, backgroundColor: '#043e6b' }}>
@@ -90,41 +107,35 @@ function Header({ handleDrawerToggle }) {
           <SearchIconWrapper>
             <SearchIcon />
           </SearchIconWrapper>
-          <StyledInputBase
-            placeholder="Search…"
-            
-          />
+          <StyledInputBase placeholder="Search…" />
         </Search>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <IconButton color="inherit">
             <NotificationsIcon />
           </IconButton>
-          <IconButton
-            color="inherit"
-            onClick={handleClick} 
-          >
+          <IconButton color="inherit" onClick={handleClick}>
             <AccountCircle />
           </IconButton>
           <Typography variant="body1" sx={{ color: 'white', ml: 1 }}>
             Admin
           </Typography>
           <Menu
-        id="simple-menu"
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        sx={{
-          '& .MuiPaper-root': {
-            backgroundColor: 'black',
-            color: 'white',
-          }
-        }}
-      >
-        <Link to={'/login'} style={{ textDecoration: "none", color: "white" }}>
-          <MenuItem onClick={handleClose}>Login</MenuItem>
-        </Link>
-        <MenuItem onClick={handleClose}>Logout</MenuItem>
-      </Menu>
+            id="simple-menu"
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            sx={{
+              '& .MuiPaper-root': {
+                backgroundColor: 'black',
+                color: 'white',
+              },
+            }}
+          >
+            <Link to={'/login'} style={{ textDecoration: 'none', color: 'white' }}>
+              <MenuItem onClick={handleClose}>Login</MenuItem>
+            </Link>
+            <MenuItem onClick={handleLogout}>Logout</MenuItem>
+          </Menu>
           <IconButton color="inherit">
             <SettingsIcon />
           </IconButton>

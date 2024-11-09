@@ -1,1 +1,1 @@
-export const BASE_URL="https://groceryct.pythonanywhere.com"
+export const BASE_URL="https://ownweave.pythonanywhere.com/api/"

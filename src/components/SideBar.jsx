@@ -11,6 +11,7 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { useTheme, Typography } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import { 
   Category, AddBox, ViewList, People, Payment, Notifications, 
   Dashboard, ShoppingCart, Assessment,
@@ -71,6 +72,16 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
     { text: 'Dashboard', icon: <Dashboard />, action: 'dashboard' },
     { text: 'Analytical Report', icon: <Assessment />, action: 'reports' },
     {
+      text: 'Offers',
+      icon: <LocalOfferOutlinedIcon />,
+      action: null,
+     
+      children: [
+       
+        { text: 'View Offer', icon: <LocalOfferOutlinedIcon />, action: 'viewOffers' },
+      ],
+    },
+    {
       text: 'Category',
       icon: <Category />,
       children: [
@@ -96,7 +107,6 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
         
       ],
      },
-    { text: 'Delivery Boy', icon: <DeliveryDiningIcon />, action: 'viewDelivery' },
     { text: 'Customers', icon: <People />, action: 'viewCustomers' },
     { text: 'Payments', icon: <Payment />, action: 'viewPayments' },
     {

@@ -22,8 +22,10 @@ import Stocks from './Products/Stocks';
 import AnalyticalReport from './Analytical report/AnalyticalReport';
 import AddPoster from './AddPoster';
 import AddHomeImage from './AddHomeImage';
-import DeliveryBoyManagement from './DeliveryBoy';
+// import DeliveryBoyManagement from './Offers/DeliveryBoy';
 import ViewReturn from './Orders/ViewReturn';
+import AddOffers from './Offers/AddOffers';
+import ViewOffers from './Offers/ViewOffers';
 
 function Home() {
     const [selectedOption, setSelectedOption] = useState('dashboard'); // Default to dashboard
@@ -44,6 +46,10 @@ function Home() {
         switch (selectedOption) {
             case 'addProduct':
                 return <AddProduct />;
+           
+             case 'viewOffers':
+                return <ViewOffers />;
+
             case 'addCategory':
                 return <AddCategory />;
             case 'viewProduct':
@@ -60,8 +66,8 @@ function Home() {
                 return <ViewOrders />;
             case 'ViewReturns':
                 return <ViewReturn/>
-            case 'viewDelivery':
-                    return <DeliveryBoyManagement />;
+            // case 'viewDelivery':
+            //         return <DeliveryBoyManagement />;
             case 'notifications':
                 return <Notifications />;
             case 'addCarosal':

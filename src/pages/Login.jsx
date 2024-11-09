@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Box, TextField, Button, Typography, Container, IconButton, InputAdornment } from '@mui/material';
 import { Lock as LockIcon, Visibility, VisibilityOff } from '@mui/icons-material';
-import { login } from '../services/allApi'; // This function will handle API calls
+import { adminLogin } from '../services/allApi'; 
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 
 function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+ const [adminCredentials,setAdminCredentials]=useState({
+  mobile_number:"",
+  password:""
+ })
   const [errors, setErrors] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false); 
@@ -14,8 +18,28 @@ function LoginPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setErrors({ email: '', password: '' });
+    setErrors({ mobile_number: '', password: '' });
     setLoading(true);
+    try {
+      const result = await adminLogin(adminCredentials);
+      if ( result.status === 200) {
+        console.log(result)
+        toast.success("Login Successfull")
+        localStorage.setItem('refresh', result.data.token.refresh); 
+        localStorage.setItem('access', result.data.token.access);
+        navigate('/')
+       
+      } else {
+        setErrors({ email: 'Invalid credentials', password: 'Invalid credentials' });
+       
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error("something went wrong")
+      setErrors({ email: 'Invalid Username or Password', password: 'Invalid Password or Username' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClickShowPassword = () => setShowPassword((prev) => !prev);
@@ -32,15 +56,15 @@ function LoginPage() {
               margin="normal"
               required
               fullWidth
-              id="email"
-              label="Email"
-              name="email"
-              autoComplete="email"
+              id="mobile"
+              label="mobile"
+              name="mobile"
+              autoComplete="mobile"
               autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              helperText={errors.email}
-              error={!!errors.email}
+              value={adminCredentials.mobile_number}
+              onChange={(e) => setAdminCredentials({...adminCredentials,mobile_number:e.target.value})}
+              helperText={errors.mobile_number}
+              error={!!errors.mobile_number}
             />
             <TextField
               margin="normal"
@@ -51,8 +75,8 @@ function LoginPage() {
               type={showPassword ? 'text' : 'password'}
               id="password"
               autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={adminCredentials.password}
+              onChange={(e) => setAdminCredentials({...adminCredentials,password:e.target.value})}
               helperText={errors.password}
               error={!!errors.password}
               InputProps={{

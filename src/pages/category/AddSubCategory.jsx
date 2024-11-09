@@ -4,7 +4,7 @@ import {
   CircularProgress, Grid, FormControlLabel, Checkbox
 } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import CSS
+import 'react-toastify/dist/ReactToastify.css'; 
 
 const AddSubcategory = () => {
   const [categories, setCategories] = useState([]);

@@ -3,12 +3,15 @@ import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton,
   Dialog, DialogActions, DialogContent, DialogTitle, Button, Select, CircularProgress,
   DialogContentText, FormControl, InputLabel, MenuItem,
-  TextField,Modal
+  TextField, Modal
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import EditProductModal from './EditProductModal';
+import { viewAllproducts } from '../../services/allApi';
+import axios from "axios";
+
 
 function ViewProduct() {
   const [products, setProducts] = useState([]);
@@ -29,27 +32,34 @@ function ViewProduct() {
   const [isInStock, setIsInStock] = useState(true);
   const [stockFilter, setStockFilter] = useState('all'); // New stock filter state
   const [searchQuery, setSearchQuery] = useState(''); // New search query state
-  const [openFeatures,setOpenFeatures]=useState(false)
+  const [openFeatures, setOpenFeatures] = useState(false)
 
 
   const resultsPerPage = 10;
 
   const totalPages = Math.ceil(count / resultsPerPage);
 
-
-
-
-
-
-
- 
+  const handleGetallProducts = async () => {
+    try {
+      const response = await viewAllproducts()
+      console.log(response)
+      if (response.status === 200) {
+        setProducts(response.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  useEffect(() => {
+    handleGetallProducts()
+  }, [])
 
   const startProductIndex = (currentPage - 1) * resultsPerPage + 1;
   const endProductIndex = Math.min(startProductIndex + resultsPerPage - 1, count);
 
 
   const handleOpenDeleteDialog = () => {
-    
+
     setOpenDeleteDialog(true);
   };
 
@@ -59,7 +69,7 @@ function ViewProduct() {
   };
 
   const handleOpenEditDialog = () => {
-    
+
     setOpenEditDialog(true);
   };
 
@@ -75,8 +85,8 @@ function ViewProduct() {
     }));
   };
 
-  
-  
+
+
 
 
   const handleFilterChange = (e) => {
@@ -90,18 +100,18 @@ function ViewProduct() {
   const handleNextPage = async () => {
     if (nextPageUrl) {
       setLoading(true);
-     
+
     }
   };
 
   const handlePrevPage = async () => {
     if (prevPageUrl) {
       setLoading(true);
-    
+
     }
   };
 
-  
+
 
   const handleStockFilterChange = (e) => {
     setStockFilter(e.target.value);
@@ -119,13 +129,13 @@ function ViewProduct() {
     <Box sx={{ maxWidth: '100%', margin: 'auto' }}>
 
       {/* Error Alert */}
-     
-        <Box mb={2}>
-          <Typography variant="body1" color="error">
-           
-          </Typography>
-        </Box>
-     
+
+      <Box mb={2}>
+        <Typography variant="body1" color="error">
+
+        </Typography>
+      </Box>
+
 
       {/* Header and Filters */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -143,18 +153,18 @@ function ViewProduct() {
           </FormControl>
           <FormControl variant="outlined" sx={{ minWidth: 200 }}>
             <InputLabel>Category</InputLabel>
-            <Select  label="Category">
+            <Select label="Category">
               <MenuItem value="all">All Categories</MenuItem>
-              
-                <MenuItem >
-                  option
-                </MenuItem>
-              
+
+              <MenuItem >
+                option
+              </MenuItem>
+
             </Select>
           </FormControl>
           <FormControl variant="outlined" sx={{ minWidth: 200 }}>
             <InputLabel>Stock Status</InputLabel>
-            <Select  label="Stock Status">
+            <Select label="Stock Status">
               <MenuItem value="all">All</MenuItem>
               <MenuItem value="inStock">In Stock</MenuItem>
               <MenuItem value="outOfStock">Out of Stock</MenuItem>
@@ -176,7 +186,7 @@ function ViewProduct() {
           variant="contained"
           color="primary"
           sx={{ minWidth: '100px' }}  // Set a minimum width for the button
-         
+
         >
           Search
         </Button>
@@ -204,50 +214,50 @@ function ViewProduct() {
             </TableRow>
           </TableHead>
           <TableBody>
-            
 
-              <TableRow >
-                <TableCell></TableCell>
-                <TableCell>
-                  {/* <img
+
+            <TableRow >
+              <TableCell></TableCell>
+              <TableCell>
+                {/* <img
                     src={product.image}
                     alt={product.name}
                     style={{ width: 50, height: 50, objectFit: 'cover' }}
                     loading="lazy"
                   /> */}
-                </TableCell>
-                <TableCell></TableCell>
-                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}></TableCell>
-                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}></TableCell>
-                <TableCell style={{ textAlign: 'center' }}>
-                  
-                </TableCell>
-                <TableCell style={{ textAlign: 'center' }}></TableCell>
-                <TableCell></TableCell>
-                {/* <TableCell>{product.quantity}</TableCell> */}
-                <TableCell style={{ textAlign: 'center' }}>
-                  {/* Display Stock Status */}
-                </TableCell>
-                <TableCell sx={{color:'blue',textAlign: 'center',cursor:"pointer" }} onClick={()=>setOpenFeatures(true)} >
-                  <u>View</u>
-                </TableCell>
+              </TableCell>
+              <TableCell></TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}></TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}></TableCell>
+              <TableCell style={{ textAlign: 'center' }}>
 
-                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
-                  <IconButton
-                    onClick={() => handleOpenEditDialog()}
-                    aria-label={`Edit `}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => handleOpenDeleteDialog()}
-                    aria-label={`Delete `}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            
+              </TableCell>
+              <TableCell style={{ textAlign: 'center' }}></TableCell>
+              <TableCell></TableCell>
+              {/* <TableCell>{product.quantity}</TableCell> */}
+              <TableCell style={{ textAlign: 'center' }}>
+                {/* Display Stock Status */}
+              </TableCell>
+              <TableCell sx={{ color: 'blue', textAlign: 'center', cursor: "pointer" }} onClick={() => setOpenFeatures(true)} >
+                <u>View</u>
+              </TableCell>
+
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
+                <IconButton
+                  onClick={() => handleOpenEditDialog()}
+                  aria-label={`Edit `}
+                >
+                  <EditIcon />
+                </IconButton>
+                <IconButton
+                  onClick={() => handleOpenDeleteDialog()}
+                  aria-label={`Delete `}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </TableCell>
+            </TableRow>
+
           </TableBody>
         </Table>
       </TableContainer>
@@ -284,11 +294,11 @@ function ViewProduct() {
           onClose={handleCloseEditDialog}
           product={editProductData}
           categories={categories}
-         
+
         />
       )}
       {/* modal for view features */}
-      <Modal open={openFeatures} onClose={()=>setOpenFeatures(false)}>
+      <Modal open={openFeatures} onClose={() => setOpenFeatures(false)}>
         <Box
           sx={{
             position: 'absolute',
@@ -306,7 +316,7 @@ function ViewProduct() {
         >
           <IconButton
             aria-label="close"
-            onClick={()=>setOpenFeatures(false)}
+            onClick={() => setOpenFeatures(false)}
             sx={{
               position: 'absolute',
               right: 8,
@@ -316,40 +326,40 @@ function ViewProduct() {
           >
             <CloseIcon />
           </IconButton>
-            <>
-              <Typography sx={{display:"flex",justifyContent:"center"}} variant="h6" gutterBottom>
-                Product Features
-              </Typography>
-              <Typography>
-                <b>description: </b> 
-              </Typography>
-              <Typography>
-                <b>Fabric:</b> 
-              </Typography>
-              <Typography>
-                <b>Pattern:</b> 
-              </Typography>
-              <Typography>
-                <b>Fabric Composition:</b> 
-              </Typography>
-              <Typography>
-                <b>Fit:</b> 
-              </Typography>
-              <Typography>
-                <b>style:</b> 
-              </Typography>
-              <Typography>
-                <b>state:</b> 
-              </Typography>
-              <Typography>
-                <b>Sleeve type</b>
-              </Typography>
-             
-              
+          <>
+            <Typography sx={{ display: "flex", justifyContent: "center" }} variant="h6" gutterBottom>
+              Product Features
+            </Typography>
+            <Typography>
+              <b>description: </b>
+            </Typography>
+            <Typography>
+              <b>Fabric:</b>
+            </Typography>
+            <Typography>
+              <b>Pattern:</b>
+            </Typography>
+            <Typography>
+              <b>Fabric Composition:</b>
+            </Typography>
+            <Typography>
+              <b>Fit:</b>
+            </Typography>
+            <Typography>
+              <b>style:</b>
+            </Typography>
+            <Typography>
+              <b>state:</b>
+            </Typography>
+            <Typography>
+              <b>Sleeve type</b>
+            </Typography>
 
-              
-            </>
-          
+
+
+
+          </>
+
         </Box>
       </Modal>
 
@@ -365,7 +375,7 @@ function ViewProduct() {
           <Button onClick={handleCloseDeleteDialog} color="primary" variant="outlined">
             Cancel
           </Button>
-          <Button  color="secondary" variant="contained">
+          <Button color="secondary" variant="contained">
             Delete
           </Button>
         </DialogActions>

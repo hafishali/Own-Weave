@@ -4,15 +4,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { toast, ToastContainer } from 'react-toastify';
 
 function AddProduct() {
-  const [productName, setProductName] = useState('');
+
   const [category, setCategory] = useState('');
-  const [subcategory, setSubcategory] = useState(''); // State for subcategory
+  const [subcategory, setSubcategory] = useState(''); 
   const [categories, setCategories] = useState([]);
-  const [subcategories, setSubcategories] = useState([]); // State for subcategories
+  const [subcategories, setSubcategories] = useState([]);
   const [actualPrice, setActualPrice] = useState('');
-  const [offerPrice, setOfferPrice] = useState('');
-  const [weightMeasurement, setWeightMeasurement] = useState('');
-  const [discountPercentage, setDiscountPercentage] = useState('');
+
+ 
   const [description, setDescription] = useState('');
   const [quantity, setQuantity] = useState('');
   const [productImage, setProductImage] = useState(null);
@@ -26,8 +25,32 @@ function AddProduct() {
   const [allProducts, setAllProducts] = useState([]);  // Store all products
   const [productSuggestions, setProductSuggestions] = useState([]);  // Store filtered suggestions
   const [loadingProducts, setLoadingProducts] = useState(false);
-  const [weightQuantity, setWeightQuantity] = useState('');
-  const [isWeightInStock, setIsWeightInStock] = useState(true); // Default to in stock
+
+  const [product,setProduct]=useState({
+    name:"",
+    product_code:"",
+    color:"",
+    category_name:"",
+    images:[],
+    price_per_meter:"",
+    discount_price:"",
+    offer_price_per_meter:"",
+    user_price_per_meter:"",
+    stock_length:"",
+    width:"",
+    gsm:"",
+    is_popular:"",
+    is_offer_product:"",
+    description:"",
+    in_Stock:true,
+    fabric:"",
+    pattern:"",
+    fabric_composition:"",
+    fit:"",
+    style:"",
+    category:""
+  })
+
 
 
 
@@ -61,6 +84,12 @@ function AddProduct() {
     setMultipleImagesPreview(previews);
   };
 
+  const handleRadioChange = (event, field) => {
+    setProduct({
+      ...product,
+      [field]: event.target.value === 'yes' ? true : false
+    });
+  };
 
 
 
@@ -102,29 +131,42 @@ function AddProduct() {
 
 
       <Grid container spacing={2}>
-        <Grid item xs={4}>
-          <Autocomplete
-            freeSolo
-            options={['product']} // Add your options here
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                fullWidth
-                label="Product Name"
-                variant="outlined"
-              />
-            )}
-          />
+        <Grid item xs={3}>
+        <TextField
+            fullWidth
+            label="Product Name"
+            variant="outlined"
+           value={product.name}
+           onChange={(e) => setProduct({ ...product, name: e.target.value })}
+           />
+        </Grid>
+        <Grid item xs={3}>
+        <TextField
+            fullWidth
+            label="Product Code"
+            variant="outlined"
+           value={product.product_code}
+           onChange={(e) => setProduct({ ...product, product_code: e.target.value })}
+           />
         </Grid>
 
-        <Grid item xs={4}>
-          <TextField
+        <Grid item xs={3}>
+        <TextField
+            fullWidth
+            label="Product Color"
+            variant="outlined"
+           value={product.color}
+           onChange={(e) => setProduct({ ...product, color: e.target.value })}
+           />
+        </Grid>
+        <Grid item xs={3}>
+        <TextField
             select
             fullWidth
             label="Category"
             variant="outlined"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            value={product.category_name}
+            onChange={(e) => setProduct({ ...product, category_name: e.target.value })}
           >
 
             <MenuItem >
@@ -133,42 +175,21 @@ function AddProduct() {
 
           </TextField>
         </Grid>
-        <Grid item xs={4}>
-          <TextField
-            select
-            fullWidth
-            label="Subcategory"
-            variant="outlined"
-            value={subcategory}
-            onChange={(e) => setSubcategory(e.target.value)}
-          >
-
-            <MenuItem >
-
-            </MenuItem>
 
 
-            <MenuItem value="" disabled>
-              No subcategories available
-            </MenuItem>
-
-          </TextField>
-        </Grid>
-
-
-        <Grid item xs={6}>
+        {/* <Grid item xs={6}>
           <Button variant="contained" component="label">
             Upload Main Product Image
             <input type="file" hidden onChange={handleProductImageUpload} />
           </Button>
-        </Grid>
-        <Grid item xs={6}>
+        </Grid> */}
+        <Grid item xs={12}>
           <Button variant="contained" component="label">
             Upload Multiple Images
             <input type="file" hidden multiple onChange={handleMultipleImageUpload} />
           </Button>
         </Grid>
-        {imagePreview && (
+        {/* {imagePreview && (
           <Grid item xs={12}>
             <Box mt={2} textAlign="center" position="relative" display="inline-block">
               <img
@@ -185,7 +206,7 @@ function AddProduct() {
               </IconButton>
             </Box>
           </Grid>
-        )}
+        )} */}
 
         {multipleImagesPreview.length > 0 && (
           <Grid item xs={12}>
@@ -210,68 +231,103 @@ function AddProduct() {
           </Grid>
         )}
 
-        <Grid item xs={6}>
+        <Grid item xs={3}>
           <TextField
             fullWidth
-            label="Actual Price per meter"
+            label="wholesale Price per meter"
             variant="outlined"
             type="number"
-            value={actualPrice}
-            onChange={(e) => setActualPrice(e.target.value)}
+            value={product.price_per_meter}
+            onChange={(e) => setProduct({ ...product, price_per_meter: e.target.value })} 
           />
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={3}>
           <TextField
             fullWidth
-            label="Length"
+            label="Offer Price per meter"
             variant="outlined"
-
+            value={product.offer_price_per_meter}
+            onChange={(e) => setProduct({ ...product, offer_price_per_meter: e.target.value })} 
           />
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={3}>
           <TextField
             fullWidth
-            label="Discount Percentage"
-            variant="outlined"
-            type="number"
-
-          />
-        </Grid>
-        <Grid item xs={6}>
-          <TextField
-            fullWidth
-            label="Offer Price"
+            label="User price"
             variant="outlined"
             type="number"
-
+            value={product.user_price_per_meter}
+            onChange={(e) => setProduct({ ...product, user_price_per_meter: e.target.value })} 
+          />
+        </Grid>
+        <Grid item xs={3}>
+          <TextField
+            fullWidth
+            label="Discounted Price (user)"
+            variant="outlined"
+            type="number"
+            value={product.discount_price}
+            onChange={(e) => setProduct({ ...product, discount_price: e.target.value })} 
+          />
+        </Grid>
+        <Grid item xs={4}>
+          <TextField
+            fullWidth
+            label="Total Length"
+            variant="outlined"
+            type="number"
+            value={product.stock_length}
+            onChange={(e) => setProduct({ ...product, stock_length: e.target.value })} 
+          />
+        </Grid>
+        <Grid item xs={4}>
+          <TextField
+            fullWidth
+            label="Total Width"
+            variant="outlined"
+            type="number"
+            value={product.width}
+            onChange={(e) => setProduct({ ...product, width: e.target.value })} 
+          />
+        </Grid>
+        <Grid item xs={4}>
+          <TextField
+            fullWidth
+            label="GSM"
+            variant="outlined"
+            type="number"
+            value={product.gsm}
+            onChange={(e) => setProduct({ ...product, gsm: e.target.value })} 
           />
         </Grid>
 
         <Grid item xs={4}>
-          <FormControl component="fieldset">
-            <FormLabel component="legend">Is Popular</FormLabel>
-            <RadioGroup
-              row
+        <FormControl component="fieldset">
+          <FormLabel component="legend">Is Popular</FormLabel>
+          <RadioGroup
+            row
+            value={product.is_popular ? 'yes' : 'no'}
+            onChange={(e) => handleRadioChange(e, 'isPopular')}
+          >
+            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+            <FormControlLabel value="no" control={<Radio />} label="No" />
+          </RadioGroup>
+        </FormControl>
+      </Grid>
 
-            >
-              <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-              <FormControlLabel value="no" control={<Radio />} label="No" />
-            </RadioGroup>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={4}>
-          <FormControl component="fieldset">
-            <FormLabel component="legend">Is Offer Product</FormLabel>
-            <RadioGroup
-              row
-
-            >
-              <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-              <FormControlLabel value="no" control={<Radio />} label="No" />
-            </RadioGroup>
-          </FormControl>
-        </Grid>
+      <Grid item xs={4}>
+        <FormControl component="fieldset">
+          <FormLabel component="legend">Is Offer Product</FormLabel>
+          <RadioGroup
+            row
+            value={product.is_offer_product ? 'yes' : 'no'}
+            onChange={(e) => handleRadioChange(e, 'isOfferProduct')}
+          >
+            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+            <FormControlLabel value="no" control={<Radio />} label="No" />
+          </RadioGroup>
+        </FormControl>
+      </Grid>
         <Grid item xs={12}>
           <TextField
             fullWidth
@@ -279,18 +335,18 @@ function AddProduct() {
             multiline
             rows={4}
             variant="outlined"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+            value={product.description}
+           
+            onChange={(e) => setProduct({ ...product, description: e.target.value })}          />
         </Grid>
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <Typography variant="body1">In Stock</Typography>
           <Switch
             checked={isInStock}
             onChange={(e) => setIsInStock(e.target.checked)}
             color="primary"
           />
-        </Grid>
+        </Grid> */}
 
 
         <Grid item xs={12}>
@@ -302,7 +358,8 @@ function AddProduct() {
                   fullWidth
                   label="Fabric"
                   variant="outlined"
-
+                  value={product.fabric}
+                  onChange={(e) => setProduct({ ...product, fabric: e.target.value })}
                 />
               </Grid>
               <Grid item xs={4}>
@@ -311,7 +368,8 @@ function AddProduct() {
                   label="Pattern"
                   variant="outlined"
                   type="text"
-
+                  value={product.pattern}
+                  onChange={(e) => setProduct({ ...product, pattern: e.target.value })}
 
                 />
               </Grid>
@@ -321,6 +379,8 @@ function AddProduct() {
                   label="Fabric Composition"
                   variant="outlined"
                   type="text"
+                  value={product.fabric_composition}
+                  onChange={(e) => setProduct({ ...product, fabric_composition: e.target.value })}
                 />
               </Grid>
              
@@ -330,6 +390,8 @@ function AddProduct() {
                     label="Fit"
                     variant="outlined"
                     type="text"
+                    value={product.fit}
+                  onChange={(e) => setProduct({ ...product, fit: e.target.value })}
                   />
                 </Grid>
                 <Grid item xs={4}>
@@ -338,10 +400,12 @@ function AddProduct() {
                     label="Style"
                     variant="outlined"
                     type="text"
+                    value={product.style}
+                  onChange={(e) => setProduct({ ...product, style: e.target.value })}
                   />
                 
               </Grid>
-              <Grid item xs={4}>
+              {/* <Grid item xs={4}>
               <FormControl fullWidth>
               <InputLabel>Select Sleeve Type</InputLabel>
               <Select
@@ -359,8 +423,8 @@ function AddProduct() {
               </Select>
             </FormControl>
                 
-              </Grid>
-              <Grid item xs={12}>
+              </Grid> */}
+              {/* <Grid item xs={12}>
                 <Button
                   variant="contained"
                   color="primary"
@@ -368,13 +432,13 @@ function AddProduct() {
                 >
                   Add
                 </Button>
-              </Grid>
+              </Grid> */}
             </Grid>
           </Box>
         </Grid>
 
         {/* Display Weights */}
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           {weights.map((w, index) => ( // Use weights directly
             <Box
               key={index} // Use index as the key (if weights don't have a unique ID)
@@ -399,7 +463,7 @@ function AddProduct() {
               </IconButton>
             </Box>
           ))}
-        </Grid>
+        </Grid> */}
         <Grid item xs={12} mt={2}>
           <Button
             variant="contained"

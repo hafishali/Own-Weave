@@ -2,13 +2,16 @@ import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, IconButton, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle,
-  DialogContentText
+  DialogContentText,MenuItem,Select,FormControl,InputLabel
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EmojiPicker from 'emoji-picker-react';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
+import VipIcon from '@mui/icons-material/Star';
 
 
 const defaultAvatar = 'https://i.postimg.cc/mZ3Yr8JV/user-avatar-male-5.png';
@@ -31,6 +34,7 @@ function ViewCustomers() {
   const [count, setCount] = useState(0);             // Total number of customers
   const [startCustomerIndex, setStartCustomerIndex] = useState(1);
   const [endCustomerIndex, setEndCustomerIndex] = useState(10);
+  const [customerCategory,setCustomerCategory]=useState('')
 
 
 
@@ -45,6 +49,9 @@ function ViewCustomers() {
       setCurrentPage(currentPage - 1);
     }
   };
+  const handleCustomerCategory=(value)=>{
+    setCustomerCategory(value)
+  }
 
 
  
@@ -94,20 +101,31 @@ function ViewCustomers() {
 
   return (
     <Box sx={{ maxWidth: '100%', margin: 'auto', p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h4" gutterBottom>View Customers</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4">
+          View Customers
+        </Typography>
+
+        {/* Filter Dropdown on Right Side */}
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel>Filter</InputLabel>
+          <Select  >
+            <MenuItem value="all">VIP</MenuItem>
+            <MenuItem value="enabled">Favourite</MenuItem>
+            
+          </Select>
+        </FormControl>
       </Box>
 
       <TableContainer component={Paper}>
         <Table>
           <TableHead sx={{ backgroundColor: "lightblue" }}>
             <TableRow>
-              <TableCell><b>Photo</b></TableCell>
-              <TableCell><b>Name</b></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Mobile Number</b></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Road Name</b></TableCell>
-              <TableCell><b>Address</b></TableCell>
-              <TableCell><b>City</b></TableCell>
+              <TableCell><b>SI Number</b></TableCell>
+              <TableCell><b>Customer Id</b></TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Name</b></TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Address</b></TableCell>
+              <TableCell><b>District</b></TableCell>
               <TableCell><b>State</b></TableCell>
               <TableCell><b>Pincode</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>View Orders</b></TableCell>
@@ -125,15 +143,23 @@ function ViewCustomers() {
                   /> */}
                 </TableCell>
                 <TableCell></TableCell>
-                <TableCell></TableCell>
-                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }} >
-                  
+                <TableCell style={{ textAlign: 'center' }}>
+  John Doe 
+  {customerCategory === 'Favourite' ? (
+    <FavoriteIcon sx={{ color: 'red', fontSize: '15px' }} />
+  ) : customerCategory === 'VIP' ? (
+    <WorkspacePremiumOutlinedIcon sx={{ color: 'gold', fontSize: '20px' }} />
+  ) : (
+    ""
+  )}
+</TableCell>                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }} >
+                  df
                 </TableCell>
 
                 <TableCell>
                   
                 </TableCell>
-                <TableCell></TableCell> {/* Added City */}
+                 {/* Added City */}
                 <TableCell></TableCell> {/* Added State */}
                 <TableCell></TableCell> {/* Added Pincode */}
                 <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
@@ -268,7 +294,7 @@ function ViewCustomers() {
       <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
         <DialogTitle>Edit Customer</DialogTitle>
         <DialogContent>
-          <TextField
+          {/* <TextField
             margin="dense"
             name="name"
             label="Name"
@@ -276,7 +302,7 @@ function ViewCustomers() {
             variant="standard"
             
            
-          />
+          /> */}
           <TextField
             margin="dense"
             name="email"
@@ -325,6 +351,19 @@ function ViewCustomers() {
             variant="standard"
             
           />
+                          <FormControl variant="standard" fullWidth className='mt-3'>
+  <InputLabel id="demo-simple-select-label">status</InputLabel>
+  <Select
+    labelId="demo-simple-select-label"
+    value={customerCategory}
+    onChange={(e)=>setCustomerCategory(e.target.value)} 
+  >
+     <MenuItem value="Normal">Normal</MenuItem>
+     <MenuItem value="VIP">VIP</MenuItem>
+      <MenuItem value="Favourite">Favourite</MenuItem>
+      
+  </Select>
+</FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={()=>setOpenEditDialog(false)} >Cancel</Button>
