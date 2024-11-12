@@ -67,9 +67,8 @@ function AddCategory() {
       size_S_length, size_M_length, size_L_length, size_XL_length, 
       size_XXL_length, size_XXXL_length, size_4XL_length,sleeve_half_length,sleeve_full_length 
     } = categoryDts;
-    if (!name || !heading || !description || !image || status === undefined || 
-        !size_S_length || !size_M_length || !size_L_length || !size_XL_length || 
-        !size_XXL_length || !size_XXXL_length || !size_4XL_length) {
+    if (!name || !heading || !description || !image 
+        ) {
       toast.error("All fields are mandatory. Please fill out the form completely.");
       return;
     }
@@ -133,7 +132,7 @@ function AddCategory() {
   
   
 
-// console.log(categoryDts)
+console.log(categoryDts)
   return (
     <Box 
       sx={{ 

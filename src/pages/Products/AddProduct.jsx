@@ -50,39 +50,39 @@ function AddProduct() {
     style:"",
     category:""
   })
-
-
-
-
-
-
-
-
-
-  // New state for weights
-  const [weight, setWeight] = useState('');
-  const [weightPrice, setWeightPrice] = useState('');
-  const [weights, setWeights] = useState([]);
-
-
-
-
-
-
-  const handleProductImageUpload = (event) => {
-    const file = event.target.files[0];
-    setProductImage(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
+  
 
   const handleMultipleImageUpload = (event) => {
-    const files = event.target.files;
-    const selectedImages = Array.from(files);
-    setProductImages(selectedImages);
+    const files = Array.from(event.target.files);
+    const selectedImages = files.map(file => ({
+      file,
+      preview: URL.createObjectURL(file)
+    }));
 
-    const previews = selectedImages.map((file) => URL.createObjectURL(file));
-    setMultipleImagesPreview(previews);
+    setProduct((prevState) => ({
+      ...prevState,
+      images: [...prevState.images, ...selectedImages.map(img => img.file)]
+    }));
+
+    setMultipleImagesPreview((prevPreview) => [
+      ...prevPreview,
+      ...selectedImages.map(img => img.preview)
+    ]);
   };
+
+  const handleDeleteMultipleImage = (indexToDelete) => {
+    // Remove the image from product.images and multipleImagesPreview
+    setProduct((prevState) => ({
+      ...prevState,
+      images: prevState.images.filter((_, index) => index !== indexToDelete)
+    }));
+
+    setMultipleImagesPreview((prevPreview) =>
+      prevPreview.filter((_, index) => index !== indexToDelete)
+    );
+  };
+
+
 
   const handleRadioChange = (event, field) => {
     setProduct({
@@ -90,22 +90,6 @@ function AddProduct() {
       [field]: event.target.value === 'yes' ? true : false
     });
   };
-
-
-
-
-
-
-
-
-  const handleDeleteMainImage = () => {
-    setImagePreview(null); // Clears the main product image preview
-  };
-
-  const handleDeleteMultipleImage = (index) => {
-    setMultipleImagesPreview((prev) => prev.filter((_, i) => i !== index)); // Removes the selected image by index
-  };
-
 
 
   return (
@@ -183,53 +167,37 @@ function AddProduct() {
             <input type="file" hidden onChange={handleProductImageUpload} />
           </Button>
         </Grid> */}
-        <Grid item xs={12}>
-          <Button variant="contained" component="label">
-            Upload Multiple Images
-            <input type="file" hidden multiple onChange={handleMultipleImageUpload} />
-          </Button>
-        </Grid>
-        {/* {imagePreview && (
-          <Grid item xs={12}>
-            <Box mt={2} textAlign="center" position="relative" display="inline-block">
-              <img
-                src={imagePreview}
-                alt="Selected Product"
-                style={{ maxHeight: 200, objectFit: 'contain' }}
-              />
-              <IconButton
-                onClick={handleDeleteMainImage}
-                size="small"
-                sx={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          </Grid>
-        )} */}
+      <Grid container spacing={2}>
+      <Grid item xs={12}>
+        <Button variant="contained" component="label">
+          Upload Multiple Images
+          <input type="file" hidden multiple onChange={handleMultipleImageUpload} />
+        </Button>
+      </Grid>
 
-        {multipleImagesPreview.length > 0 && (
-          <Grid item xs={12}>
-            <Box mt={2} textAlign="center">
-              {multipleImagesPreview.map((imageSrc, index) => (
-                <Box key={index} position="relative" display="inline-block" mx={1}>
-                  <img
-                    src={imageSrc}
-                    alt={`Selected Product ${index}`}
-                    style={{ maxHeight: 100, margin: 5, objectFit: 'contain' }}
-                  />
-                  <IconButton
-                    onClick={() => handleDeleteMultipleImage(index)}
-                    size="small"
-                    sx={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              ))}
-            </Box>
-          </Grid>
-        )}
+      {multipleImagesPreview.length > 0 && (
+        <Grid item xs={12}>
+          <Box mt={2} textAlign="center">
+            {multipleImagesPreview.map((imageSrc, index) => (
+              <Box key={index} position="relative" display="inline-block" mx={1}>
+                <img
+                  src={imageSrc}
+                  alt={`Selected Product ${index}`}
+                  style={{ maxHeight: 100, margin: 5, objectFit: 'contain' }}
+                />
+                <IconButton
+                  onClick={() => handleDeleteMultipleImage(index)}
+                  size="small"
+                  sx={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            ))}
+          </Box>
+        </Grid>
+      )}
+    </Grid>
 
         <Grid item xs={3}>
           <TextField
