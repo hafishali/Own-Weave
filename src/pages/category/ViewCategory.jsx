@@ -237,32 +237,39 @@ console.log(selectedCategory)
         <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell><b>S</b></TableCell>
-                    <TableCell><b>M</b></TableCell>
-                    <TableCell><b>L</b></TableCell>
-                    <TableCell><b>XL</b></TableCell>
-                    <TableCell><b>XXL</b></TableCell>
-                    <TableCell><b>XXXL</b></TableCell>
-                    <TableCell><b>4XL</b></TableCell>
-                    <TableCell><b>Full Sleeve</b></TableCell>
-                    <TableCell><b>Half Sleeve</b></TableCell>
+
+                    <TableCell><b> L full length</b></TableCell>
+                    <TableCell><b> L half length</b></TableCell>
+                    <TableCell><b> XL full length</b></TableCell>
+                    <TableCell><b> XL half length</b></TableCell>
+                    <TableCell><b> XXL full length</b></TableCell>
+                    <TableCell><b> XXL half length</b></TableCell>
+                    <TableCell><b> XXXL full length</b></TableCell>
+                    <TableCell><b> XXXL half length</b></TableCell>
+                    <TableCell><b> half length</b></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {selectedCategory?(<TableRow >
-                      <TableCell>{selectedCategory.size_S_length}</TableCell>
-                      <TableCell>{selectedCategory.size_M_length}</TableCell>
-                      <TableCell>{selectedCategory.size_L_length}</TableCell>
-                      <TableCell>{selectedCategory.size_XL_length}</TableCell>
-                      <TableCell>{selectedCategory.size_XXL_length}</TableCell>
-                      <TableCell>{selectedCategory.size_XXL_length}</TableCell>
-                      <TableCell>{selectedCategory.size_4XL_length}</TableCell>
-                      <TableCell>{selectedCategory.sleeve_full_length}</TableCell>
-                      <TableCell>{selectedCategory.sleeve_half_length}</TableCell>
-                    </TableRow>) :(<TableRow>No sizes for this Category</TableRow>) }
-                   
-                  
-                </TableBody>
+                {selectedCategory && selectedCategory.sizes && selectedCategory.sizes.length > 0 ? (
+                    selectedCategory.sizes.map((size, index) => (
+                        <TableRow key={size.id || index}>
+                            <TableCell>{size.size_L_full_length || 'N/A'}</TableCell>
+                            <TableCell>{size.size_L_half_length || 'N/A'}</TableCell>
+                            <TableCell>{size.size_XL_full_length || 'N/A'}</TableCell>
+                            <TableCell>{size.size_XL_half_length || 'N/A'}</TableCell>
+                            <TableCell>{size.size_XXL_full_length || 'N/A'}</TableCell>
+                            <TableCell>{size.size_XXL_half_length || 'N/A'}</TableCell>
+                            <TableCell>{size.size_XXXL_full_length || 'N/A'}</TableCell>
+                            <TableCell>{size.size_XXXL_half_length || 'N/A'}</TableCell>
+                            <TableCell>{size.sleeve_half_length || 'N/A'}</TableCell>
+                        </TableRow>
+                    ))
+                ) : (
+                    <TableRow>
+                        <TableCell colSpan={9} align="center">No sizes for this Category</TableCell>
+                    </TableRow>
+                )}
+            </TableBody>
               </Table>
           
                  

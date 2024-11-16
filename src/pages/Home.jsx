@@ -26,6 +26,7 @@ import AddHomeImage from './AddHomeImage';
 import ViewReturn from './Orders/ViewReturn';
 import AddOffers from './Offers/AddOffers';
 import ViewOffers from './Offers/ViewOffers';
+import ViewCustomeOrders from './Orders/ViewCustomeOrders';
 
 function Home() {
     const [selectedOption, setSelectedOption] = useState('dashboard'); // Default to dashboard
@@ -66,8 +67,8 @@ function Home() {
                 return <ViewOrders />;
             case 'ViewReturns':
                 return <ViewReturn/>
-            // case 'viewDelivery':
-            //         return <DeliveryBoyManagement />;
+            case 'CustomOrders':
+                    return <ViewCustomeOrders />;
             case 'notifications':
                 return <Notifications />;
             case 'addCarosal':

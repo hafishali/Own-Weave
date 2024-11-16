@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, TextField, Button, Typography, Grid, Alert,FormControl,MenuItem,Select,InputLabel,Radio,FormControlLabel,RadioGroup,FormLabel ,IconButton} from '@mui/material';
-import {  getAlloffers ,addCategories } from '../../services/allApi';
+import {  getAlloffers ,addCategories,addCategorysizes,viewAllCategories} from '../../services/allApi';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { toast,ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -11,6 +11,8 @@ function AddCategory() {
   const [categoryImage, setCategoryImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [alloffers, setAlloffers] = useState([])
+  const [allcategories, setAllcategories] = useState([])
+
   const [categoryDts,setCategoryDts]=useState({
     name:"",
     heading:"",
@@ -18,17 +20,21 @@ function AddCategory() {
     offer_id:"",
     image:imagePreview?imagePreview:"",
     status:true,
-    size_S_length:"",
-    size_M_length:"",
-    size_L_length:"",
-    size_XL_length:"",
-    size_XXL_length:"",
-    size_XXXL_length:"",
-    size_4XL_length:"",
-    sleeve_full_length:"",          
+  
+  })
+  const [categorysizes,setCategorysizes]=useState({
+    category:"",
+    width:"",
+    size_L_full_length:"",
+    size_L_half_length:"",
+    size_XL_full_length:"",
+    size_XL_half_length:"",
+    size_XXL_full_length:"",
+    size_XXL_half_length:"",
+    size_XXXL_full_length:"",
+    size_XXXL_half_length:"",          
     sleeve_half_length:""
   })
-
   const handleImageChange = (e) => {
     const file = e.target.files[0];
    
@@ -59,15 +65,87 @@ function AddCategory() {
     viewallOffers()
   }, [])
 
+  const viewallCategories = async () => {
+    try {
+      const response = await viewAllCategories()
+      console.log(response)
+      if (response.status === 200) {
+        setAllcategories(response.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  useEffect(() => {
+    viewallCategories()
+  }, [])
+
   // add category
 
   const handleAddCategories = async () => {
+    const { name, heading, description, offer_id, image, status } = categoryDts;
+  
+    // Validate input fields
+    if (!name || !heading || !description || !image) {
+      toast.error("All fields are mandatory. Please fill out the form completely.");
+      return;
+    }
+  
+    const acces_token = localStorage.getItem('access');
+    const reqHeader = {
+      'Authorization': `Bearer ${acces_token}`,
+      'Content-Type': 'multipart/form-data'
+    };
+  
+    try {
+      console.log("Validation passed. Preparing to send data...");
+  
+      // Prepare form data
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("heading", heading);
+      formData.append("description", description);
+      formData.append("offer_id", offer_id);
+      formData.append("image", image); 
+      formData.append("status", status);
+  
+      // Send API request to add category
+      const response = await addCategories(formData, reqHeader);
+      console.log('Response:', response);
+  
+      if (response.status === 201) {
+        toast.success("Category added successfully");
+  
+        // Assuming the API response contains the newly added category's details
+        const newCategory = response.data;
+  
+        // Update allcategories to include the newly added category
+        setAllcategories((prevCategories) => [...prevCategories, newCategory]);
+  
+        // Reset the form fields
+        setCategoryDts({
+          name: "",
+          heading: "",
+          description: "",
+          offer: "",
+          image: imagePreview ? imagePreview : "",
+          status: true,
+        });
+        setImagePreview(null);
+      }
+    } catch (error) {
+      console.error("Error while adding category:", error);
+      toast.error("Something went wrong while adding the category.");
+    }
+  };
+  
+  const handleAddCategorysizes = async () => {
     const { 
-      name, heading, description, offer_id, image, status, 
-      size_S_length, size_M_length, size_L_length, size_XL_length, 
-      size_XXL_length, size_XXXL_length, size_4XL_length,sleeve_half_length,sleeve_full_length 
-    } = categoryDts;
-    if (!name || !heading || !description || !image 
+      category,width,
+      size_L_full_length, size_L_half_length, size_XL_full_length, size_XL_half_length, 
+      size_XXL_full_length, size_XXL_half_length, size_XXXL_full_length,sleeve_half_length,size_XXXL_half_length 
+    } = categorysizes;
+    if (!category || !width
         ) {
       toast.error("All fields are mandatory. Please fill out the form completely.");
       return;
@@ -82,54 +160,44 @@ function AddCategory() {
       console.log("Validation passed. Preparing to send data...");
   
       const formData = new FormData();
-      formData.append("name", name);
-      formData.append("heading", heading);
-      formData.append("description", description);
-      formData.append("offer_id", offer_id);
-      formData.append("image", image); 
-      formData.append("status", status);
-      formData.append("size_S_length", size_S_length);
-      formData.append("size_M_length", size_M_length);
-      formData.append("size_L_length", size_L_length);
-      formData.append("size_XL_length", size_XL_length);
-      formData.append("size_XXL_length", size_XXL_length);
-      formData.append("size_XXXL_length", size_XXXL_length);
-      formData.append("size_4XL_length", size_4XL_length);
-      formData.append("sleeve_full_length", sleeve_full_length);
+      formData.append("category", category);
+      formData.append("width", width);
+      formData.append("size_L_full_length", size_L_full_length);
+      formData.append("size_L_half_length", size_L_half_length);
+      formData.append("size_XL_full_length", size_XL_full_length);
+      formData.append("size_XL_half_length", size_XL_half_length);
+      formData.append("size_XXL_full_length", size_XXL_full_length);
+      formData.append("size_XXL_half_length", size_XXL_half_length);
+      formData.append("size_XXXL_full_length", size_XXXL_full_length);
+      formData.append("size_XXXL_half_length", size_XXXL_half_length);
       formData.append("sleeve_half_length", sleeve_half_length);
   
-      const response = await addCategories(formData,reqHeader);
+      const response = await addCategorysizes(formData,reqHeader);
       console.log('Response:', response);
   
       if (response.status === 201) {
-        toast.success("Category added successfully");
-        setCategoryDts({
-          name: "",
-          heading: "",
-          description: "",
-          offer: "",
-          image: imagePreview ? imagePreview : "",
-          status: true,
-          size_S_length: "",
-          size_M_length: "",
-          size_L_length: "",
-          size_XL_length: "",
-          size_XXL_length: "",
-          size_XXXL_length: "",
-          size_4XL_length: "",
-          sleeve_full_length:"",          
+        toast.success("Category size added successfully");
+        setCategorysizes({
+          width:"",
+          category:"",
+          size_L_full_length: "",
+          size_L_half_length: "",
+          size_XL_full_length: "",
+          size_XL_half_length: "",
+          size_XXL_full_length: "",
+          size_XXL_half_length: "",
+          size_XXXL_full_length: "",
+          size_XXXL_half_length:"",          
           sleeve_half_length:""
 
 
         });
-        setImagePreview(null);
       }
     } catch (error) {
       console.error("Error while adding category:", error);
       toast.error("Something went wrong while adding the category.");
     }
   };
-  
   
 
 console.log(categoryDts)
@@ -241,100 +309,7 @@ console.log(categoryDts)
       </IconButton>
     </Box>
   )}
-</Grid>
-        <Grid item xs={3}>
-        <InputLabel>Size of S</InputLabel>
-          <TextField
-            fullWidth
-           
-            variant="outlined"
-           
-            onChange={(e) => setCategoryDts({ ...categoryDts, size_S_length: e.target.value })}
-            value={categoryDts.size_S_length}
-          />
-        </Grid>
-        <Grid item xs={3}>
-        <InputLabel>Size of M</InputLabel>
-          <TextField
-            fullWidth
-            
-            variant="outlined"
-           
-            onChange={(e) => setCategoryDts({ ...categoryDts, size_M_length: e.target.value })}
-            value={categoryDts.size_M_length}
-          />
-        </Grid>
-        <Grid item xs={3}>
-        <InputLabel>Size of L</InputLabel>
-          <TextField
-            fullWidth
-            variant="outlined"
-            onChange={(e) => setCategoryDts({ ...categoryDts, size_L_length: e.target.value })}
-            value={categoryDts.size_L_length}
-          />
-        </Grid>
-        <Grid item xs={3}>
-        <InputLabel>Size of XL</InputLabel>
-          <TextField
-            fullWidth
-           
-            variant="outlined"
-            onChange={(e) => setCategoryDts({ ...categoryDts, size_XL_length: e.target.value })}
-            value={categoryDts.size_XL_length}
-          />
-        </Grid>
-        <Grid item xs={2}>
-        <InputLabel>Size of XXL</InputLabel>
-          <TextField
-            fullWidth
-           
-            variant="outlined"
-            onChange={(e) => setCategoryDts({ ...categoryDts, size_XXL_length: e.target.value })}
-            value={categoryDts.size_XXL_length}
-          />
-        </Grid>
-        <Grid item xs={2}>
-        <InputLabel>Size of XXXL</InputLabel>
-          <TextField
-            fullWidth
-           
-            variant="outlined"
-            onChange={(e) => setCategoryDts({ ...categoryDts, size_XXXL_length: e.target.value })}
-            value={categoryDts.size_XXXL_length}
-          />
-        </Grid>
-        <Grid item xs={2}>
-        <InputLabel>Size of 4XL</InputLabel>
-          <TextField
-            fullWidth
-            variant="outlined"
-            onChange={(e) => setCategoryDts({ ...categoryDts, size_4XL_length: e.target.value })}
-            value={categoryDts.size_4XL_length}
-          />
-        </Grid>
-        <Grid item xs={2}>
-        <InputLabel>Size of Full Sleeve</InputLabel>
-          <TextField
-            fullWidth
-            variant="outlined"
-            onChange={(e) => setCategoryDts({ ...categoryDts, sleeve_full_length: e.target.value })}
-            value={categoryDts.sleeve_full_length}
-          />
-        </Grid>
-        <Grid item xs={2}>
-        <InputLabel>Size of Half Sleeve</InputLabel>
-          <TextField
-            fullWidth
-            variant="outlined"
-            onChange={(e) => setCategoryDts({ ...categoryDts, sleeve_half_length: e.target.value })}
-            value={categoryDts.sleeve_half_length}
-          />
-        </Grid>
-        
-        
-
-
-        <Grid item xs={12}>
+   <Grid item xs={12}>
           <TextField
             fullWidth
             label="Product Description"
@@ -345,12 +320,146 @@ console.log(categoryDts)
             value={categoryDts.description}
           />
         </Grid>
+  <Button  style={{marginTop:'3%'}}
+  fullWidth
+  variant="contained"
+  color="primary"
+  onClick={handleAddCategories}
+>
+  Add
+</Button>
+</Grid>
+<Grid item xs={3}>
+  <InputLabel>Select Category</InputLabel>
+  <TextField
+    fullWidth
+    variant="outlined"
+    select
+    required
+    onChange={(e) => setCategorysizes({ ...categorysizes, category: e.target.value })}
+    value={categorysizes.category}
+  >
+    {allcategories && allcategories.length > 0 ? (
+      allcategories.map((item) => (
+        <MenuItem key={item.id} value={item.id}>
+          {item.name}
+        </MenuItem>
+      ))
+    ) : (
+      <MenuItem disabled>No categories</MenuItem>
+    )}
+  </TextField>
+</Grid>
+<Grid item xs={3}>
+        <InputLabel>Width</InputLabel>
+          <TextField
+            fullWidth
+           
+            variant="outlined"
+           
+            onChange={(e) => setCategorysizes({ ...categorysizes, width: e.target.value })}
+            value={categorysizes.width}
+          />
+        </Grid>
+        <Grid item xs={3}>
+        <InputLabel>Size of S</InputLabel>
+          <TextField
+            fullWidth
+           
+            variant="outlined"
+           
+            onChange={(e) => setCategorysizes({ ...categorysizes, size_L_full_length: e.target.value })}
+            value={categorysizes.size_L_full_length}
+          />
+        </Grid>
+        <Grid item xs={3}>
+        <InputLabel>Size of M</InputLabel>
+          <TextField
+            fullWidth
+            
+            variant="outlined"
+           
+            onChange={(e) => setCategorysizes({ ...categorysizes, size_L_half_length: e.target.value })}
+            value={categorysizes.size_L_half_length}
+          />
+        </Grid>
+        <Grid item xs={3}>
+        <InputLabel>Size of L</InputLabel>
+          <TextField
+            fullWidth
+            variant="outlined"
+            onChange={(e) => setCategorysizes({ ...categorysizes, size_XL_full_length: e.target.value })}
+            value={categorysizes.size_XL_full_length}
+          />
+        </Grid>
+        <Grid item xs={3}>
+        <InputLabel>Size of XL</InputLabel>
+          <TextField
+            fullWidth
+           
+            variant="outlined"
+            onChange={(e) => setCategorysizes({ ...categorysizes, size_XL_half_length: e.target.value })}
+            value={categorysizes.size_XL_half_length}
+          />
+        </Grid>
+        <Grid item xs={2}>
+        <InputLabel>Size of XXL</InputLabel>
+          <TextField
+            fullWidth
+           
+            variant="outlined"
+            onChange={(e) => setCategorysizes({ ...categorysizes, size_XXL_full_length: e.target.value })}
+            value={categorysizes.size_XXL_full_length}
+          />
+        </Grid>
+        <Grid item xs={2}>
+        <InputLabel>Size of XXXL</InputLabel>
+          <TextField
+            fullWidth
+           
+            variant="outlined"
+            onChange={(e) => setCategorysizes({ ...categorysizes, size_XXL_half_length: e.target.value })}
+            value={categorysizes.size_XXL_half_length}
+          />
+        </Grid>
+        <Grid item xs={2}>
+        <InputLabel>Size of 4XL</InputLabel>
+          <TextField
+            fullWidth
+            variant="outlined"
+            onChange={(e) => setCategorysizes({ ...categorysizes, size_XXXL_full_length: e.target.value })}
+            value={categorysizes.size_XXXL_full_length}
+          />
+        </Grid>
+        <Grid item xs={2}>
+        <InputLabel>Size of Full Sleeve</InputLabel>
+          <TextField
+            fullWidth
+            variant="outlined"
+            onChange={(e) => setCategorysizes({ ...categorysizes, size_XXXL_half_length: e.target.value })}
+            value={categorysizes.size_XXXL_half_length}
+          />
+        </Grid>
+        <Grid item xs={2}>
+        <InputLabel>Size of Half Sleeve</InputLabel>
+          <TextField
+            fullWidth
+            variant="outlined"
+            onChange={(e) => setCategorysizes({ ...categorysizes, sleeve_half_length: e.target.value })}
+            value={categorysizes.sleeve_half_length}
+          />
+        </Grid>
+        
+        
+
+
+       
         <Grid item xs={12}>
           <Button
             fullWidth
             variant="contained"
             color="primary"
-            onClick={handleAddCategories}
+            onClick={handleAddCategorysizes}
           >
             Add
           </Button>

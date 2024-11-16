@@ -42,7 +42,6 @@ export const deleteOffer=async(id)=>{
 // ------------------------------------------------------------------------------------------------------------------------
 
 // category
-// add category
 export const addCategories=async(reqBody,reqHeader)=>{
     return await commonApi('POST', `${BASE_URL}product/categories/`,reqBody,reqHeader)
 }
@@ -59,6 +58,11 @@ export const deleteCategories=async(id)=>{
     return await commonApi('DELETE', `${BASE_URL}product/categories/${id}/`,"",null)
 }
 
+// add category sizes
+export const addCategorysizes=async(reqBody,reqHeader)=>{
+    return await commonApi('POST', `${BASE_URL}product/categorysizes/`,reqBody,reqHeader)
+}
+
 
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -68,3 +72,68 @@ export const deleteCategories=async(id)=>{
 export const viewAllproducts=async()=>{
     return await commonApi('GET', `${BASE_URL}product/products/`,"")
 }
+
+
+export const addProduct=async(reqBody,reqHeader)=>{
+    return await commonApi('POST', `${BASE_URL}product/products/`,reqBody,reqHeader)
+}
+
+
+export const editProduct=async(id,reqBody,reqHeader)=>{
+    return await commonApi('PATCH', `${BASE_URL}product/products/${id}/`,reqBody,reqHeader)
+}
+  
+
+
+
+
+
+// ------------------------------------------------------------------------------------------------------------------------
+// orders
+// get all orders
+export const ViewallOrder=async()=>{
+    return await commonApi('GET', `${BASE_URL}orders/`,"",null)
+}
+// edit orders
+
+export const editOrder=async(id,reqBody)=>{
+    return await commonApi('PATCH', `${BASE_URL}orders/orders/${id}/update/`,reqBody,null)
+}
+
+
+// view returns-------------------------------------------------------------------------------------------------------------
+export const viewReturn=async()=>{
+    return await commonApi('GET', `${BASE_URL}orders/orders/returns/`,"",null)
+}
+
+
+
+
+// -------------------------------------------------------------------------------------------------------------------------
+// get all customers
+export const ViewallCustomers=async()=>{
+    return await commonApi('GET', `${BASE_URL}accounts/customers`,"",null)
+}
+
+// edit adress of the customer
+export const EditAddressCustomers=async(id,reqBody)=>{
+    return await commonApi('PATCH', `${BASE_URL}accounts/customers/${id}/update-address/`,reqBody,null)
+}
+// edit details of the customer
+export const EditCustomerdts=async(id,reqBody)=>{
+    return await commonApi('PATCH', `${BASE_URL}accounts/customers/${id}/`,reqBody,null)
+}
+
+// delete customers
+export const deleteCustomer=async(id,)=>{
+    return await commonApi('DELETE', `${BASE_URL}accounts/customers/${id}/`,"",null)
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// get all payments
+export const ViewallPayments=async()=>{
+    return await commonApi('GET', `${BASE_URL}orders/orders/payment-details/`,"",null)
+}
+
+
+

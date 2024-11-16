@@ -2,119 +2,298 @@ import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, IconButton, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle,
-  DialogContentText,MenuItem,Select,FormControl,InputLabel
+  DialogContentText, MenuItem, Select, FormControl, InputLabel, FormControlLabel, FormLabel, Radio, RadioGroup, Grid
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import SendIcon from '@mui/icons-material/Send';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import EmojiPicker from 'emoji-picker-react';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
-import VipIcon from '@mui/icons-material/Star';
+import { deleteCustomer, EditAddressCustomers, EditCustomerdts, ViewallCustomers } from '../../services/allApi';
+import { toast, ToastContainer } from 'react-toastify';
+import * as XLSX from 'xlsx';
 
-
-const defaultAvatar = 'https://i.postimg.cc/mZ3Yr8JV/user-avatar-male-5.png';
 
 function ViewCustomers() {
   const [customers, setCustomers] = useState([]);
   const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openadressDialog, setOpenadressDialog] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState('')
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [openNotificationDialog, setOpenNotificationDialog] = useState(false);
-  const [openOrdersDialog, setOpenOrdersDialog] = useState(false); // Orders dialog state
-  const [currentCustomer, setCurrentCustomer] = useState(null);
-  const [editForm, setEditForm] = useState({
-    name: '', email: '', mobile_number: '', address_line1: '', address_line2: '', pincode: ''
-  });
-  const [message, setMessage] = useState('');
-  const [orders, setOrders] = useState([]); // State to hold fetched orders
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1); // Page number state
-  const [totalPages, setTotalPages] = useState(1);   // Total pages from API
-  const [count, setCount] = useState(0);             // Total number of customers
-  const [startCustomerIndex, setStartCustomerIndex] = useState(1);
-  const [endCustomerIndex, setEndCustomerIndex] = useState(10);
-  const [customerCategory,setCustomerCategory]=useState('')
+  const [currentPage, setCurrentPage] = useState(1);
+  const [customerCategory, setCustomerCategory] = useState('');
+  const [customerNumber, setCustomerNumber] = useState('');
+  const [updatedAddresses, setUpdatedAddresses] = useState(
+    selectedCustomer?.addresses || []
+  );
+  const [addresses, setAddresses] = useState(updatedAddresses);
+  const [originalAddresses, setOriginalAddresses] = useState(updatedAddresses); // Store original addresses
+  const [isSaveEnabled, setIsSaveEnabled] = useState(false);
+  const[customerdts,setCustomerdts]=useState({
+    email:"",
+    name:"",
+    mobile_number:"",
+    is_vip:"",
+    is_favorite:""
+  })
 
 
+  const pageSize = 10;
+
+  // Fetch all customers and set to `customers` state
+  const handleGetallCustomers = async () => {
+    try {
+      const response = await ViewallCustomers();
+      if (response.status === 200) {
+        setCustomers(response.data); // Set to `customers` state
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    handleGetallCustomers();
+  }, []);
+
+
+  useEffect(() => {
+    if (selectedCustomer) {
+      setUpdatedAddresses(selectedCustomer.addresses);
+    }
+  }, [selectedCustomer]);
+
+
+  useEffect(() => {
+    setAddresses(updatedAddresses);
+    setOriginalAddresses(updatedAddresses);
+  }, [updatedAddresses]);
+
+  useEffect(() => {
+    // Set initial form data when dialog opens
+    if (selectedCustomer) {
+      
+      setCustomerdts({
+        email: selectedCustomer.email || "",
+        name: selectedCustomer.name || "",
+        mobile_number: selectedCustomer.mobile_number || "",
+        is_vip: selectedCustomer.is_vip || false,
+        is_favorite: selectedCustomer.is_favorite || false
+      });
+
+      setCustomerCategory(selectedCustomer.is_vip ? "VIP" : selectedCustomer.is_favorite ? "Favourite" : "Normal");
+    }
+  }, [selectedCustomer, openEditDialog]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCustomerdts((prevState) => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  const handleCategoryChange = (e) => {
+    const value = e.target.value;
+    setCustomerCategory(value);
+    setCustomerdts((prevState) => ({
+      ...prevState,
+      is_vip: value === "VIP",
+      is_favorite: value === "Favourite"
+    }));
+  };
+
+
+  const handleAddressChange = (index, field, value) => {
+    // Update the addresses state with the modified field value
+    const updatedAddresses = [...addresses];
+    updatedAddresses[index][field] = value;
+    setAddresses(updatedAddresses);
+
+    // Check if there's any change compared to the original values
+    const isChanged = isAnyFieldChanged(updatedAddresses, originalAddresses);
+    setIsSaveEnabled(isChanged);
+  };
+
+
+  const isAnyFieldChanged = (updatedAddresses, originalAddresses) => {
+    // Compare each address field to check if any value has changed
+    return updatedAddresses.some((address, index) => {
+      return Object.entries(address).some(([key, value]) => value !== originalAddresses[index][key]);
+    });
+  };
+console.log(updatedAddresses)
+  // Calculate total pages and slice data based on pagination
+  const totalPages = Math.ceil(customers.length / pageSize);
+  const displayedCustomers = customers.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+      setCurrentPage(prevPage => prevPage + 1);
     }
   };
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+      setCurrentPage(prevPage => prevPage - 1);
     }
   };
-  const handleCustomerCategory=(value)=>{
-    setCustomerCategory(value)
-  }
-
-
- 
-
-
-  const handleEditChange = () => {
+  const handleEditChange = (item) => {
     setOpenEditDialog(true)
+    setSelectedCustomer(item)
+    setCustomerNumber(item.mobile_number)
+    console.log(customerNumber)
+  };
+  const canceledit = () => {
+    setOpenEditDialog(false)
+    setSelectedCustomer(null)
+  };
+  const handleEditadressChange = (item) => {
+    setOpenadressDialog(true)
+    setSelectedCustomer(item)
+  };
+  const canceleditadress = () => {
+    setOpenadressDialog(false)
+    setSelectedCustomer(null)
   };
 
-
-
-  const handleDelete = () => {
-   
+  const handleDelete = (item) => {
     setOpenDeleteDialog(true);
+    setSelectedCustomer(item)
+
   };
-
-
 
   const cancelDelete = () => {
     setOpenDeleteDialog(false);
+    setSelectedCustomer(null)
+  };
+
+  // edit address
+  const handleEditAddress = async (m_number, address,id) => {
+    try {
+      // Filter out fields that are null or empty strings
+      const filteredAddress = Object.fromEntries(
+        Object.entries(address).filter(([key, value]) => value !== null && value !== '')
+      );
+      const updatedAddress = {
+        ...filteredAddress,  // Spread the filtered address fields
+        address_id: id       // Add the address_id field with the given id
+      };
+      console.log('updated',updatedAddress)
+      
+      // Send the filtered address object in the API request
+      const response = await EditAddressCustomers(m_number, updatedAddress);
+      console.log(response);
+  
+      if (response.status === 200) {
+        toast.success("address updated succesfully")
+        canceleditadress()
+        handleGetallCustomers()
+      }
+    } catch (error) {
+      toast.error("Something went wrong at editing customer address")
+
+      console.log(error);
+      setSelectedCustomer(null)
+    }
+  };
+  
+// edit customer details
+const handleEditdts = async ( customerdts) => {
+  try {
+    // Filter out fields that are null or empty strings
+    const filtereddts = Object.fromEntries(
+      Object.entries(customerdts).filter(([key, value]) => value !== null && value !== '')
+    );
     
-  };
+    // Send the filtered address object in the API request
+    const response = await EditCustomerdts(customerNumber, filtereddts);
+    console.log(response);
 
-  const handleSendNotification = (customer) => {
-    setCurrentCustomer(customer);
-    setMessage('');
-    setOpenNotificationDialog(true);
-  };
+    if (response.status === 200) {
+      toast.success("customer details updated succesfully")
+      canceledit()
+      handleGetallCustomers()
+      setCustomerNumber(null)
+    }
+  } catch (error) {
+    toast.error("Something went wrong at editing customer details")
 
-  const handleMessageChange = (event) => {
-    setMessage(event.target.value);
-  };
+    console.log(error);
+    setSelectedCustomer(null)
+  }
+};
 
-  const handleEmojiClick = (emojiObject) => {
-    
-    setMessage((prevMessage) => prevMessage + emojiObject.emoji);
-  };
-  
+// delete customers
+const handleDeleteCustomer=async()=>{
+  try {
+    const response=await deleteCustomer(selectedCustomer.mobile_number)
+    if(response.status===204){
+      toast.success("customer deleted successfully")
+      handleGetallCustomers()
+    }
+  } catch (error) {
+    console.log(error)
+    toast.error("Something went wrong at deleting customers")
+  }
+}
 
-  
-  
+const downloadExcelVip = () => {
+  const vipCustomers = customers.filter(customer => customer.is_vip);
+  const worksheetData = [
+    ['Name', 'Email', 'Phone Number',],
+    ...vipCustomers.map(customer => [customer.name, customer.email, customer.mobile_number])
+    // Add more rows here
+  ];
 
-  
+  // Create a new workbook and add the worksheet data
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Vip customer report');
+
+  // Trigger download
+  XLSX.writeFile(workbook, 'VIP_Customers.xlsx');
+};
+const downloadExcelFavourite = () => {
+  const vipCustomers = customers.filter(customer => customer.is_favorite);
+  const worksheetData = [
+    ['Name', 'Email', 'Phone Number',],
+    ...vipCustomers.map(customer => [customer.name, customer.email, customer.mobile_number])
+    // Add more rows here
+  ];
+
+  // Create a new workbook and add the worksheet data
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Vip customer report');
+
+  // Trigger download
+  XLSX.writeFile(workbook, 'VIP_Customers.xlsx');
+};
 
 
-  
 
   return (
     <Box sx={{ maxWidth: '100%', margin: 'auto', p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">
-          View Customers
-        </Typography>
-
-        {/* Filter Dropdown on Right Side */}
-        <FormControl sx={{ minWidth: 120 }}>
+        <Typography variant="h4">View Customers</Typography>
+        {/* <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>Filter</InputLabel>
-          <Select  >
-            <MenuItem value="all">VIP</MenuItem>
-            <MenuItem value="enabled">Favourite</MenuItem>
-            
+          <Select value={customerCategory} onChange={(e) => setCustomerCategory(e.target.value)}>
+            <MenuItem value="VIP">VIP</MenuItem>
+            <MenuItem value="Favourite">Favourite</MenuItem>
           </Select>
-        </FormControl>
+        </FormControl> */}
+        <Box><Button variant="contained" sx={{"marginRight":"10px"}} color="primary" onClick={downloadExcelVip}>
+          Export VIP 
+        </Button>
+        <Button variant="contained" color="primary"  onClick={downloadExcelFavourite}>
+          Export Favourite
+        </Button></Box>
+        
       </Box>
 
       <TableContainer component={Paper}>
@@ -124,154 +303,59 @@ function ViewCustomers() {
               <TableCell><b>SI Number</b></TableCell>
               <TableCell><b>Customer Id</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Name</b></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Address</b></TableCell>
-              <TableCell><b>District</b></TableCell>
-              <TableCell><b>State</b></TableCell>
-              <TableCell><b>Pincode</b></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>View Orders</b></TableCell>
+              <TableCell><b>Email</b></TableCell>
+              <TableCell><b>Mobile Number</b></TableCell>
+              <TableCell><b>Address</b></TableCell>
+              <TableCell><b>Customer Type</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Actions</b></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            
-              <TableRow>
+            {displayedCustomers.length > 0 ? displayedCustomers.map((item, index) => (
+              <TableRow key={index}>
+                <TableCell>{(currentPage - 1) * pageSize + index + 1}</TableCell>
+                <TableCell>{item.id}</TableCell>
+                <TableCell>{item.name}{customerCategory === 'Favourite' ? (
+                  <FavoriteIcon sx={{ color: 'red', fontSize: '15px' }} />
+                ) : customerCategory === 'VIP' ? (
+                  <WorkspacePremiumOutlinedIcon sx={{ color: 'gold', fontSize: '20px' }} />
+                ) : (
+                  ""
+                )}</TableCell>
+                <TableCell>{item.email}</TableCell>
+                <TableCell>{item.mobile_number}</TableCell>
+                <TableCell onClick={() => handleEditadressChange(item)}><u style={{ color: "blue" }}>View</u> </TableCell>
                 <TableCell>
-                  {/* <img
-                    src=''
-                    alt=''
-                    style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover' }}
-                  /> */}
+                  {item.is_vip ? "VIP" : item.is_favorite ? "Favourite" : "Normal"}
                 </TableCell>
-                <TableCell></TableCell>
                 <TableCell style={{ textAlign: 'center' }}>
-  John Doe 
-  {customerCategory === 'Favourite' ? (
-    <FavoriteIcon sx={{ color: 'red', fontSize: '15px' }} />
-  ) : customerCategory === 'VIP' ? (
-    <WorkspacePremiumOutlinedIcon sx={{ color: 'gold', fontSize: '20px' }} />
-  ) : (
-    ""
-  )}
-</TableCell>                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }} >
-                  df
-                </TableCell>
-
-                <TableCell>
-                  
-                </TableCell>
-                 {/* Added City */}
-                <TableCell></TableCell> {/* Added State */}
-                <TableCell></TableCell> {/* Added Pincode */}
-                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
-                  <IconButton color="info" onClick={()=>setOpenOrdersDialog(true)} >
-                    <VisibilityIcon /> {/* View Orders button */}
-                  </IconButton>
-                </TableCell>
-                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
-                  <IconButton color="primary" onClick={handleEditChange} >
+                  <IconButton color="primary" onClick={()=>handleEditChange(item)}>
                     <EditIcon />
                   </IconButton>
-                  <IconButton color="secondary" onClick={handleDelete}  >
-                    <DeleteIcon />
-                  </IconButton>
-                  <IconButton color="default" onClick={()=>setOpenNotificationDialog(true)} >
-                    <SendIcon />
+                  <IconButton color="secondary" onClick={()=>handleDelete(item)}>
+                    <DeleteIcon  />
                   </IconButton>
                 </TableCell>
               </TableRow>
-            
+            )) : (
+              <TableRow>
+                <TableCell colSpan={7} align="center">No Customers</TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
-
       {/* Pagination Controls */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
-        <Button
-          variant="contained"
-          onClick={handlePrevPage}
-          disabled={currentPage === 1}
-        >
+        <Button variant="contained" onClick={handlePrevPage} disabled={currentPage === 1}>
           Previous
         </Button>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
-          <Typography sx={{ mr: 2 }}>
-            {`Showing ${startCustomerIndex} to ${endCustomerIndex} of ${count}`}
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </Button>
-        </Box>
+        <Typography>{`Page ${currentPage} of ${totalPages}`}</Typography>
+        <Button variant="contained" onClick={handleNextPage} disabled={currentPage === totalPages}>
+          Next
+        </Button>
       </Box>
-
-      {/* Orders Dialog */}
-      <Dialog
-        open={openOrdersDialog}
-        onClose={() => setOpenOrdersDialog(false)}
-        fullWidth // Ensures the dialog takes up the full available width
-        maxWidth="lg" // You can use 'sm', 'md', 'lg', 'xl' based on your need
-      >
-        <DialogTitle>
-          {currentCustomer
-            ? `Orders for ${currentCustomer.name} (${orders.length} Total Orders)`
-            : `Orders (${orders.length} Total Orders)`
-          }
-
-
-
-        </DialogTitle>
-
-        <DialogContent>
-          
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell><b>Order ID</b></TableCell>
-                  <TableCell><b>Status</b></TableCell>
-                  <TableCell><b>Payment Method</b></TableCell>
-                  <TableCell><b>Total Price</b></TableCell>
-                  <TableCell><b>Order Time</b></TableCell>
-                  <TableCell><b>Products</b></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-              
-                  <TableRow >
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell>
-                      <ul>
-                       
-                          <li >
-                            
-                          </li>
-                        
-                      </ul>
-                    </TableCell>
-                  </TableRow>
-                
-              </TableBody>
-            </Table>
-          
-            <Typography>No orders found for this customer.</Typography>
-         
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenOrdersDialog(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
-
-
-
-
       {/* Delete Confirmation Dialog */}
       <Dialog open={openDeleteDialog} onClose={cancelDelete}>
         <DialogTitle>Confirm Delete</DialogTitle>
@@ -284,7 +368,7 @@ function ViewCustomers() {
           <Button onClick={cancelDelete} color="primary">
             Cancel
           </Button>
-          <Button  color="secondary">
+          <Button color="secondary" onClick={handleDeleteCustomer}>
             Delete
           </Button>
         </DialogActions>
@@ -294,22 +378,25 @@ function ViewCustomers() {
       <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
         <DialogTitle>Edit Customer</DialogTitle>
         <DialogContent>
-          {/* <TextField
+          <TextField
             margin="dense"
             name="name"
             label="Name"
             fullWidth
             variant="standard"
-            
+           value={customerdts.name}
+          onChange={handleInputChange}
            
-          /> */}
+          />
           <TextField
             margin="dense"
             name="email"
             label="Email"
             fullWidth
             variant="standard"
-           
+            value={customerdts.email}
+          onChange={handleInputChange}
+
           />
           <TextField
             margin="dense"
@@ -317,82 +404,198 @@ function ViewCustomers() {
             label="Mobile Number"
             fullWidth
             variant="standard"
-           
+            value={customerdts.mobile_number}
+            onChange={handleInputChange}
+
           />
-          <TextField
-            margin="dense"
-            name="address"
-            label="Address"
-            fullWidth
-            variant="standard"
-            
-          />
-          <TextField
-            margin="dense"
-            name="city"
-            label="City"
-            fullWidth
-            variant="standard"
-            
-          />
-          <TextField
-            margin="dense"
-            name="state"
-            label="State"
-            fullWidth
-            variant="standard"
-            
-          />
-          <TextField
-            margin="dense"
-            name="pincode"
-            label="Pincode"
-            fullWidth
-            variant="standard"
-            
-          />
-                          <FormControl variant="standard" fullWidth className='mt-3'>
-  <InputLabel id="demo-simple-select-label">status</InputLabel>
-  <Select
-    labelId="demo-simple-select-label"
-    value={customerCategory}
-    onChange={(e)=>setCustomerCategory(e.target.value)} 
-  >
-     <MenuItem value="Normal">Normal</MenuItem>
-     <MenuItem value="VIP">VIP</MenuItem>
-      <MenuItem value="Favourite">Favourite</MenuItem>
-      
-  </Select>
-</FormControl>
+
+         
+         
+          <FormControl variant="standard" fullWidth className='mt-3'>
+            <InputLabel id="demo-simple-select-label">Customer Type</InputLabel>
+            <Select
+              labelId="demo-simple-select-label"
+              value={customerCategory}
+            onChange={handleCategoryChange}
+            >
+              <MenuItem  value="Normal">Normal</MenuItem>
+              <MenuItem value="VIP">VIP</MenuItem>
+              <MenuItem value="Favourite">Favourite</MenuItem>
+
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={()=>setOpenEditDialog(false)} >Cancel</Button>
-          <Button >Save</Button>
+          <Button onClick={canceledit} >Cancel</Button>
+          <Button onClick={()=>handleEditdts(customerdts)} >Save</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Send Notification Dialog */}
-      <Dialog open={openNotificationDialog} onClose={() => setOpenNotificationDialog(false)}>
-        <DialogTitle>Send Notification</DialogTitle>
+      {/* edit address */}
+      <Dialog open={openadressDialog} onClose={() => setOpenadressDialog(false)} maxWidth="md">
+        <DialogTitle>Edit Address</DialogTitle>
         <DialogContent>
-          <TextField
-            margin="dense"
-            label="Message"
-            fullWidth
-            value={message}
-            variant="standard"
-            onClick={(e)=>setMessage(e.target.value)}
-          />
-          <Button >
-             Show Emoji Picker
-          </Button>
-           <EmojiPicker onEmojiClick={handleEmojiClick} />
+          <Box>
+            
+            {updatedAddresses.map((address, index) => (
+              <div key={index}>
+                <Typography variant="h6" sx={{"textAlign":"center","fontWeight":"10px"}}>{`Address ${index + 1}`}</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={4}>
+                    <TextField
+                      fullWidth
+                      label="Email"
+                      variant="outlined"
+                      value={address.email || ''}
+                      onChange={(e) => handleAddressChange(index, 'email', e.target.value)}
+                      sx={{ mb: 2 }}
+                    />
+                  </Grid>
+                  <Grid item xs={4} > <TextField
+                    fullWidth
+                    label="Mobile number"
+                    variant="outlined"
+                    value={address.mobile_number || ''}
+                    onChange={(e) => handleAddressChange(index, 'mobile_number', e.target.value)}
+                    sx={{ mb: 2 }}
+                  /></Grid>
+                  <Grid item xs={4} ><TextField
+                    fullWidth
+                    label="Name"
+                    variant="outlined"
+                    value={address.name || ''}
+                    onChange={(e) => handleAddressChange(index, 'name', e.target.value)}
+                    sx={{ mb: 2 }}
+                  /></Grid>
+                  <Grid item xs={12} > <TextField
+                    fullWidth
+                    label="Address"
+                    multiline
+                    rows={2}
+                    variant="outlined"
+                    value={address.address || ''}
+                    onChange={(e) => handleAddressChange(index, 'address', e.target.value)}
+                    sx={{ mb: 2 }}
+                  /></Grid>
+                  <Grid item xs={4} > <TextField
+                    fullWidth
+                    label="Block"
+                    variant="outlined"
+                    value={address.block || ''}
+                    onChange={(e) => handleAddressChange(index, 'block', e.target.value)}
+                    sx={{ mb: 2 }}
+                  /></Grid>
+                  <Grid item xs={4} ><TextField
+                    fullWidth
+                    label="District"
+                    variant="outlined"
+                    value={address.district || ''}
+                    onChange={(e) => handleAddressChange(index, 'district', e.target.value)}
+                    sx={{ mb: 2 }}
+                  /></Grid>
+                  <Grid item xs={4} ><TextField
+                    fullWidth
+                    label="Country"
+                    variant="outlined"
+                    value={address.country || ''}
+                    onChange={(e) => handleAddressChange(index, 'country', e.target.value)}
+                    sx={{ mb: 2 }}
+                  /></Grid>
+                  <Grid item xs={4} >
+                    <TextField
+                      fullWidth
+                      label="Post office"
+                      variant="outlined"
+                      value={address.post_office || ''}
+                      onChange={(e) => handleAddressChange(index, 'post_office', e.target.value)}
+                      sx={{ mb: 2 }}
+                    />
+                  </Grid>
+                  <Grid item xs={4} > <TextField
+                    fullWidth
+                    label="State"
+                    variant="outlined"
+                    value={address.state || ''}
+                    onChange={(e) => handleAddressChange(index, 'state', e.target.value)}
+                    sx={{ mb: 2 }}
+                  /></Grid>
+                  <Grid item xs={4} ><TextField
+                    fullWidth
+                    label="Pincode"
+                    variant="outlined"
+                    value={address.pincode || ''}
+                   
+                    onChange={(e) => handleAddressChange(index, 'pincode', e.target.value)}
+                    sx={{ mb: 2 }}
+                  /></Grid>
+                  <Grid item xs={3}>
+  <FormControl component="fieldset">
+    <FormLabel component="legend">Default Address</FormLabel>
+    <RadioGroup
+      row
+      value={address.is_default ? 'true' : 'false'}
+      onChange={(e) => handleAddressChange(index, 'is_default', e.target.value === 'true')}
+    >
+      <FormControlLabel value="true" control={<Radio />} label="Yes" />
+      <FormControlLabel value="false" control={<Radio />} label="No" />
+    </RadioGroup>
+  </FormControl>
+</Grid>
+
+                  <Grid item xs={3} ><FormControl component="fieldset">
+                    <FormLabel component="legend">Home Address</FormLabel>
+                    <RadioGroup
+                      row
+                      value={address.is_home === true ? 'true' : 'false'}
+                      onChange={(e) => handleAddressChange(index, 'is_home', e.target.value === 'true')}
+                    >
+                      <FormControlLabel value="true" control={<Radio />} label="Yes" />
+                      <FormControlLabel value="false" control={<Radio />} label="No" />
+                    </RadioGroup>
+                  </FormControl></Grid>
+                  <Grid item xs={3} ><FormControl component="fieldset">
+                    <FormLabel component="legend">Office Address</FormLabel>
+                    <RadioGroup
+                      row
+                      value={address.is_office === true ? 'true' : 'false'}
+                      onChange={(e) => handleAddressChange(index, 'is_office', e.target.value === 'true')}
+                    >
+                      <FormControlLabel value="true" control={<Radio />} label="Yes" />
+                      <FormControlLabel value="false" control={<Radio />} label="No" />
+                    </RadioGroup>
+                  </FormControl></Grid>
+                  <Grid item xs={3} > <FormControl component="fieldset">
+                    <FormLabel component="legend">Other Address</FormLabel>
+                    <RadioGroup
+                      row
+                      value={address.is_other === true ? 'true' : 'false'}
+                      onChange={(e) => handleAddressChange(index, 'is_other',  e.target.value === 'true')}
+                    >
+                      <FormControlLabel value="true" control={<Radio />} label="Yes" />
+                      <FormControlLabel value="false" control={<Radio />} label="No" />
+                    </RadioGroup>
+                  </FormControl></Grid>
+
+                </Grid>
+                <Box sx={{"display":"flex","justifyContent":"center"}}><Button variant="contained"
+            color="primary"   onClick={()=>handleEditAddress(selectedCustomer.mobile_number,address,address.id)}  >Save</Button></Box>
+                
+              </div>
+            ))}
+
+            
+          </Box>
+
+
         </DialogContent>
         <DialogActions>
-          <Button onClick={()=>setOpenNotificationDialog(false)} >Cancel</Button>
-          <Button >Send</Button>
+          <Button onClick={canceleditadress} >Cancel</Button>
+          {/* <Button onClick={()=>handleEditAddress(selectedCustomer.mobile_number)}  >Save</Button> */}
         </DialogActions>
       </Dialog>
+
+
+<ToastContainer/>
     </Box>
   );
 }

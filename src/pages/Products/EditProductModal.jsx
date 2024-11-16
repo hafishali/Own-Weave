@@ -5,10 +5,9 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import { editProduct, fetchCategories, fetchSubCategories, viewAllCategories } from '../../services/allApi'; 
 
-import { fetchCategories, fetchSubCategories } from '../../services/allApi'; // Ensure fetchSubCategories is correctly imported
-
-function EditProductModal({ open, onClose, product, onChange, onSubmit, categories: propCategories, // Pass categories as props to avoid redundant fetching
+function EditProductModal({ open, onClose, product, onChange,reqHeader, onSubmit, categories: propCategories, // Pass categories as props to avoid redundant fetching
 }) {
   const [subcategories, setSubcategories] = useState([]);
   const [imagePreview, setImagePreview] = useState(product.image || null);
@@ -19,9 +18,13 @@ function EditProductModal({ open, onClose, product, onChange, onSubmit, categori
   const [isWeightInStock, setIsWeightInStock] = useState(true); // Default to in stock
   const [isEditing, setIsEditing] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
-
-
+  const [isLoading, setIsLoading] = useState(false);  // State for loading spinner
+  const [error, setError] = useState(null);  // State for error handling
+  const [productData, setProductData] = useState(product);
+  const [allcategories, setAllcategories] = useState([])
   const [loading, setLoading] = useState(false);
+  const access_token = localStorage.getItem('access');
+  const [widthOptions, setWidthOptions] = useState([]); // State for available widths
 
   // Fetch subcategories whenever the category changes
 
@@ -31,9 +34,59 @@ function EditProductModal({ open, onClose, product, onChange, onSubmit, categori
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    onChange(name, value);
-  };
+    setProductData((prevData) => ({
+        ...prevData,
+        [name]: value,
+    }));
+};
 
+
+  const handleSave = async () => {
+    const reqHeader = {
+      'Authorization': `Bearer ${access_token}`,
+      // Do NOT set 'Content-Type' manually; let FormData handle it.
+    };
+  
+    setIsLoading(true);
+    setError(null);
+  
+    // Convert productData to FormData for multipart submission
+    const formData = new FormData();
+    Object.keys(productData).forEach(key => {
+      formData.append(key, productData[key]);
+    });
+  
+    try {
+      const response = await editProduct(productData.id, formData, reqHeader);
+      if (response.success) {
+        console.log('Product updated successfully');
+        onClose();
+      } else {
+        setError('Failed to update product. Please try again.');
+      }
+    } catch (error) {
+      setError('An error occurred. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const viewallCategories = async () => {
+    try {
+      const response = await viewAllCategories();
+      console.log(response);
+      if (response.status === 200) {
+        setAllcategories(response.data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
+  
+  useEffect(() => {
+    viewallCategories();
+  }, []);
+  
   const handleProductImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -101,273 +154,235 @@ function EditProductModal({ open, onClose, product, onChange, onSubmit, categori
     setIsEditing(true);
     setEditIndex(index);
   };
+  const handleCategoryChange = (event) => {
+    const selectedCategoryId = event.target.value;
+    const selectedCategory = allcategories.find(item => item.id === selectedCategoryId);
+
+    // Update `category` in `productData` and clear the width value
+    setProductData((prevProduct) => ({
+        ...prevProduct,
+        category: selectedCategoryId,
+        width: "" // Clear the width when category changes
+    }));
+
+    // Set available width options based on the selected category's sizes
+    if (selectedCategory && selectedCategory.sizes) {
+        const widths = selectedCategory.sizes.map(size => size.width);
+        setWidthOptions(widths); // Populate the width dropdown
+    } else {
+        setWidthOptions([]); // Reset if no sizes are available
+    }
+};
 
 
 
-
-
-  const handleSave = () => {
-    setLoading(true);
-    // Ensure weights are updated before submitting
-    onChange('weights', weights);
-    onChange('Available', product.Available); // Ensure this is correct
-    onSubmit(); // Trigger the parent submit action
-    setLoading(false);
-  };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Edit Product</DialogTitle>
-      <DialogContent>
-        <Grid container spacing={2}>
-          {/* Product Name */}
-          <Grid item xs={6}>
-            <TextField
-              margin="dense"
-              label="Product Name"
-              name="name"
-              fullWidth
-              variant="outlined"
-              value={product.name || ''}
-              onChange={handleInputChange}
-              required
-            />
-          </Grid>
-          {/* Category */}
-          <Grid item xs={6}>
-            <FormControl fullWidth variant="outlined" margin="dense" required>
-              <InputLabel>Category</InputLabel>
-              <Select
-                name="category"
-                value={product.category || ''}
-                onChange={handleInputChange}
-                label="Category"
-              >
-                {propCategories.map((category) => (
-                  <MenuItem key={category.id} value={category.id}>
-                    {category.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          {/* Subcategory */}
-          <Grid item xs={6}>
-            <FormControl
-              fullWidth
-              variant="outlined"
-              margin="dense"
-              required
-              disabled={!product.category || subcategories.length === 0}
-            >
-              <InputLabel>Subcategory</InputLabel>
-              <Select
-                name="sub_category"
-                value={product.sub_category || ''}
-                onChange={handleInputChange}
-                label="Subcategory"
-              >
-                {subcategories.map((subcat) => (
-                  <MenuItem key={subcat.id} value={subcat.id}>
-                    {subcat.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={6}>
-            <FormControl component="fieldset" margin="dense">
-              <FormLabel component="legend">Stock Status</FormLabel>
-              <RadioGroup
-                row
-                name="Available"
-                value={product.Available ? 'in_stock' : 'out_of_stock'} // Set value based on boolean
-                onChange={(e) => onChange('Available', e.target.value === 'in_stock')}
-              >
-                <FormControlLabel
-                  value="in_stock"
-                  control={<Radio />}
-                  label="In Stock"
-                />
-                <FormControlLabel
-                  value="out_of_stock"
-                  control={<Radio />}
-                  label="Out of Stock"
-                />
-              </RadioGroup>
-            </FormControl>
-          </Grid>
-
-          {/* Price */}
-          <Grid item xs={6}>
-            <TextField
-              margin="dense"
-              label="Price"
-              name="price"
-              fullWidth
-              variant="outlined"
-              type="number"
-              value={product.price || ''}
-              onChange={handleInputChange}
-              required
-            />
-          </Grid>
-          {/* Offer Price */}
-          <Grid item xs={6}>
-            <TextField
-              margin="dense"
-              label="Offer Price"
-              name="offer_price"
-              fullWidth
-              variant="outlined"
-              type="number"
-              value={product.offer_price || ''}
-              onChange={handleInputChange}
-            />
-          </Grid>
-          {/* Discount */}
-          <Grid item xs={6}>
-            <TextField
-              margin="dense"
-              label="Discount (%)"
-              name="discount"
-              fullWidth
-              variant="outlined"
-              type="number"
-              value={product.discount || ''}
-              onChange={handleInputChange}
-            />
-          </Grid>
-          {/* Quantity */}
-
-          {/* Weight Measurement */}
-          <Grid item xs={6}>
-            <TextField
-              margin="dense"
-              label="Length"
-              name="Length"
-              fullWidth
-              variant="outlined"
-              required
-            />
-          </Grid>
-          {/* Is Popular Product */}
-          <Grid item xs={3}>
-            <FormControl component="fieldset" margin="dense">
-              <FormLabel component="legend">Is Popular</FormLabel>
-              <RadioGroup
-                row
-                name="is_popular_product"
-                value={product.is_popular_product ? 'yes' : 'no'}
-                onChange={handleInputChange}
-              >
-                <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-                <FormControlLabel value="no" control={<Radio />} label="No" />
-              </RadioGroup>
-            </FormControl>
-          </Grid>
-          {/* Is Offer Product */}
-          <Grid item xs={3}>
-            <FormControl component="fieldset" margin="dense">
-              <FormLabel component="legend">Is Offer Product</FormLabel>
-              <RadioGroup
-                row
-                name="is_offer_product"
-                value={product.is_offer_product ? 'yes' : 'no'}
-                onChange={handleInputChange} >
-                <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-                <FormControlLabel value="no" control={<Radio />} label="No" />
-              </RadioGroup>
-            </FormControl>
-          </Grid>
-          {/* Product Description */}
-          <Grid item xs={12}>
-            <TextField
-              margin="dense"
-              label="Product Description"
-              name="description"
-              fullWidth
-              variant="outlined"
-              multiline
-              rows={4}
-              value={product.description || ''}
-              onChange={handleInputChange} />
-          </Grid>
-          {/* Product Image Upload */}
-          <Grid item xs={12}>
-            <Button variant="contained" component="label" fullWidth>
-              Upload Product Image
-              <input type="file" hidden onChange={handleProductImageUpload} />
-            </Button>
-          </Grid>
-          {/* Image Preview */}
-          {imagePreview && (
-            <Grid item xs={12}>
-              <Box mt={2} textAlign="center">
-                <img
-                  src={imagePreview}
-                  alt="Selected Product"
-                  style={{ maxHeight: 200, objectFit: 'contain' }} />
-              </Box>
-            </Grid>
-          )}
-          {/* Add Weights and Prices */}
-          <Grid item xs={12}>
-  
-</Grid>
-
-{/* Display Weights */}
-{/* <Grid item xs={12}>
-  {weights.map((w, index) => (
-    <Box
-      key={index}
-      mt={2}
-      sx={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        border: '1px solid #ccc',
-        p: 2,
-        borderRadius: 1,
-      }}
-    >
-      <Typography>
-        Weight: {w.weight} - Price: {w.price} - Quantity: {w.quantity} - In Stock: {w.is_in_stock ? "Yes" : "No"}
-      </Typography>
-      <Box>
-        <IconButton
-          aria-label="edit"
-          onClick={() => handleEditWeight(index)}
-        >
-          <EditIcon />
-        </IconButton>
-        <IconButton
-          aria-label="delete"
-          onClick={() => handleRemoveWeight(index)}
-        >
-          <DeleteIcon />
-        </IconButton>
-      </Box>
-    </Box>
-  ))}
-</Grid> */}
-
-
+    <DialogTitle>Edit Product</DialogTitle>
+    <DialogContent>
+      <Grid container spacing={2}>
+        {/* Product Name */}
+        <Grid item xs={6}>
+          <TextField
+            margin="dense"
+            label="Product Name"
+            name="name"
+            fullWidth
+            variant="outlined"
+            value={productData?.name || ''}
+            onChange={handleInputChange}
+            required
+          />
         </Grid>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="primary" variant="outlined">
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSave}
-          color="primary"
-          variant="contained"
-          disabled={loading}>
-          {loading ? <CircularProgress size={24} /> : 'Save'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+  
+        {/* Category */}
+        <Grid item xs={6}>
+    <TextField
+        fullWidth
+        label="Select category"
+        variant="outlined"
+        select
+        required
+        onChange={handleCategoryChange}
+        value={productData.category} // Use productData here
+    >
+        {allcategories.length > 0 ? (
+            allcategories.map((item) => (
+                <MenuItem key={item.id} value={item.id}>
+                    {item.name}
+                </MenuItem>
+            ))
+        ) : (
+            <MenuItem disabled>No categories</MenuItem>
+        )}
+    </TextField>
+</Grid>
+  
+        {/* Subcategory */}
+        {/* <Grid item xs={6}>
+          <FormControl fullWidth variant="outlined" margin="dense" required>
+            <InputLabel>Subcategory</InputLabel>
+            <Select
+              name="sub_category"
+              value={product.sub_category || ''}
+              onChange={handleInputChange}
+              label="Subcategory"
+            >
+              {subcategories.map((subcat) => (
+                <MenuItem key={subcat.id} value={subcat.id}>
+                  {subcat.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+   */}
+        {/* Price */}
+        <Grid item xs={6}>
+          <TextField
+            margin="dense"
+            label="Price"
+            name="price"
+            fullWidth
+            variant="outlined"
+            type="number"
+            value={product.price || ''}
+            onChange={handleInputChange}
+            required
+          />
+        </Grid>
+  
+        {/* Offer Price */}
+        <Grid item xs={6}>
+          <TextField
+            margin="dense"
+            label="Offer Price"
+            name="offer_price"
+            fullWidth
+            variant="outlined"
+            type="number"
+            value={product.offer_price || ''}
+            onChange={handleInputChange}
+          />
+        </Grid>
+  
+        {/* Discount */}
+        <Grid item xs={6}>
+          <TextField
+            margin="dense"
+            label="Discount (%)"
+            name="discount"
+            fullWidth
+            variant="outlined"
+            type="number"
+            value={product.discount || ''}
+            onChange={handleInputChange}
+          />
+        </Grid>
+  
+        {/* Length */}
+        <Grid item xs={6}>
+          <TextField
+            margin="dense"
+            label="Length"
+            name="Length"
+            fullWidth
+            variant="outlined"
+            value={product.Length || ''}
+            onChange={handleInputChange}
+            required
+          />
+        </Grid>
+        <Grid item xs={6}>
+    <TextField
+        fullWidth
+        label="Total Width"
+        variant="outlined"
+        select
+        name="width" // Set name to "width"
+        value={productData.width} // Use productData here
+        onChange={handleInputChange} // Bind to handleInputChange
+    >
+        {widthOptions.length > 0 ? (
+            widthOptions.map((width, index) => (
+                <MenuItem key={index} value={width}>
+                    {width}
+                </MenuItem>
+            ))
+        ) : (
+            <MenuItem disabled>No widths available</MenuItem>
+        )}
+    </TextField>
+</Grid>
+        {/* Is Popular Product */}
+        <Grid item xs={6}>
+          <FormControl component="fieldset" margin="dense">
+            <FormLabel component="legend">Is Popular</FormLabel>
+            <RadioGroup
+              row
+              name="is_popular_product"
+              value={product.is_popular_product ? 'yes' : 'no'}
+              onChange={handleInputChange}
+            >
+              <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+              <FormControlLabel value="no" control={<Radio />} label="No" />
+            </RadioGroup>
+          </FormControl>
+        </Grid>
+  
+        {/* Product Description */}
+        <Grid item xs={12}>
+          <TextField
+            margin="dense"
+            label="Product Description"
+            name="description"
+            fullWidth
+            variant="outlined"
+            multiline
+            rows={4}
+            value={product.description || ''}
+            onChange={handleInputChange}
+          />
+        </Grid>
+  
+        {/* Product Image Upload */}
+        <Grid item xs={12}>
+          <Button variant="contained" component="label" fullWidth>
+            Upload Product Image
+            <input type="file" hidden onChange={handleProductImageUpload} />
+          </Button>
+        </Grid>
+  
+        {/* Image Preview */}
+        {imagePreview && (
+          <Grid item xs={12}>
+            <Box mt={2} textAlign="center">
+              <img
+                src={imagePreview}
+                alt="Selected Product"
+                style={{ maxHeight: 200, objectFit: 'contain' }}
+              />
+            </Box>
+          </Grid>
+        )}
+      </Grid>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={onClose} color="primary" variant="outlined">
+        Cancel
+      </Button>
+      <Button
+        onClick={handleSave}
+        color="primary"
+        variant="contained"
+        disabled={loading}
+      >
+        {loading ? <CircularProgress size={24} /> : 'Save'}
+      </Button>
+    </DialogActions>
+  </Dialog>
+  
   );
 }
 

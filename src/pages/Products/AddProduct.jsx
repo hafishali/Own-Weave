@@ -2,20 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Box, TextField, Button, Typography, MenuItem, Grid, CircularProgress, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, IconButton, Switch, Autocomplete,InputLabel,Select } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { toast, ToastContainer } from 'react-toastify';
+import { addProduct, getAlloffers, viewAllCategories } from '../../services/allApi';
 
 function AddProduct() {
 
-  const [category, setCategory] = useState('');
-  const [subcategory, setSubcategory] = useState(''); 
-  const [categories, setCategories] = useState([]);
-  const [subcategories, setSubcategories] = useState([]);
-  const [actualPrice, setActualPrice] = useState('');
-
- 
-  const [description, setDescription] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [productImage, setProductImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isPopularProduct, setIsPopularProduct] = useState('no');  // default to "no"
   const [isOfferProduct, setIsOfferProduct] = useState('no');      // default to "no"
@@ -25,33 +15,48 @@ function AddProduct() {
   const [allProducts, setAllProducts] = useState([]);  // Store all products
   const [productSuggestions, setProductSuggestions] = useState([]);  // Store filtered suggestions
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [allcategories, setAllcategories] = useState([])
+  const [widthOptions, setWidthOptions] = useState([]); // State for available widths
+  const [alloffers, setAlloffers] = useState([])
+
 
   const [product,setProduct]=useState({
     name:"",
     product_code:"",
-    color:"",
-    category_name:"",
-    images:[],
-    price_per_meter:"",
-    discount_price:"",
-    offer_price_per_meter:"",
-    user_price_per_meter:"",
-    stock_length:"",
+    category:"",
+    offer_id:"",
+    uploaded_images:[],
+    sub_category:"",
     width:"",
+    price_per_meter:"",
+    offer_price_per_meter:"",
+    stock_length:"",
     gsm:"",
     is_popular:"",
-    is_offer_product:"",
+    is_offer_product:true,
     description:"",
-    in_Stock:true,
     fabric:"",
     pattern:"",
     fabric_composition:"",
     fit:"",
     style:"",
-    category:""
+    color:""
   })
   
-
+  const viewallOffers = async () => {
+    try {
+      const response = await getAlloffers()
+      console.log(response)
+      if (response.status === 200) {
+        setAlloffers(response.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  useEffect(() => {
+    viewallOffers()
+  }, [])
   const handleMultipleImageUpload = (event) => {
     const files = Array.from(event.target.files);
     const selectedImages = files.map(file => ({
@@ -61,7 +66,7 @@ function AddProduct() {
 
     setProduct((prevState) => ({
       ...prevState,
-      images: [...prevState.images, ...selectedImages.map(img => img.file)]
+      uploaded_images: [...prevState.uploaded_images, ...selectedImages.map(img => img.file)]
     }));
 
     setMultipleImagesPreview((prevPreview) => [
@@ -70,26 +75,137 @@ function AddProduct() {
     ]);
   };
 
-  const handleDeleteMultipleImage = (indexToDelete) => {
-    // Remove the image from product.images and multipleImagesPreview
+  const handleDeleteMultipleImage = (index) => {
+    setMultipleImagesPreview((prevPreview) =>
+      prevPreview.filter((_, i) => i !== index)
+    );
+
     setProduct((prevState) => ({
       ...prevState,
-      images: prevState.images.filter((_, index) => index !== indexToDelete)
+      uploaded_images: prevState.uploaded_images.filter((_, i) => i !== index)
+    }));
+  };
+
+  const viewallCategories = async () => {
+    try {
+      const response = await viewAllCategories();
+      console.log(response);
+      if (response.status === 200) {
+        setAllcategories(response.data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
+  
+  useEffect(() => {
+    viewallCategories();
+  }, []);
+  
+  const handleCategoryChange = (event) => {
+    const selectedCategoryId = event.target.value;
+    const selectedCategory = allcategories.find(item => item.id === selectedCategoryId);
+
+    // Update product category and reset width if a new category is selected
+    setProduct(prevProduct => ({
+        ...prevProduct,
+        category: selectedCategoryId,
+        width: "" // Reset width when category changes
     }));
 
-    setMultipleImagesPreview((prevPreview) =>
-      prevPreview.filter((_, index) => index !== indexToDelete)
-    );
+    // Set available width options based on the selected category's sizes
+    if (selectedCategory && selectedCategory.sizes) {
+        const widths = selectedCategory.sizes.map(size => size.width);
+        setWidthOptions(widths); // Populate the width dropdown
+    } else {
+        setWidthOptions([]); // Reset if no sizes are available
+    }
+};
+const handleAddProduct = async () => {
+  const {
+    name, product_code, offer_id, category, uploaded_images, sub_category, width,
+    price_per_meter, offer_price_per_meter, stock_length, gsm, is_popular,
+    is_offer_product, description, fabric, pattern, fabric_composition, fit,
+    style, color
+  } = product;
+
+  // Validate required fields
+  if (!name || !product_code || !category) {
+    toast.error("All fields are mandatory. Please fill out the form completely.");
+    return;
+  }
+
+  const access_token = localStorage.getItem('access');
+  const reqHeader = {
+    'Authorization': `Bearer ${access_token}`,
+    'Content-Type': 'multipart/form-data'
   };
 
+  try {
+    console.log("Validation passed. Preparing to send data...");
 
+    // Prepare form data
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("product_code", product_code);
+    formData.append("category", category);
+    formData.append("offer_id", offer_id); // Add selected offer ID here
 
-  const handleRadioChange = (event, field) => {
-    setProduct({
-      ...product,
-      [field]: event.target.value === 'yes' ? true : false
+    uploaded_images.forEach((file, index) => {
+      formData.append(`uploaded_images[${index}]`, file);
     });
-  };
+
+    formData.append("sub_category", sub_category);
+    formData.append("width", width);
+    formData.append("price_per_meter", price_per_meter);
+    formData.append("offer_price_per_meter", offer_price_per_meter);
+    formData.append("stock_length", stock_length);
+    formData.append("gsm", gsm);
+    formData.append("is_popular", is_popular);
+    formData.append("is_offer_product", is_offer_product);
+    formData.append("description", description);
+    formData.append("fabric", fabric);
+    formData.append("pattern", pattern);
+    formData.append("fabric_composition", fabric_composition);
+    formData.append("fit", fit);
+    formData.append("style", style);
+    formData.append("color", color);
+
+    const response = await addProduct(formData, reqHeader);
+    console.log('Response:', response);
+
+    if (response.status === 201) {
+      toast.success("Product added successfully");
+      const newProduct = response.data;
+      setAllProducts((prevProducts) => [...prevProducts, newProduct]);
+
+      // Reset the form
+      setProduct({
+        name: "", product_code: "", category: "", sub_category: "",
+        uploaded_images: [], width: "", offer: "", price_per_meter: "",
+        offer_price_per_meter: "", stock_length: "", gsm: "",
+        is_popular: "", is_offer_product: true, description: "",
+        fabric: "", pattern: "", fabric_composition: "", fit: "",
+        style: "", color: ""
+      });
+      setMultipleImagesPreview([]);
+    }
+  } catch (error) {
+    console.error("Error while adding product:", error);
+    toast.error("Something went wrong while adding the product.");
+  }
+};
+
+
+const handleRadioChange = (event, fieldName) => {
+  const value = event.target.value === 'yes';
+  setProduct(prevProduct => ({
+      ...prevProduct,
+      [fieldName === 'isPopular' ? 'is_popular' : 'is_offer_product']: value
+  }));
+};
+
 
 
   return (
@@ -144,30 +260,52 @@ function AddProduct() {
            />
         </Grid>
         <Grid item xs={3}>
-        <TextField
-            select
-            fullWidth
-            label="Category"
-            variant="outlined"
-            value={product.category_name}
-            onChange={(e) => setProduct({ ...product, category_name: e.target.value })}
-          >
-
-            <MenuItem >
-
-            </MenuItem>
-
-          </TextField>
+            <TextField
+                fullWidth
+                label="Select category"
+                variant="outlined"
+                select
+                required
+                onChange={handleCategoryChange}
+                value={product.category}
+            >
+                {allcategories.length > 0 ? (
+                    allcategories.map((item) => (
+                        <MenuItem key={item.id} value={item.id}>
+                            {item.name}
+                        </MenuItem>
+                    ))
+                ) : (
+                    <MenuItem disabled>No categories</MenuItem>
+                )}
+            </TextField>
         </Grid>
 
 
-        {/* <Grid item xs={6}>
-          <Button variant="contained" component="label">
-            Upload Main Product Image
-            <input type="file" hidden onChange={handleProductImageUpload} />
-          </Button>
-        </Grid> */}
-      <Grid container spacing={2}>
+        <Grid item xs={4}>
+  <FormControl fullWidth>
+    <InputLabel>Select Offer</InputLabel>
+    <Select
+      label="Select offer"
+      required
+      onChange={(e) => setProduct({ ...product, offer_id: e.target.value })}
+      value={product.offer_id || ''} // Set default to empty string if offer is null
+    >
+      {alloffers && alloffers.length > 0 ? (
+        alloffers.map((item) => (
+          <MenuItem key={item.id} value={item.id}>
+            {item.name}
+          </MenuItem>
+        ))
+      ) : (
+        <MenuItem disabled>No offers</MenuItem>
+      )}
+    </Select>
+  </FormControl>
+</Grid>
+
+        
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <Button variant="contained" component="label">
           Upload Multiple Images
@@ -202,7 +340,7 @@ function AddProduct() {
         <Grid item xs={3}>
           <TextField
             fullWidth
-            label="wholesale Price per meter"
+            label="price per meterr"
             variant="outlined"
             type="number"
             value={product.price_per_meter}
@@ -221,14 +359,14 @@ function AddProduct() {
         <Grid item xs={3}>
           <TextField
             fullWidth
-            label="User price"
+            label="stock length"
             variant="outlined"
             type="number"
-            value={product.user_price_per_meter}
-            onChange={(e) => setProduct({ ...product, user_price_per_meter: e.target.value })} 
+            value={product.stock_length}
+            onChange={(e) => setProduct({ ...product, stock_length: e.target.value })} 
           />
         </Grid>
-        <Grid item xs={3}>
+        {/* <Grid item xs={3}>
           <TextField
             fullWidth
             label="Discounted Price (user)"
@@ -237,8 +375,8 @@ function AddProduct() {
             value={product.discount_price}
             onChange={(e) => setProduct({ ...product, discount_price: e.target.value })} 
           />
-        </Grid>
-        <Grid item xs={4}>
+        </Grid> */}
+        {/* <Grid item xs={4}>
           <TextField
             fullWidth
             label="Total Length"
@@ -247,17 +385,28 @@ function AddProduct() {
             value={product.stock_length}
             onChange={(e) => setProduct({ ...product, stock_length: e.target.value })} 
           />
+        </Grid> */}
+                <Grid item xs={4}>
+            <TextField
+                fullWidth
+                label="Total Width"
+                variant="outlined"
+                select // Change to select to show dropdown options
+                value={product.width}
+                onChange={(e) => setProduct({ ...product, width: e.target.value })}
+            >
+                {widthOptions.length > 0 ? (
+                    widthOptions.map((width, index) => (
+                        <MenuItem key={index} value={width}>
+                            {width}
+                        </MenuItem>
+                    ))
+                ) : (
+                    <MenuItem disabled>No widths available</MenuItem>
+                )}
+            </TextField>
         </Grid>
-        <Grid item xs={4}>
-          <TextField
-            fullWidth
-            label="Total Width"
-            variant="outlined"
-            type="number"
-            value={product.width}
-            onChange={(e) => setProduct({ ...product, width: e.target.value })} 
-          />
-        </Grid>
+
         <Grid item xs={4}>
           <TextField
             fullWidth
@@ -270,32 +419,32 @@ function AddProduct() {
         </Grid>
 
         <Grid item xs={4}>
-        <FormControl component="fieldset">
-          <FormLabel component="legend">Is Popular</FormLabel>
-          <RadioGroup
-            row
-            value={product.is_popular ? 'yes' : 'no'}
-            onChange={(e) => handleRadioChange(e, 'isPopular')}
-          >
-            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-            <FormControlLabel value="no" control={<Radio />} label="No" />
-          </RadioGroup>
-        </FormControl>
-      </Grid>
+            <FormControl component="fieldset">
+                <FormLabel component="legend">Is Popular</FormLabel>
+                <RadioGroup
+                    row
+                    value={product.is_popular ? 'yes' : 'no'}
+                    onChange={(e) => handleRadioChange(e, 'isPopular')}
+                >
+                    <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+                    <FormControlLabel value="no" control={<Radio />} label="No" />
+                </RadioGroup>
+            </FormControl>
+        </Grid>
 
-      <Grid item xs={4}>
-        <FormControl component="fieldset">
-          <FormLabel component="legend">Is Offer Product</FormLabel>
-          <RadioGroup
-            row
-            value={product.is_offer_product ? 'yes' : 'no'}
-            onChange={(e) => handleRadioChange(e, 'isOfferProduct')}
-          >
-            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-            <FormControlLabel value="no" control={<Radio />} label="No" />
-          </RadioGroup>
-        </FormControl>
-      </Grid>
+        <Grid item xs={4}>
+            <FormControl component="fieldset">
+                <FormLabel component="legend">Is Offer Product</FormLabel>
+                <RadioGroup
+                    row
+                    value={product.is_offer_product ? 'yes' : 'no'}
+                    onChange={(e) => handleRadioChange(e, 'isOfferProduct')}
+                >
+                    <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+                    <FormControlLabel value="no" control={<Radio />} label="No" />
+                </RadioGroup>
+            </FormControl>
+        </Grid>
         <Grid item xs={12}>
           <TextField
             fullWidth
@@ -436,7 +585,7 @@ function AddProduct() {
           <Button
             variant="contained"
             color="primary"
-
+            onClick={handleAddProduct}
             disabled={loading}
           >
             {loading ? <CircularProgress size={24} /> : 'Submit Product'}

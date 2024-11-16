@@ -16,8 +16,11 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField,Grid,MenuItem,Select,FormControl,InputLabel
+  TextField, Grid, MenuItem, Select, FormControl, InputLabel
+
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import DoneIcon from '@mui/icons-material/Done';
 import CancelIcon from '@mui/icons-material/Cancel';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -27,83 +30,191 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import CloseIcon from '@mui/icons-material/Close';
-import dayjs from 'dayjs'; 
+import dayjs from 'dayjs';
+import { editOrder, ViewallOrder } from '../../services/allApi';
+import { Label } from 'recharts';
+import { toast, ToastContainer } from 'react-toastify';
 
 
 
 const ViewOrders = () => {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [openCustomer,setOpenCustomer]=useState(false)
+  const [openCustomer, setOpenCustomer] = useState(false)
   const [open, setOpen] = useState(false);
-  const [trackmodal,setTrackmodal]=useState(false)
-  const [addOrderModal,setAddOrderModal]=useState(false)
+  const [trackmodal, setTrackmodal] = useState(false)
+  const [addOrderModal, setAddOrderModal] = useState(false)
+  const [addressModal, setAddressModal] = useState(false)
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null); // State for the order to delete
-  const [status, setStatus] = useState('');
-
+  const [orderStatuses, setOrderStatuses] = useState({}); // Object to hold statuses of individual orders
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [updatedCustomer, setUpdatedCustomer] = useState({
+    payment_status: "",
+    status: "",
+    Track_id: ""
+  })
+  const [isEnabled, setIsEnabled] = useState(false)
   // State to manage date pickers
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
-
  
 
 
+  // const downloadPDF = () => {
+  //   const doc = new jsPDF();
+  //   doc.text('Orders Report', 14, 16);
 
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-    doc.text('Orders Report', 14, 16);
+  //   const columns = ['Order ID', 'Customer', 'Date', 'Time', 'Payment Method', 'Status'];
+  //   const rows = ['test']
+  //   doc.autoTable({
+  //     head: [columns],
+  //     body: rows,
+  //   });
 
-    const columns = ['Order ID', 'Customer', 'Date', 'Time', 'Payment Method', 'Status'];
-    const rows = ['test']
-    doc.autoTable({
-      head: [columns],
-      body: rows,
-    });
-
-    doc.save('orders_report.pdf');
-  };
+  //   doc.save('orders_report.pdf');
+  // };
   const downloadExcel = () => {
     const worksheetData = [
       ['Order ID', 'Customer', 'Date', 'Time', 'Payment Method', 'Status'],
       ['1234', 'John Doe', '2024-10-30', '10:00 AM', 'Credit Card', 'Completed'],
       // Add more rows here
     ];
-  
+
     // Create a new workbook and add the worksheet data
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders Report');
-  
+
     // Trigger download
     XLSX.writeFile(workbook, 'orders_report.xlsx');
   };
+  const handleGetallorders = async () => {
+    try {
+      const response = await ViewallOrder()
+      if (response.status === 200) {
+        setOrders(response.data);
+        setFilteredOrders(response.data);
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  useEffect(() => {
+    handleGetallorders()
+  }, [])
+  console.log(orders)
 
- 
+  const handleopenorder = (item) => {
+    setSelectedOrder(item)
+    setOpen(true)
+  }
 
   const handleClose = () => {
     setOpen(false);
     setSelectedOrder(null);
   };
 
-  // const handleFilterOrders = () => {
-  //   const formattedFromDate = fromDate ? dayjs(fromDate).format('YYYY-MM-DD') : null;
-  //   const formattedToDate = toDate ? dayjs(toDate).format('YYYY-MM-DD') : null;
 
-  //   loadOrders(formattedFromDate, formattedToDate); // Filter orders with selected dates
-  // };
 
- 
+
 
   const openConfirmDialog = () => {
-    setConfirmDialogOpen(true); 
+    setConfirmDialogOpen(true);
   };
 
  
+
+
+
+  const handleCustomerOpen = (item) => {
+    setOpenCustomer(true)
+    setSelectedOrder(item)
+
+  }
+  const handleaddressOpen = (item) => {
+    setSelectedOrder(item)
+    setAddressModal(true)
+  }
+  const handleEdit = (order) => {
+    setTrackmodal(true)
+    setSelectedOrder(order)
+    setUpdatedCustomer({
+      payment_status: order.payment_status || "", // Initialize with existing values
+      status: order.status || "",  // Existing status value
+      Track_id: order.Track_id || "",
+
+    });
+    if (order?.payment_option === 'Razorpay') {
+      setIsEnabled(true);
+    } else {
+      setIsEnabled(false); // Reset to default if not Razorpay
+    }
+
+  }
+  const handleCloseEdit = () => {
+    setTrackmodal(false)
+    setUpdatedCustomer({
+      payment_status: "",
+      status: "",
+      Track_id: ""
+    })
+    setIsEnabled(false)
+  }
   const handleStatusChange = (event) => {
-    setStatus(event.target.value);
+    setUpdatedCustomer(prevState => ({
+      ...prevState,
+      status: event.target.value // Update the status in the updatedCustomer state
+    }));
+  };
+  const handlePaymentStatusChange = (event) => {
+    setUpdatedCustomer(prevState => ({
+      ...prevState,
+      payment_status: event.target.value // Update the status in the updatedCustomer state
+    }));
   };
 
+  const handleEditorders = async (id) => {
+    console.log(id)
+    console.log(updatedCustomer)
+    try {
+      const response = await editOrder(id, updatedCustomer)
+      if (response.status === 200) {
+        toast.success("order has been edited successfully")
+        handleCloseEdit()
+        handleGetallorders()
+      }
+    } catch (error) {
+      console.log(error)
+      toast.error("something went wrong at editing")
+
+    }
+    finally {
+      setUpdatedCustomer({
+        payment_status: "",
+        status: "",
+        Track_id: ""
+      })
+
+    }
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Completed':
+        return 'green';
+      case 'pending':
+        return 'orange';
+      case 'Accept':
+        return 'blue';
+      case 'Reject':
+        return 'red';
+      case 'Return':
+        return 'blue';
+      default:
+        return 'black';
+    }
+  };
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -116,38 +227,30 @@ const ViewOrders = () => {
       </Box>
 
       {/* Date filters */}
-      <Box sx={{display:'flex',justifyContent:'space-between'}}>
-      <Box sx={{ display: 'flex', mb: 2, gap: 2 }}>
-      <Typography gutterBottom>
-         From
-        </Typography>
-        <input
-          type="date"
-          value={fromDate}
-          
-          style={{ padding: '10px', fontSize: '16px' }}
-        />
-        <Typography gutterBottom>
-        To
-        </Typography>
-        <input
-          type="date"
-          value={toDate}
-         
-          style={{ padding: '10px', fontSize: '16px' }}
-        />
-        <Button variant="contained" color="secondary" >
-          Filter Orders
-        </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', mb: 2, gap: 2 }}>
+          {/* <FormControl fullWidth>
+          <InputLabel id="status-select-label">Status</InputLabel>
+          <Select
+            labelId="status-select-label"
+            label="Choose Status"
+            value={status}
+            onChange={handleStatusChange}
+          >
+            <MenuItem value="All">All</MenuItem>
+            <MenuItem value="Accept">Accepted</MenuItem>
+            <MenuItem value="Reject">Rejected</MenuItem>
+            <MenuItem value="pending">Pending</MenuItem>
+            <MenuItem value="Return">Returned</MenuItem>
+            <MenuItem value="Completed">Completed</MenuItem>
+          </Select>
+        </FormControl> */}
+
+        </Box>
+        
+
       </Box>
-      <Box>
-      <Button variant="contained" sx={{marginTop:'10px'}} color="success" onClick={()=>setAddOrderModal(true)} >
-          Add order
-        </Button>
-      </Box>
-      
-      </Box>
-      
+
 
       <TableContainer component={Paper}>
         <Table>
@@ -157,58 +260,81 @@ const ViewOrders = () => {
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Customer</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Date</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Time</b></TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Shipping Address</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Payment Method</b></TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Payment Status</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Track id</b></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Status</b></TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b> Order Status</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Actions</b></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-           
-              <TableRow >
-                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }} sx={{color:"blue",cursor:"pointer"}} onClick={()=>setOpen(true)} ><u>586555</u></TableCell>
-                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }} sx={{color:"blue",cursor:"pointer"}} onClick={()=>setOpenCustomer(true)}> <u>name</u> </TableCell>
-                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}></TableCell>
-                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}></TableCell>
-                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}></TableCell>
-                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}  sx={{color:"blue",cursor:"pointer"}} onClick={()=>setTrackmodal(true)} > <u>Set TrackId </u></TableCell>
+
+            {filteredOrders && filteredOrders.length > 0 ? filteredOrders.map((item, index) => (
+              <TableRow key={index}>
+                {/* Order ID Column */}
+                <TableCell
+                  style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
+                  sx={{ color: "blue", cursor: "pointer" }}
+                  onClick={() => handleopenorder(item)}
+                >
+                  <u>{item.id}</u>
+                </TableCell>
+
+                {/* Customer Name Column */}
+                <TableCell
+                  style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
+                  sx={{ color: "blue", cursor: "pointer" }}
+                  onClick={() => handleCustomerOpen(item)}
+                >
+                  <u>{item.user?.name}</u>
+                </TableCell>
+
+                {/* Additional Empty Columns */}
+                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item.created_at.split("T")[0]}</TableCell>
+                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item.created_at.split("T")[1].split(".")[0]}</TableCell>
+                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center', color: "blue", cursor: "pointer" }} onClick={() => handleaddressOpen(item)}><u>View</u></TableCell>
+                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item.payment_option}</TableCell>
+                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item.payment_status}</TableCell>
+
+
+                {/* Track ID Column */}
+                <TableCell
+                  style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
+                  sx={{ color: "blue", cursor: "pointer" }}
+
+                >
+                  {item.Track_id}
+                </TableCell>
+
+
                 <TableCell style={{ textAlign: 'center' }}>
-                <FormControl fullWidth>
-  <InputLabel id="demo-simple-select-label">status</InputLabel>
-  <Select
-    labelId="demo-simple-select-label"
-    label={status===''?'choose status':status}
-    value={status}
-    onChange={handleStatusChange}
-    
-  >
-     <MenuItem value="Accept">Accept</MenuItem>
-        <MenuItem value="Reject">Reject</MenuItem>
-        <MenuItem value="Pending">Pending</MenuItem>
-        <MenuItem value="Return">Return</MenuItem>
-        <MenuItem value="Completed">Completed</MenuItem>
-  </Select>
-</FormControl>
-                  </TableCell>
-                <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
-                {/* <DoneIcon sx={{color:'green'}}/>
-                <CancelIcon sx={{color:'red'}} className='ms-2' /> */}
-                {/* <Button variant='success'sx={{backgroundColor:"green"}}  > accept</Button>
-               <Button variant='danger'sx={{backgroundColor:"red",marginLeft:"5px"}}  >
-            Cancel
-          </Button> */}
-                {/* <RemoveRedEyeIcon sx={{color:'blue'}} className='ms-2'/> */}
-                {status==='Accept'&&<Button variant='contained'sx={{backgroundColor:"red",marginLeft:"5px"}}  >
-            cancel order
-          </Button>}
-          {status==='Return'&&<Button variant='contained'sx={{backgroundColor:"green",marginLeft:"5px"}}  >
-            View returns
-          </Button>}
-                  
-                 
+                  <Button style={{ color: getStatusColor(item.status) }}>{item.status}</Button>
+
+                </TableCell>
+
+
+                {/* Action Buttons Based on Status */}
+                <TableCell><IconButton aria-label="Edit" onClick={() => handleEdit(item)}>
+                  <EditIcon />
+                </IconButton>
+
+                  {/* <IconButton aria-label="Delete">
+              <DeleteIcon />
+            </IconButton> */}
                 </TableCell>
               </TableRow>
-           
+            )) : (
+              // Fallback Message when there are no orders
+              <TableRow>
+                <TableCell colSpan={8} style={{ textAlign: 'center' }}>
+                  No Orders Available
+                </TableCell>
+              </TableRow>
+            )}
+
+
+
           </TableBody>
         </Table>
       </TableContainer>
@@ -225,7 +351,6 @@ const ViewOrders = () => {
             bgcolor: 'background.paper',
             p: 4,
             boxShadow: 24,
-            position: 'relative',
             maxHeight: '80vh', // Limit height of modal
             overflowY: 'auto',  // Enable vertical scrolling
           }}
@@ -243,64 +368,63 @@ const ViewOrders = () => {
             <CloseIcon />
           </IconButton>
 
-          
-            <>
-              <Typography variant="h6" gutterBottom>
-                Order Details
-              </Typography>
-              <Typography>
-                <b>Order ID:</b> 
-              </Typography>
-              <Typography>
-                <b>Customer:</b> 
-              </Typography>
-              <Typography>
-                <b>Status:</b> 
-              </Typography>
-              <Typography>
-                <b>Payment Method:</b> 
-              </Typography>
-              <Typography>
-                <b>Total Price:</b> RS.
-              </Typography>
-              <Typography>
-                <b>Order Time:</b> 
-              </Typography>
-              <Typography>
-                <b>product_Name:</b> 
-              </Typography>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                Products:
-              </Typography>
+          <Typography variant="h6" gutterBottom>
+            Order Details
+          </Typography>
 
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell><b>Product code</b></TableCell>
-                    <TableCell><b>Size</b></TableCell>
-                    <TableCell><b>length</b></TableCell>
-                    <TableCell><b>Color</b></TableCell>
-                    <TableCell><b>Price</b></TableCell>
+          {/* Order Information */}
+          <Typography><b>Order ID:</b> {selectedOrder?.id}</Typography>
+          <Typography><b>Customer:</b> {selectedOrder?.user?.name}</Typography>
+          <Typography><b>Status:</b> {selectedOrder?.status}</Typography>
+          <Typography><b>Total Price:</b> RS. {selectedOrder?.total_price}</Typography>
+          <Typography><b>Order Time:</b> {new Date(selectedOrder?.created_at).toLocaleString()}</Typography>
+
+          <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+            Products:
+          </Typography>
+
+          {/* Product Table */}
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell><b>Product Id</b></TableCell>
+                <TableCell><b>Product Code</b></TableCell>
+                <TableCell><b>Product Name</b></TableCell>
+                <TableCell><b>Product Color</b></TableCell>
+                <TableCell><b>Quantity</b></TableCell>
+                <TableCell><b>Size</b></TableCell>
+                <TableCell><b>Sleeve</b></TableCell>
+                <TableCell><b>Price</b></TableCell>
+                <TableCell><b> Offer Price</b></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {selectedOrder?.items && selectedOrder?.items.length > 0 ? (
+                selectedOrder.items.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.product?.id}</TableCell>
+                    <TableCell>{item.product?.product_code}</TableCell>
+                    <TableCell>{item.product?.name}</TableCell>
+                    <TableCell>{item.product?.color}</TableCell>
+                    <TableCell>{item.quantity}</TableCell>
+                    <TableCell>{item.size}</TableCell>
+                    <TableCell>{item.sleeve}</TableCell>
+                    <TableCell>RS. {item.price}</TableCell>
+                    <TableCell>RS. {item.product?.offer_price_per_meter}</TableCell>
                   </TableRow>
-                </TableHead>
-                <TableBody>
-                  
-                    <TableRow >
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-                  
-                </TableBody>
-              </Table>
-            </>
-          
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">No products for this order</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </Box>
       </Modal>
+
       {/* modal for customer details */}
-      <Modal open={openCustomer} onClose={()=>setOpenCustomer(false)}>
+      <Modal open={openCustomer} onClose={() => setOpenCustomer(false)}>
         <Box
           sx={{
             position: 'absolute',
@@ -318,7 +442,7 @@ const ViewOrders = () => {
         >
           <IconButton
             aria-label="close"
-            onClick={()=>setOpenCustomer(false)}
+            onClick={() => setOpenCustomer(false)}
             sx={{
               position: 'absolute',
               right: 8,
@@ -328,46 +452,107 @@ const ViewOrders = () => {
           >
             <CloseIcon />
           </IconButton>
-            <>
-              <Typography sx={{display:"flex",justifyContent:"center"}} variant="h6" gutterBottom>
-                Customer Details
-              </Typography>
-              <Typography>
-                <b>Customer ID:</b> 
-              </Typography>
-              <Typography>
-                <b>Customer Name:</b> 
-              </Typography>
-              <Typography>
-                <b>Email:</b> 
-              </Typography>
-              <Typography>
-                <b>Phone:</b> 
-              </Typography>
-              <Typography>
-                <b>Adress:</b> RS.
-              </Typography>
-              <Typography>
-                <b>Adress Type:</b> 
-              </Typography>
-              <Typography>
-                <b>state:</b> 
-              </Typography>
-              <Typography>
-                <b>city:</b>
-              </Typography>
-              <Typography>
-                <b>pincode:</b> 
-              </Typography>
-              
+          <>
+            <Typography sx={{ display: "flex", justifyContent: "center" }} variant="h6" gutterBottom>
+              Customer Details
+            </Typography>
 
-              
-            </>
-          
+            <Typography>
+              <b>Customer Name:</b>{selectedOrder?.user?.name}
+            </Typography>
+            <Typography>
+              <b>Email:</b>{selectedOrder?.user?.email}
+            </Typography>
+            <Typography>
+              <b>Phone:</b>{selectedOrder?.user?.mobile_number}
+            </Typography>
+          </>
+
+        </Box>
+      </Modal>
+      {/* modal for view address */}
+      <Modal open={addressModal} onClose={() => setAddressModal(false)}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 600,
+            bgcolor: 'background.paper',
+            p: 4,
+            boxShadow: 24,
+            position: 'relative',
+            maxHeight: '80vh', // Limit height of modal
+            overflowY: 'auto',  // Enable vertical scrolling
+          }}
+        >
+          <IconButton
+            aria-label="close"
+            onClick={() => setAddressModal(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'grey.500',
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+          <>
+            <Typography sx={{ display: "flex", justifyContent: "center" }} variant="h6" gutterBottom>
+              Shipping Address:
+            </Typography>
+
+            <Typography>
+              <b> Name:</b>{selectedOrder?.shipping_address?.name}
+            </Typography>
+            <Typography>
+              <b>Email:</b>{selectedOrder?.shipping_address?.email}
+            </Typography>
+            <Typography>
+              <b>Phone:</b>{selectedOrder?.shipping_address?.mobile_number}
+            </Typography>
+            <Typography>
+              <b>Address:</b>{selectedOrder?.shipping_address?.address}
+            </Typography>
+            <Typography>
+              <b>pincode:</b>{selectedOrder?.shipping_address?.pincode}
+            </Typography>
+            <Typography>
+              <b>Post office:</b>{selectedOrder?.shipping_address?.post_office}
+            </Typography>
+            <Typography>
+              <b>Block:</b>{selectedOrder?.shipping_address?.block}
+            </Typography>
+            <Typography>
+              <b>District:</b>{selectedOrder?.shipping_address?.district}
+            </Typography>
+            <Typography>
+              <b>State:</b>{selectedOrder?.shipping_address?.state}
+            </Typography>
+            <Typography>
+              <b>Country:</b>{selectedOrder?.shipping_address?.country}
+            </Typography>
+            <Typography>
+              <b>Home Address:</b>{selectedOrder?.shipping_address?.is_home === true ? 'yes' : 'No'}
+            </Typography>
+            <Typography>
+              <b>Office Address:</b>{selectedOrder?.shipping_address?.is_office === true ? 'yes' : 'No'}
+            </Typography>
+            <Typography>
+              <b>Other Address:</b>{selectedOrder?.shipping_address?.is_other === true ? 'yes' : 'No'}
+            </Typography>
+            <Typography>
+              <b>Defualt Address:</b>{selectedOrder?.shipping_address?.is_default === true ? 'yes' : 'No'}
+            </Typography>
+
+          </>
+
         </Box>
       </Modal>
       {/* modal for track id */}
-      <Modal open={trackmodal} onClose={()=>setTrackmodal(false)}>
+      <Modal open={trackmodal} onClose={handleCloseEdit}>
         <Box
           sx={{
             position: 'absolute',
@@ -385,7 +570,7 @@ const ViewOrders = () => {
         >
           <IconButton
             aria-label="close"
-            onClick={()=>setTrackmodal(false)}
+            onClick={handleCloseEdit}
             sx={{
               position: 'absolute',
               right: 8,
@@ -395,220 +580,80 @@ const ViewOrders = () => {
           >
             <CloseIcon />
           </IconButton>
-            <>
-              <Typography sx={{display:"flex",justifyContent:"center"}} variant="h6" gutterBottom>
-                Track Id
-              </Typography>
-              
+          <>
+            <Typography sx={{ display: "flex", justifyContent: "center" }} variant="h6" gutterBottom>
+              Edit Orders
+            </Typography>
+
+            <Grid container mt={2} >
               <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Track Id"
-            variant="standard"
-            placeholder='paste track id here'
-           
-          />
-        </Grid>
+                <TextField
+                  fullWidth
+                  label="Track Id"
+                  variant="outlined"
+                  placeholder='paste track id here'
+                  value={updatedCustomer.Track_id}
+                  onChange={(e) => setUpdatedCustomer({ ...updatedCustomer, Track_id: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} mt={3}>
+                <Label>Order status</Label>
+                <FormControl fullWidth>
+                  <InputLabel id="status-select-label"> Order Status</InputLabel>
+                  <Select
+                    labelId="status-select-label"
+                    label="Choose Status"
+                    value={updatedCustomer.status} // Dynamically set the value
+                    onChange={handleStatusChange} // Update state on change
+                  >
+                    <MenuItem value="Accept">Accept</MenuItem>
+                    <MenuItem value="Reject">Reject</MenuItem>
+                    <MenuItem value="Pending">Pending</MenuItem>
+                    <MenuItem value="Return">Return</MenuItem>
+                    <MenuItem value="Completed">Completed</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} mt={3} sx={{ "marginLeft": "5px" }}>
+                <Label>Payment status</Label>
+                <FormControl fullWidth>
+                  <InputLabel id="status-select-label"> Payment Status</InputLabel>
+                  <Select
+                    labelId="status-select-label"
+                    label="Choose Status"
+                    disabled={isEnabled}
+                    value={updatedCustomer.payment_status} // Dynamically set the value
+                    onChange={handlePaymentStatusChange}
+                  >
+                    <MenuItem value="Pending">Pending</MenuItem>
+                    <MenuItem value="Paid">Paid</MenuItem>
+                    <MenuItem value="Failed">Failed</MenuItem>
 
-<Box sx={{display:'flex',justifyContent:'center'}}>
-<Button  variant='success'sx={{backgroundColor:"green",marginTop:'5px'}}  > save</Button>
-</Box>
 
-       
 
-              
-            </>
-          
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+
+
+
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Button variant='success' sx={{ backgroundColor: "green", marginTop: '5px' }} onClick={() => handleEditorders(selectedOrder.id)}  > save Changes</Button>
+            </Box>
+
+
+
+
+          </>
+
         </Box>
       </Modal>
-      {/* modal for add orders */}
-      <Modal open={addOrderModal} onClose={()=>setAddOrderModal(false)}>
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 600,
-            bgcolor: 'background.paper',
-            p: 4,
-            boxShadow: 24,
-            position: 'relative',
-            maxHeight: '80vh', // Limit height of modal
-            overflowY: 'auto',  // Enable vertical scrolling
-          }}
-        >
-          <IconButton
-            aria-label="close"
-            onClick={()=>setAddOrderModal(false)}
-            sx={{
-              position: 'absolute',
-              right: 8,
-              top: 8,
-              color: 'grey.500',
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-            <>
-              <Typography sx={{display:"flex",justifyContent:"center"}} variant="h6" gutterBottom>
-                Add Orders
-              </Typography>
-              <Grid item xs={12}>
-          <Box mt={2}>
-            <Typography variant="h6">User Details:</Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Name"
-                  variant="outlined"
-
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Phone Number"
-                  variant="outlined"
-                  type="text"
-
-
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Address"
-                  variant="outlined"
-                  type="text"
-                />
-              </Grid>
-             
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth
-                    label="state"
-                    variant="outlined"
-                    type="text"
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth
-                    label="Pincode"
-                    variant="outlined"
-                    type="text"
-                  />
-              </Grid>
-              <Grid item xs={6}>
-              <TextField
-                    fullWidth
-                    label="City"
-                    variant="outlined"
-                    type="text"
-                  />
-                
-              </Grid>
-              <Grid item xs={6}>
-              <TextField
-                    fullWidth
-                    label="Area/Locality"
-                    variant="outlined"
-                    type="text"
-                  />
-                
-              </Grid>
-              <Grid item xs={12}>
-              <TextField
-                    fullWidth
-                    label="Email"
-                    variant="outlined"
-                    type="mail"
-                  />
-                
-              </Grid>
-              
-              
-              
-            </Grid>
-          </Box>
-          <Box mt={2}>
-            <Typography variant="h6">Product Details:</Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label=" Product Name"
-                  variant="outlined"
-
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Product code"
-                  variant="outlined"
-                  type="text"
-
-
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Size"
-                  variant="outlined"
-                  type="text"
-                />
-              </Grid>
-             
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    label="Length"
-                    variant="outlined"
-                    type="text"
-                  />
-                </Grid>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    label="Color"
-                    variant="outlined"
-                    type="text"
-                  />
-              </Grid>
-              <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    label="Price"
-                    variant="outlined"
-                    type="number"
-                  />
-              </Grid>
-            
-              
-              
-              
-            </Grid>
-          </Box>
-        </Grid>
-              
-             
-       
-        
-<Box sx={{display:'flex',justifyContent:'center'}}>
-<Button  variant='success'sx={{backgroundColor:"green",marginTop:'5px'}}  > save</Button>
-</Box>   
-            </>
-          
-        </Box>
-      </Modal>
+    
 
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      {/* <Dialog
         open={confirmDialogOpen}
         onClose={() => setConfirmDialogOpen(false)}
       >
@@ -624,7 +669,8 @@ const ViewOrders = () => {
             Delete
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
+      <ToastContainer />
     </Box>
   );
 };

@@ -97,29 +97,30 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
       children: [
         { text: 'Add Product', icon: <AddBox />, action: 'addProduct' },
         { text: 'View Product', icon: <ViewList />, action: 'viewProduct' },
-        { text: 'View Stocks', icon: <ProductionQuantityLimitsIcon />, action: 'viewStocks' },
+        // { text: 'View Stocks', icon: <ProductionQuantityLimitsIcon />, action: 'viewStocks' },
       ],
     },
     { text: 'Orders', icon: <ShoppingCart />, action: null,
       children: [
         { text: 'View Orders', icon: <ShoppingCart />, action: 'viewOrders' },
         { text: 'View Returns', icon: <ShoppingCart />, action: 'ViewReturns' },
+        { text: 'Custome Orders', icon: <ShoppingCart />, action: 'CustomOrders' },
         
       ],
      },
     { text: 'Customers', icon: <People />, action: 'viewCustomers' },
     { text: 'Payments', icon: <Payment />, action: 'viewPayments' },
-    {
-      text: 'Add Carousal',
-      icon: <ImageIcon />,
-      action: null,
+    // {
+    //   text: 'Add Carousal',
+    //   icon: <ImageIcon />,
+    //   action: null,
       
-      children: [
-        { text: 'Add Carousal', icon: <AddBox />, action: 'addCarosal' },
-        { text: 'Add Poster', icon: <AddBox />, action: 'addPoster' },
-        { text: 'Add Home Image', icon: <AddBox />, action: 'addHomeImage' },
-      ],
-    },
+    //   children: [
+    //     { text: 'Add Carousal', icon: <AddBox />, action: 'addCarosal' },
+    //     { text: 'Add Poster', icon: <AddBox />, action: 'addPoster' },
+    //     { text: 'Add Home Image', icon: <AddBox />, action: 'addHomeImage' },
+    //   ],
+    // },
     {
       text: 'Sub Admin',
       icon: <People />,
