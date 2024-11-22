@@ -28,13 +28,13 @@ function App() {
   return (
     <div className="App">
       <Routes>
-        <Route path='/' element={<Home></Home> }></Route>
+        <Route path='/home' element={<Home></Home> }></Route>
         {/* <Route path='/addproduct' element={<AdminRoute element={<AddProduct></AddProduct>}/> }></Route>
         <Route path='/addcategory' element={<AdminRoute element={<AddCategory></AddCategory>}/> }></Route>
         <Route path='/viewproducts' element={<AdminRoute element={<ViewProduct></ViewProduct>}/> }></Route>
         <Route path='/viewcategory' element={<AdminRoute element={<ViewCategory></ViewCategory>}/> }></Route>
         <Route path='/viewpayments' element={<AdminRoute element={<ViewPayments></ViewPayments>}/> }></Route> */}
-        <Route path='/login' element={<LoginPage></LoginPage>}></Route>
+        <Route path='/' element={<LoginPage></LoginPage>}></Route>
         {/* <Route path='/dashboard' element={<AdminRoute element={<Dashboard></Dashboard>}/> }></Route>
         <Route path='/vieworders' element={<AdminRoute element={<ViewOrders></ViewOrders>}/> }></Route>
         <Route path='/notifications' element={<AdminRoute element={<Notifications></Notifications>}/> }></Route>

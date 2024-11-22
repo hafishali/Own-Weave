@@ -16,10 +16,12 @@ import {
   Category, AddBox, ViewList, People, Payment, Notifications, 
   Dashboard, ShoppingCart, Assessment,
 } from '@mui/icons-material';
+import ReviewsIcon from '@mui/icons-material/Reviews';
 import ImageIcon from '@mui/icons-material/Image';
 import ProductionQuantityLimitsIcon from '@mui/icons-material/ProductionQuantityLimits';
 import Divider from '@mui/material/Divider';
 import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
+import AddTestimonial from '../pages/Testimonials/AddTestimonial';
 
 function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
   const theme = useTheme();
@@ -87,8 +89,8 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
       children: [
         { text: 'View Category', icon: <ViewList />, action: 'viewCategory' },
         { text: 'Add Category', icon: <AddBox />, action: 'addCategory' },
-        { text: 'View Subcategory', icon: <ViewList />, action: 'viewSubcategory' },
-        { text: 'Add Subcategory', icon: <AddBox />, action: 'addSubcategory' },
+        // { text: 'View Subcategory', icon: <ViewList />, action: 'viewSubcategory' },
+        // { text: 'Add Subcategory', icon: <AddBox />, action: 'addSubcategory' },
       ],
     },
     {
@@ -104,7 +106,7 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
       children: [
         { text: 'View Orders', icon: <ShoppingCart />, action: 'viewOrders' },
         { text: 'View Returns', icon: <ShoppingCart />, action: 'ViewReturns' },
-        { text: 'Custome Orders', icon: <ShoppingCart />, action: 'CustomOrders' },
+        { text: 'Custom Orders', icon: <ShoppingCart />, action: 'CustomOrders' },
         
       ],
      },
@@ -131,6 +133,7 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
         { text: 'View Sub Admin', icon: <ViewList />, action: 'viewSubAdmin' },
       ],
     },
+    { text: 'Testimonials', icon: <ReviewsIcon />, action: 'testimonials' },
     { text: 'Notification', icon: <Notifications />, action: 'notifications' },
     { text: 'Send Notifications', icon: <Notifications />, action: 'sendNotifications' },
   ];

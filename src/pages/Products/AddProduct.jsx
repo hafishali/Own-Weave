@@ -28,6 +28,7 @@ function AddProduct() {
     uploaded_images:[],
     sub_category:"",
     width:"",
+    wholesale_price_per_meter:"",
     price_per_meter:"",
     offer_price_per_meter:"",
     stock_length:"",
@@ -124,7 +125,7 @@ function AddProduct() {
 };
 const handleAddProduct = async () => {
   const {
-    name, product_code, offer_id, category, uploaded_images, sub_category, width,
+    name, product_code, offer_id, category, uploaded_images, sub_category, width,wholesale_price_per_meter,
     price_per_meter, offer_price_per_meter, stock_length, gsm, is_popular,
     is_offer_product, description, fabric, pattern, fabric_composition, fit,
     style, color
@@ -150,7 +151,10 @@ const handleAddProduct = async () => {
     formData.append("name", name);
     formData.append("product_code", product_code);
     formData.append("category", category);
-    formData.append("offer_id", offer_id); // Add selected offer ID here
+    if (offer_id) { 
+      formData.append("offer_id", offer_id); 
+  }
+  
 
     uploaded_images.forEach((file, index) => {
       formData.append(`uploaded_images[${index}]`, file);
@@ -158,6 +162,8 @@ const handleAddProduct = async () => {
 
     formData.append("sub_category", sub_category);
     formData.append("width", width);
+    formData.append("wholesale_price_per_meter", wholesale_price_per_meter);
+
     formData.append("price_per_meter", price_per_meter);
     formData.append("offer_price_per_meter", offer_price_per_meter);
     formData.append("stock_length", stock_length);
@@ -183,7 +189,7 @@ const handleAddProduct = async () => {
       // Reset the form
       setProduct({
         name: "", product_code: "", category: "", sub_category: "",
-        uploaded_images: [], width: "", offer: "", price_per_meter: "",
+        uploaded_images: [], width: "", offer: "", price_per_meter: "",wholesale_price_per_meter:"",
         offer_price_per_meter: "", stock_length: "", gsm: "",
         is_popular: "", is_offer_product: true, description: "",
         fabric: "", pattern: "", fabric_composition: "", fit: "",
@@ -223,10 +229,10 @@ const handleRadioChange = (event, fieldName) => {
         <Typography variant="h4" gutterBottom>
           <b>Add Product</b>
         </Typography>
-        <Button variant="contained" component="label">
+        {/* <Button variant="contained" component="label">
           import excel file
           <input type="file" hidden />
-        </Button>
+        </Button> */}
       </Box>
 
 
@@ -306,7 +312,7 @@ const handleRadioChange = (event, fieldName) => {
 
         
     <Grid container spacing={2}>
-      <Grid item xs={12}>
+      <Grid item xs={12} style={{marginLeft:'2%',marginTop:'2%'}}>
         <Button variant="contained" component="label">
           Upload Multiple Images
           <input type="file" hidden multiple onChange={handleMultipleImageUpload} />
@@ -336,6 +342,16 @@ const handleRadioChange = (event, fieldName) => {
         </Grid>
       )}
     </Grid>
+    <Grid item xs={3}>
+          <TextField
+            fullWidth
+            label="Wholesale Rate"
+            variant="outlined"
+            type="number"
+            value={product.wholesale_price_per_meter}
+            onChange={(e) => setProduct({ ...product, wholesale_price_per_meter: e.target.value })} 
+          />
+        </Grid>
 
         <Grid item xs={3}>
           <TextField

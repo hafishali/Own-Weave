@@ -350,6 +350,7 @@ console.log(categoryDts)
     )}
   </TextField>
 </Grid>
+
 <Grid item xs={3}>
         <InputLabel>Width</InputLabel>
           <TextField
@@ -361,97 +362,44 @@ console.log(categoryDts)
             value={categorysizes.width}
           />
         </Grid>
-        <Grid item xs={3}>
-        <InputLabel>Size of S</InputLabel>
-          <TextField
-            fullWidth
-           
-            variant="outlined"
-           
-            onChange={(e) => setCategorysizes({ ...categorysizes, size_L_full_length: e.target.value })}
-            value={categorysizes.size_L_full_length}
-          />
-        </Grid>
-        <Grid item xs={3}>
-        <InputLabel>Size of M</InputLabel>
-          <TextField
-            fullWidth
-            
-            variant="outlined"
-           
-            onChange={(e) => setCategorysizes({ ...categorysizes, size_L_half_length: e.target.value })}
-            value={categorysizes.size_L_half_length}
-          />
-        </Grid>
-        <Grid item xs={3}>
-        <InputLabel>Size of L</InputLabel>
-          <TextField
-            fullWidth
-            variant="outlined"
-            onChange={(e) => setCategorysizes({ ...categorysizes, size_XL_full_length: e.target.value })}
-            value={categorysizes.size_XL_full_length}
-          />
-        </Grid>
-        <Grid item xs={3}>
-        <InputLabel>Size of XL</InputLabel>
-          <TextField
-            fullWidth
-           
-            variant="outlined"
-            onChange={(e) => setCategorysizes({ ...categorysizes, size_XL_half_length: e.target.value })}
-            value={categorysizes.size_XL_half_length}
-          />
-        </Grid>
-        <Grid item xs={2}>
-        <InputLabel>Size of XXL</InputLabel>
-          <TextField
-            fullWidth
-           
-            variant="outlined"
-            onChange={(e) => setCategorysizes({ ...categorysizes, size_XXL_full_length: e.target.value })}
-            value={categorysizes.size_XXL_full_length}
-          />
-        </Grid>
-        <Grid item xs={2}>
-        <InputLabel>Size of XXXL</InputLabel>
-          <TextField
-            fullWidth
-           
-            variant="outlined"
-            onChange={(e) => setCategorysizes({ ...categorysizes, size_XXL_half_length: e.target.value })}
-            value={categorysizes.size_XXL_half_length}
-          />
-        </Grid>
-        <Grid item xs={2}>
-        <InputLabel>Size of 4XL</InputLabel>
-          <TextField
-            fullWidth
-            variant="outlined"
-            onChange={(e) => setCategorysizes({ ...categorysizes, size_XXXL_full_length: e.target.value })}
-            value={categorysizes.size_XXXL_full_length}
-          />
-        </Grid>
-        <Grid item xs={2}>
-        <InputLabel>Size of Full Sleeve</InputLabel>
-          <TextField
-            fullWidth
-            variant="outlined"
-            onChange={(e) => setCategorysizes({ ...categorysizes, size_XXXL_half_length: e.target.value })}
-            value={categorysizes.size_XXXL_half_length}
-          />
-        </Grid>
-        <Grid item xs={2}>
-        <InputLabel>Size of Half Sleeve</InputLabel>
-          <TextField
-            fullWidth
-            variant="outlined"
-            onChange={(e) => setCategorysizes({ ...categorysizes, sleeve_half_length: e.target.value })}
-            value={categorysizes.sleeve_half_length}
-          />
-        </Grid>
-        
-        
 
+
+
+{/* Sizes for XL, XXL, XXXL, 4XL, etc. (separate full and half lengths) */}
+{[ 'L', 'XL', 'XXL', 'XXXL', '4XL'].map((size) => (
+  <React.Fragment key={size}>
+    <Grid item xs={2}>
+      <InputLabel>{`Size of ${size} (Full Length)`}</InputLabel>
+      <TextField
+        fullWidth
+        variant="outlined"
+        onChange={(e) =>
+          setCategorysizes({
+            ...categorysizes,
+            [`size_${size.replace(' ', '_').toUpperCase()}_full_length`]: e.target.value,
+          })
+        }
+        value={categorysizes[`size_${size.replace(' ', '_').toUpperCase()}_full_length`] || ''}
+        placeholder={`Enter full length for ${size}`}
+      />
+    </Grid>
+    <Grid item xs={2}>
+      <InputLabel>{`Size of ${size} (Half Length)`}</InputLabel>
+      <TextField
+        fullWidth
+        variant="outlined"
+        onChange={(e) =>
+          setCategorysizes({
+            ...categorysizes,
+            [`size_${size.replace(' ', '_').toUpperCase()}_half_length`]: e.target.value,
+          })
+        }
+        value={categorysizes[`size_${size.replace(' ', '_').toUpperCase()}_half_length`] || ''}
+        placeholder={`Enter half length for ${size}`}
+      />
+    </Grid>
+  </React.Fragment>
+))}
 
        
         <Grid item xs={12}>

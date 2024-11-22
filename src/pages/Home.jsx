@@ -27,6 +27,7 @@ import ViewReturn from './Orders/ViewReturn';
 import AddOffers from './Offers/AddOffers';
 import ViewOffers from './Offers/ViewOffers';
 import ViewCustomeOrders from './Orders/ViewCustomeOrders';
+import AddTestimonial from './Testimonials/AddTestimonial';
 
 function Home() {
     const [selectedOption, setSelectedOption] = useState('dashboard'); // Default to dashboard
@@ -91,6 +92,9 @@ function Home() {
                 return <Stocks />;
             case 'reports':
                 return <AnalyticalReport />;
+                case 'testimonials':
+                    return <AddTestimonial />;
+                
             default:
                 return <Dashboard />; // Fallback to Dashboard
         }

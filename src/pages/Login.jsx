@@ -27,7 +27,7 @@ function LoginPage() {
         toast.success("Login Successfull")
         localStorage.setItem('refresh', result.data.token.refresh); 
         localStorage.setItem('access', result.data.token.access);
-        navigate('/')
+        navigate('/home')
        
       } else {
         setErrors({ email: 'Invalid credentials', password: 'Invalid credentials' });

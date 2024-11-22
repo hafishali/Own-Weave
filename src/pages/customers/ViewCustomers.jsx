@@ -29,12 +29,13 @@ function ViewCustomers() {
   const [addresses, setAddresses] = useState(updatedAddresses);
   const [originalAddresses, setOriginalAddresses] = useState(updatedAddresses); // Store original addresses
   const [isSaveEnabled, setIsSaveEnabled] = useState(false);
-  const[customerdts,setCustomerdts]=useState({
-    email:"",
-    name:"",
-    mobile_number:"",
-    is_vip:"",
-    is_favorite:""
+  const [displayedCustomer, setDisplayedCustomer] = useState([]);
+  const [customerdts, setCustomerdts] = useState({
+    email: "",
+    name: "",
+    mobile_number: "",
+    is_vip: "",
+    is_favorite: ""
   })
 
 
@@ -45,12 +46,35 @@ function ViewCustomers() {
     try {
       const response = await ViewallCustomers();
       if (response.status === 200) {
-        setCustomers(response.data); // Set to `customers` state
+        setCustomers(response.data);
+        setDisplayedCustomer(response.data); // Set to `customers` state
       }
     } catch (error) {
       console.log(error);
     }
   };
+  // Calculate total pages and slice data based on pagination
+  const totalPages = Math.ceil(customers.length / pageSize);
+  useEffect(() => {
+    // Filter customers based on selected category
+    let filteredCustomers = customers;
+    if (customerCategory) {
+      filteredCustomers = customers.filter((customer) => {
+        if (customerCategory === 'VIP') return customer.is_vip;
+        if (customerCategory === 'Favourite') return customer.is_favorite;
+        return true; // If no category is selected, show all customers
+      });
+    }
+
+    // Paginate the filtered customers
+    const paginatedCustomers = filteredCustomers.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize
+    );
+
+    setDisplayedCustomer(paginatedCustomers); // Set paginated customers
+  }, [customerCategory, customers, currentPage]);
+
 
   useEffect(() => {
     handleGetallCustomers();
@@ -72,7 +96,7 @@ function ViewCustomers() {
   useEffect(() => {
     // Set initial form data when dialog opens
     if (selectedCustomer) {
-      
+
       setCustomerdts({
         email: selectedCustomer.email || "",
         name: selectedCustomer.name || "",
@@ -122,13 +146,9 @@ function ViewCustomers() {
       return Object.entries(address).some(([key, value]) => value !== originalAddresses[index][key]);
     });
   };
-console.log(updatedAddresses)
-  // Calculate total pages and slice data based on pagination
-  const totalPages = Math.ceil(customers.length / pageSize);
-  const displayedCustomers = customers.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  console.log(updatedAddresses)
+
+
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -172,7 +192,7 @@ console.log(updatedAddresses)
   };
 
   // edit address
-  const handleEditAddress = async (m_number, address,id) => {
+  const handleEditAddress = async (m_number, address, id) => {
     try {
       // Filter out fields that are null or empty strings
       const filteredAddress = Object.fromEntries(
@@ -182,12 +202,12 @@ console.log(updatedAddresses)
         ...filteredAddress,  // Spread the filtered address fields
         address_id: id       // Add the address_id field with the given id
       };
-      console.log('updated',updatedAddress)
-      
+      console.log('updated', updatedAddress)
+
       // Send the filtered address object in the API request
       const response = await EditAddressCustomers(m_number, updatedAddress);
       console.log(response);
-  
+
       if (response.status === 200) {
         toast.success("address updated succesfully")
         canceleditadress()
@@ -200,79 +220,79 @@ console.log(updatedAddresses)
       setSelectedCustomer(null)
     }
   };
-  
-// edit customer details
-const handleEditdts = async ( customerdts) => {
-  try {
-    // Filter out fields that are null or empty strings
-    const filtereddts = Object.fromEntries(
-      Object.entries(customerdts).filter(([key, value]) => value !== null && value !== '')
-    );
-    
-    // Send the filtered address object in the API request
-    const response = await EditCustomerdts(customerNumber, filtereddts);
-    console.log(response);
 
-    if (response.status === 200) {
-      toast.success("customer details updated succesfully")
-      canceledit()
-      handleGetallCustomers()
-      setCustomerNumber(null)
+  // edit customer details
+  const handleEditdts = async (customerdts) => {
+    try {
+      // Filter out fields that are null or empty strings
+      const filtereddts = Object.fromEntries(
+        Object.entries(customerdts).filter(([key, value]) => value !== null && value !== '')
+      );
+
+      // Send the filtered address object in the API request
+      const response = await EditCustomerdts(customerNumber, filtereddts);
+      console.log(response);
+
+      if (response.status === 200) {
+        toast.success("customer details updated succesfully")
+        canceledit()
+        handleGetallCustomers()
+        setCustomerNumber(null)
+      }
+    } catch (error) {
+      toast.error("Something went wrong at editing customer details")
+
+      console.log(error);
+      setSelectedCustomer(null)
     }
-  } catch (error) {
-    toast.error("Something went wrong at editing customer details")
+  };
 
-    console.log(error);
-    setSelectedCustomer(null)
-  }
-};
-
-// delete customers
-const handleDeleteCustomer=async()=>{
-  try {
-    const response=await deleteCustomer(selectedCustomer.mobile_number)
-    if(response.status===204){
-      toast.success("customer deleted successfully")
-      handleGetallCustomers()
+  // delete customers
+  const handleDeleteCustomer = async () => {
+    try {
+      const response = await deleteCustomer(selectedCustomer.mobile_number)
+      if (response.status === 204) {
+        toast.success("customer deleted successfully")
+        handleGetallCustomers()
+      }
+    } catch (error) {
+      console.log(error)
+      toast.error("Something went wrong at deleting customers")
     }
-  } catch (error) {
-    console.log(error)
-    toast.error("Something went wrong at deleting customers")
   }
-}
 
-const downloadExcelVip = () => {
-  const vipCustomers = customers.filter(customer => customer.is_vip);
-  const worksheetData = [
-    ['Name', 'Email', 'Phone Number',],
-    ...vipCustomers.map(customer => [customer.name, customer.email, customer.mobile_number])
-    // Add more rows here
-  ];
+  const downloadExcelVip = () => {
+    const vipCustomers = customers.filter(customer => customer.is_vip);
+    const worksheetData = [
+      ['Name', 'Email', 'Phone Number',],
+      ...vipCustomers.map(customer => [customer.name, customer.email, customer.mobile_number])
+      // Add more rows here
+    ];
 
-  // Create a new workbook and add the worksheet data
-  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Vip customer report');
+    // Create a new workbook and add the worksheet data
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Vip customer report');
 
-  // Trigger download
-  XLSX.writeFile(workbook, 'VIP_Customers.xlsx');
-};
-const downloadExcelFavourite = () => {
-  const vipCustomers = customers.filter(customer => customer.is_favorite);
-  const worksheetData = [
-    ['Name', 'Email', 'Phone Number',],
-    ...vipCustomers.map(customer => [customer.name, customer.email, customer.mobile_number])
-    // Add more rows here
-  ];
+    // Trigger download
+    XLSX.writeFile(workbook, 'VIP_Customers.xlsx');
+  };
+  const downloadExcelFavourite = () => {
+    const vipCustomers = customers.filter(customer => customer.is_favorite);
+    const worksheetData = [
+      ['Name', 'Email', 'Phone Number',],
+      ...vipCustomers.map(customer => [customer.name, customer.email, customer.mobile_number])
+      // Add more rows here
+    ];
 
-  // Create a new workbook and add the worksheet data
-  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Vip customer report');
+    // Create a new workbook and add the worksheet data
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Vip customer report');
 
-  // Trigger download
-  XLSX.writeFile(workbook, 'VIP_Customers.xlsx');
-};
+    // Trigger download
+    XLSX.writeFile(workbook, 'VIP_Customers.xlsx');
+  };
 
 
 
@@ -280,20 +300,22 @@ const downloadExcelFavourite = () => {
     <Box sx={{ maxWidth: '100%', margin: 'auto', p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">View Customers</Typography>
-        {/* <FormControl sx={{ minWidth: 120 }}>
+        <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>Filter</InputLabel>
           <Select value={customerCategory} onChange={(e) => setCustomerCategory(e.target.value)}>
+            <MenuItem value="All">All</MenuItem>
+            {/* <MenuItem value="Normal">Normal</MenuItem> */}
             <MenuItem value="VIP">VIP</MenuItem>
             <MenuItem value="Favourite">Favourite</MenuItem>
           </Select>
-        </FormControl> */}
-        <Box><Button variant="contained" sx={{"marginRight":"10px"}} color="primary" onClick={downloadExcelVip}>
-          Export VIP 
+        </FormControl>
+        <Box><Button variant="contained" sx={{ "marginRight": "10px" }} color="primary" onClick={downloadExcelVip}>
+          Export VIP
         </Button>
-        <Button variant="contained" color="primary"  onClick={downloadExcelFavourite}>
-          Export Favourite
-        </Button></Box>
-        
+          <Button variant="contained" color="primary" onClick={downloadExcelFavourite}>
+            Export Favourite
+          </Button></Box>
+
       </Box>
 
       <TableContainer component={Paper}>
@@ -311,17 +333,11 @@ const downloadExcelFavourite = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {displayedCustomers.length > 0 ? displayedCustomers.map((item, index) => (
+            {displayedCustomer.length > 0 ? displayedCustomer.map((item, index) => (
               <TableRow key={index}>
                 <TableCell>{(currentPage - 1) * pageSize + index + 1}</TableCell>
                 <TableCell>{item.id}</TableCell>
-                <TableCell>{item.name}{customerCategory === 'Favourite' ? (
-                  <FavoriteIcon sx={{ color: 'red', fontSize: '15px' }} />
-                ) : customerCategory === 'VIP' ? (
-                  <WorkspacePremiumOutlinedIcon sx={{ color: 'gold', fontSize: '20px' }} />
-                ) : (
-                  ""
-                )}</TableCell>
+                <TableCell>{item.name}</TableCell>
                 <TableCell>{item.email}</TableCell>
                 <TableCell>{item.mobile_number}</TableCell>
                 <TableCell onClick={() => handleEditadressChange(item)}><u style={{ color: "blue" }}>View</u> </TableCell>
@@ -329,11 +345,11 @@ const downloadExcelFavourite = () => {
                   {item.is_vip ? "VIP" : item.is_favorite ? "Favourite" : "Normal"}
                 </TableCell>
                 <TableCell style={{ textAlign: 'center' }}>
-                  <IconButton color="primary" onClick={()=>handleEditChange(item)}>
+                  <IconButton color="primary" onClick={() => handleEditChange(item)}>
                     <EditIcon />
                   </IconButton>
-                  <IconButton color="secondary" onClick={()=>handleDelete(item)}>
-                    <DeleteIcon  />
+                  <IconButton color="secondary" onClick={() => handleDelete(item)}>
+                    <DeleteIcon />
                   </IconButton>
                 </TableCell>
               </TableRow>
@@ -384,9 +400,9 @@ const downloadExcelFavourite = () => {
             label="Name"
             fullWidth
             variant="standard"
-           value={customerdts.name}
-          onChange={handleInputChange}
-           
+            value={customerdts.name}
+            onChange={handleInputChange}
+
           />
           <TextField
             margin="dense"
@@ -395,7 +411,7 @@ const downloadExcelFavourite = () => {
             fullWidth
             variant="standard"
             value={customerdts.email}
-          onChange={handleInputChange}
+            onChange={handleInputChange}
 
           />
           <TextField
@@ -409,16 +425,16 @@ const downloadExcelFavourite = () => {
 
           />
 
-         
-         
+
+
           <FormControl variant="standard" fullWidth className='mt-3'>
             <InputLabel id="demo-simple-select-label">Customer Type</InputLabel>
             <Select
               labelId="demo-simple-select-label"
               value={customerCategory}
-            onChange={handleCategoryChange}
+              onChange={handleCategoryChange}
             >
-              <MenuItem  value="Normal">Normal</MenuItem>
+              <MenuItem value="Normal">Normal</MenuItem>
               <MenuItem value="VIP">VIP</MenuItem>
               <MenuItem value="Favourite">Favourite</MenuItem>
 
@@ -427,7 +443,7 @@ const downloadExcelFavourite = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={canceledit} >Cancel</Button>
-          <Button onClick={()=>handleEditdts(customerdts)} >Save</Button>
+          <Button onClick={() => handleEditdts(customerdts)} >Save</Button>
         </DialogActions>
       </Dialog>
 
@@ -436,10 +452,10 @@ const downloadExcelFavourite = () => {
         <DialogTitle>Edit Address</DialogTitle>
         <DialogContent>
           <Box>
-            
+
             {updatedAddresses.map((address, index) => (
               <div key={index}>
-                <Typography variant="h6" sx={{"textAlign":"center","fontWeight":"10px"}}>{`Address ${index + 1}`}</Typography>
+                <Typography variant="h6" sx={{ "textAlign": "center", "fontWeight": "10px" }}>{`Address ${index + 1}`}</Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={4}>
                     <TextField
@@ -524,23 +540,23 @@ const downloadExcelFavourite = () => {
                     label="Pincode"
                     variant="outlined"
                     value={address.pincode || ''}
-                   
+
                     onChange={(e) => handleAddressChange(index, 'pincode', e.target.value)}
                     sx={{ mb: 2 }}
                   /></Grid>
                   <Grid item xs={3}>
-  <FormControl component="fieldset">
-    <FormLabel component="legend">Default Address</FormLabel>
-    <RadioGroup
-      row
-      value={address.is_default ? 'true' : 'false'}
-      onChange={(e) => handleAddressChange(index, 'is_default', e.target.value === 'true')}
-    >
-      <FormControlLabel value="true" control={<Radio />} label="Yes" />
-      <FormControlLabel value="false" control={<Radio />} label="No" />
-    </RadioGroup>
-  </FormControl>
-</Grid>
+                    <FormControl component="fieldset">
+                      <FormLabel component="legend">Default Address</FormLabel>
+                      <RadioGroup
+                        row
+                        value={address.is_default ? 'true' : 'false'}
+                        onChange={(e) => handleAddressChange(index, 'is_default', e.target.value === 'true')}
+                      >
+                        <FormControlLabel value="true" control={<Radio />} label="Yes" />
+                        <FormControlLabel value="false" control={<Radio />} label="No" />
+                      </RadioGroup>
+                    </FormControl>
+                  </Grid>
 
                   <Grid item xs={3} ><FormControl component="fieldset">
                     <FormLabel component="legend">Home Address</FormLabel>
@@ -569,7 +585,7 @@ const downloadExcelFavourite = () => {
                     <RadioGroup
                       row
                       value={address.is_other === true ? 'true' : 'false'}
-                      onChange={(e) => handleAddressChange(index, 'is_other',  e.target.value === 'true')}
+                      onChange={(e) => handleAddressChange(index, 'is_other', e.target.value === 'true')}
                     >
                       <FormControlLabel value="true" control={<Radio />} label="Yes" />
                       <FormControlLabel value="false" control={<Radio />} label="No" />
@@ -577,13 +593,13 @@ const downloadExcelFavourite = () => {
                   </FormControl></Grid>
 
                 </Grid>
-                <Box sx={{"display":"flex","justifyContent":"center"}}><Button variant="contained"
-            color="primary"   onClick={()=>handleEditAddress(selectedCustomer.mobile_number,address,address.id)}  >Save</Button></Box>
-                
+                <Box sx={{ "display": "flex", "justifyContent": "center" }}><Button variant="contained"
+                  color="primary" onClick={() => handleEditAddress(selectedCustomer.mobile_number, address, address.id)}  >Save</Button></Box>
+
               </div>
             ))}
 
-            
+
           </Box>
 
 
@@ -595,7 +611,7 @@ const downloadExcelFavourite = () => {
       </Dialog>
 
 
-<ToastContainer/>
+      <ToastContainer />
     </Box>
   );
 }

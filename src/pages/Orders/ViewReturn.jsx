@@ -55,24 +55,8 @@ function ViewReturn() {
   const openConfirmDialog = () => {
     setConfirmDialogOpen(true);
   };
-  const downloadExcel = () => {
-    const worksheetData = [
-      ['Order ID', 'Customer', 'Date', 'Time', 'Payment Method', 'Status'],
-      ['1234', 'John Doe', '2024-10-30', '10:00 AM', 'Credit Card', 'Completed'],
-      // Add more rows here
-    ];
 
-    // Create a new workbook and add the worksheet data
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders Report');
 
-    // Trigger download
-    XLSX.writeFile(workbook, 'orders_report.xlsx');
-  };
-  const handleStatusChange = (event) => {
-    setStatus(event.target.value);
-  };
 
   const handleGetReturnorders = async () => {
     try {
@@ -88,6 +72,92 @@ function ViewReturn() {
     handleGetReturnorders()
   }, [])
   console.log(returnOrders)
+
+  const downloadExcel = () => {
+    if (!returnOrders || returnOrders.length === 0) {
+      console.error("No data available for export.");
+      return;
+    }
+  
+    // Prepare the worksheet data dynamically
+    const worksheetData = [
+      [
+        'Order ID',
+        'Customer Name',
+        'Customer Email',
+        'Customer Mobile',
+        'Shipping Address',
+        'Product Name',
+        'Product Code',
+        'Product Color',
+        'Product Size',
+        'Product Sleeve',
+        'Quantity',
+        'Price',
+        'Total Price',
+        'Payment Option',
+        'Payment Status',
+        'Track ID',
+        'Order Status',
+        'Return Status',
+        'Order Date',
+        'Order Time',
+      ], // Header row
+      ...returnOrders.flatMap((order) => {
+        const {
+          id,
+          user,
+          shipping_address,
+          items,
+          total_price,
+          payment_option,
+          payment_status,
+          Track_id,
+          status,
+          return_status,
+          created_at,
+        } = order || {};
+  
+        // Format the shipping address into a single string
+        const formattedAddress = shipping_address
+          ? `${shipping_address?.address || 'N/A'}, ${shipping_address?.block || 'N/A'}, ${shipping_address?.district || 'N/A'}, ${shipping_address?.state || 'N/A'}, ${shipping_address?.country || 'N/A'} - ${shipping_address?.pincode || 'N/A'}`
+          : 'N/A';
+  
+        // Map each product in the items array to a row
+        return items?.map((item) => [
+          id || 'N/A', // Order ID
+          user?.name || 'N/A', // Customer Name
+          user?.email || 'N/A', // Customer Email
+          user?.mobile_number || 'N/A', // Customer Mobile
+          formattedAddress, // Shipping Address
+          item?.product?.name || 'N/A', // Product Name
+          item?.product_code || 'N/A', // Product Code
+          item?.product_color || 'N/A', // Product Color
+          item?.size || 'N/A', // Product Size
+          item?.sleeve || 'N/A', // Product Sleeve
+          item?.quantity || 0, // Quantity
+          item?.price || 0, // Price per item
+          total_price || 0, // Total Price
+          payment_option || 'N/A', // Payment Option
+          payment_status || 'N/A', // Payment Status
+          Track_id || 'N/A', // Track ID
+          status || 'N/A', // Order Status
+          return_status || 'N/A', // Return Status
+          created_at?.split('T')?.[0] || 'N/A', // Order Date
+          created_at?.split('T')?.[1]?.split('.')?.[0] || 'N/A', // Order Time
+        ]) || []; // Ensure `items` exists
+      }),
+    ];
+  
+    // Create a new workbook and add the worksheet data
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Return Orders Report');
+  
+    // Trigger the download
+    XLSX.writeFile(workbook, 'Return_orders_report.xlsx');
+  };
+  
 
   const handleCustomerOpen = (item) => {
     setOpenCustomer(true)
@@ -167,7 +237,7 @@ function ViewReturn() {
       </Box>
 
       {/* Date filters */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+      {/* <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', mb: 2, gap: 2 }}>
           <Typography gutterBottom>
             From
@@ -191,7 +261,7 @@ function ViewReturn() {
             Filter Orders
           </Button>
         </Box>
-      </Box>
+      </Box> */}
 
 
       <TableContainer component={Paper}>

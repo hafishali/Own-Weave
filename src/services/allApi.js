@@ -1,4 +1,3 @@
-import axios from "axios";
 import { commonApi } from "./commonApi";
 import { BASE_URL } from "./baseUrl";
 
@@ -42,6 +41,8 @@ export const deleteOffer=async(id)=>{
 // ------------------------------------------------------------------------------------------------------------------------
 
 // category
+// category
+// add category
 export const addCategories=async(reqBody,reqHeader)=>{
     return await commonApi('POST', `${BASE_URL}product/categories/`,reqBody,reqHeader)
 }
@@ -61,6 +62,13 @@ export const deleteCategories=async(id)=>{
 // add category sizes
 export const addCategorysizes=async(reqBody,reqHeader)=>{
     return await commonApi('POST', `${BASE_URL}product/categorysizes/`,reqBody,reqHeader)
+}
+
+export const editCategorysizes=async(id,reqBody,reqHeader)=>{
+    return await commonApi('PATCH', `${BASE_URL}product/categorysizes/${id}/`,reqBody,reqHeader)
+}
+export const deleteCategorysizes=async(id)=>{
+    return await commonApi('DELETE', `${BASE_URL}product/categorysizes/${id}/`,"",null)
 }
 
 
@@ -83,6 +91,10 @@ export const editProduct=async(id,reqBody,reqHeader)=>{
     return await commonApi('PATCH', `${BASE_URL}product/products/${id}/`,reqBody,reqHeader)
 }
   
+
+export const deleteProduct=async(id)=>{
+    return await commonApi('DELETE', `${BASE_URL}product/products/${id}/`,"",null)
+}
 
 
 
@@ -107,6 +119,23 @@ export const viewReturn=async()=>{
 }
 
 
+
+
+
+// custome order-----------------------------------------------------------------------------------------------------------
+
+// add custome orders
+export const addCustomeOrders=async(reqBody)=>{
+    return await commonApi('POST', `${BASE_URL}orders/admin/orders/`,reqBody,null)
+}
+
+export const viewCustomOrders=async()=>{
+    return await commonApi('GET', `${BASE_URL}orders/admin-orders/list/`,"",null)
+}
+
+export const editCustomOrders=async(id,reqBody)=>{
+    return await commonApi('PATCH', `${BASE_URL}orders/admin-orders/${id}/`,reqBody,null)
+}
 
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -134,6 +163,30 @@ export const deleteCustomer=async(id,)=>{
 export const ViewallPayments=async()=>{
     return await commonApi('GET', `${BASE_URL}orders/orders/payment-details/`,"",null)
 }
+
+// ----------------------------------------------------------------------------------------------------------------------------
+// testimonials
+
+// post testimonials
+export const addTestimonials=async(reqBody)=>{
+    return await commonApi('POST', `${BASE_URL}product/Testmonial/`,reqBody,null)
+}
+
+// get testimonials
+export const getTestimonials=async()=>{
+    return await commonApi('GET', `${BASE_URL}product/Testmonial/`,"",null)
+}
+
+// edit testimonials
+export const EditTestimonials=async(id,reqBody)=>{
+    return await commonApi('PATCH', `${BASE_URL}product/Testmonial/${id}/`,reqBody,null)
+}
+
+// delete testimonials
+export const DeleteTestimonials=async(id,reqBody)=>{
+return await commonApi('DELETE', `${BASE_URL}product/Testmonial/${id}/`,reqBody,null)
+}
+
 
 
 

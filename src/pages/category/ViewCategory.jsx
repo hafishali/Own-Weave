@@ -246,7 +246,6 @@ console.log(selectedCategory)
                     <TableCell><b> XXL half length</b></TableCell>
                     <TableCell><b> XXXL full length</b></TableCell>
                     <TableCell><b> XXXL half length</b></TableCell>
-                    <TableCell><b> half length</b></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -261,7 +260,6 @@ console.log(selectedCategory)
                             <TableCell>{size.size_XXL_half_length || 'N/A'}</TableCell>
                             <TableCell>{size.size_XXXL_full_length || 'N/A'}</TableCell>
                             <TableCell>{size.size_XXXL_half_length || 'N/A'}</TableCell>
-                            <TableCell>{size.sleeve_half_length || 'N/A'}</TableCell>
                         </TableRow>
                     ))
                 ) : (

@@ -5,71 +5,70 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import { editProduct, fetchCategories, fetchSubCategories, viewAllCategories } from '../../services/allApi'; 
+import { editProduct, fetchCategories, fetchSubCategories, getAlloffers, viewAllCategories } from '../../services/allApi'; 
 
 function EditProductModal({ open, onClose, product, onChange,reqHeader, onSubmit, categories: propCategories, // Pass categories as props to avoid redundant fetching
 }) {
   const [subcategories, setSubcategories] = useState([]);
   const [imagePreview, setImagePreview] = useState(product.image || null);
-  const [weight, setWeight] = useState('');
-  const [weightPrice, setWeightPrice] = useState('');
-  const [weights, setWeights] = useState(product.weights || []);
-  const [weightQuantity, setWeightQuantity] = useState('');
-  const [isWeightInStock, setIsWeightInStock] = useState(true); // Default to in stock
-  const [isEditing, setIsEditing] = useState(false);
-  const [editIndex, setEditIndex] = useState(null);
+ 
   const [isLoading, setIsLoading] = useState(false);  // State for loading spinner
   const [error, setError] = useState(null);  // State for error handling
-  const [productData, setProductData] = useState(product);
   const [allcategories, setAllcategories] = useState([])
   const [loading, setLoading] = useState(false);
   const access_token = localStorage.getItem('access');
   const [widthOptions, setWidthOptions] = useState([]); // State for available widths
+  const [alloffers, setAlloffers] = useState([])
 
   // Fetch subcategories whenever the category changes
 
 
   // Reset form fields when a different product is loaded or modal is closed
 
+  const [productData, setProductData] = useState({
+    ...product,  // Spread the product object
+    discount: product.offer?.name || '',  // Initialize discount field
+    offer_product: product.offer_product ? 'yes' : 'no',  // Initialize radio button based on offer_product boolean
+  });
+const viewallOffers = async () => {
+  try {
+    const response = await getAlloffers()
+    console.log(response)
+    if (response.status === 200) {
+      setAlloffers(response.data)
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+useEffect(() => {
+  viewallOffers()
+}, [])
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setProductData((prevData) => ({
-        ...prevData,
-        [name]: value,
-    }));
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+
+  setProductData((prevState) => ({
+    ...prevState,
+    [name]: name === "offer_id" ? Number(value) : value === "yes" ? true : value === "no" ? false : value,
+  }));
 };
 
 
-  const handleSave = async () => {
-    const reqHeader = {
-      'Authorization': `Bearer ${access_token}`,
-      // Do NOT set 'Content-Type' manually; let FormData handle it.
-    };
-  
-    setIsLoading(true);
-    setError(null);
-  
-    // Convert productData to FormData for multipart submission
-    const formData = new FormData();
-    Object.keys(productData).forEach(key => {
-      formData.append(key, productData[key]);
-    });
-  
-    try {
-      const response = await editProduct(productData.id, formData, reqHeader);
-      if (response.success) {
-        console.log('Product updated successfully');
-        onClose();
-      } else {
-        setError('Failed to update product. Please try again.');
-      }
-    } catch (error) {
-      setError('An error occurred. Please try again later.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const viewallCategories = async () => {
     try {
       const response = await viewAllCategories();
@@ -87,73 +86,68 @@ function EditProductModal({ open, onClose, product, onChange,reqHeader, onSubmit
     viewallCategories();
   }, []);
   
-  const handleProductImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      onChange('image', file);
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
 
-  // Add weights logic
-  const handleAddWeight = () => {
-    let updatedWeights;
-    if (isEditing) {
-      // Update the existing weight
-      updatedWeights = weights.map((w, index) =>
-        index === editIndex
-          ? {
-              weight,
-              price: weightPrice,
-              quantity: weightQuantity,
-              is_in_stock: isWeightInStock === 'yes',
-            }
-          : w
-      );
-      setIsEditing(false);
-      setEditIndex(null);
-    } else {
-      // Add a new weight
-      updatedWeights = [
-        ...weights,
-        {
-          weight,
-          price: weightPrice,
-          quantity: weightQuantity,
-          is_in_stock: isWeightInStock === 'yes',
-        },
-      ];
-    }
   
-    // Update the local state
-    setWeights(updatedWeights);
   
-    // Pass the updated weights to the parent component
-    onChange('weights', updatedWeights);
-  
-    // Clear the form
-    setWeight('');
-    setWeightPrice('');
-    setWeightQuantity('');
-    setIsWeightInStock('yes');
+
+  const handleEditImage = (index) => {
+    setProductData((prev) => {
+      const updatedImages = [...prev.images];
+      updatedImages[index].isEditing = true; // Mark image as being edited
+      return { ...prev, images: updatedImages };
+    });
   };
   
-  const handleRemoveWeight = (index) => {
-    const updatedWeights = weights.filter((_, i) => i !== index);
-    setWeights(updatedWeights);
-    onChange('weights', updatedWeights); // Pass updated weights to parent component
+  const handleReplaceImage = (index, newFile) => {
+    setProductData((prev) => {
+      const updatedImages = [...prev.images];
+      const imageId = updatedImages[index]?.id; // Get the ID of the image being replaced
+  
+      const updatedDeleteIds = imageId
+        ? [...(prev.delete_image_ids || []), imageId] // Add the old image ID to delete list
+        : prev.delete_image_ids || []; // If no ID, keep the existing list
+  
+      updatedImages[index] = {
+        image: URL.createObjectURL(newFile), // Temporary preview for UI
+        file: newFile, // New file to upload
+      };
+  
+      return {
+        ...prev,
+        images: updatedImages,
+        delete_image_ids: updatedDeleteIds, // Update delete IDs
+      };
+    });
   };
   
   
-  const handleEditWeight = (index) => {
-    const weightToEdit = weights[index];
-    setWeight(weightToEdit.weight);
-    setWeightPrice(weightToEdit.price);
-    setWeightQuantity(weightToEdit.quantity);
-    setIsWeightInStock(weightToEdit.is_in_stock ? 'yes' : 'no');
-    setIsEditing(true);
-    setEditIndex(index);
+  
+  
+  
+  const handleDeleteImage = (index) => {
+    setProductData((prev) => {
+      const imageId = prev.images[index]?.id; // Get the ID of the image being deleted
+  
+      const updatedImages = prev.images.filter((_, imgIndex) => imgIndex !== index); // Remove image
+  
+      const updatedDeleteIds = imageId
+        ? [...(prev.delete_image_ids || []), imageId] // Add ID to delete list if it exists
+        : prev.delete_image_ids || []; // Keep the existing list if no ID
+  
+      return {
+        ...prev,
+        images: updatedImages,
+        delete_image_ids: updatedDeleteIds, // Update delete IDs
+      };
+    });
   };
+  
+  
+  
+  
+  
+  
+  
   const handleCategoryChange = (event) => {
     const selectedCategoryId = event.target.value;
     const selectedCategory = allcategories.find(item => item.id === selectedCategoryId);
@@ -172,6 +166,66 @@ function EditProductModal({ open, onClose, product, onChange,reqHeader, onSubmit
     } else {
         setWidthOptions([]); // Reset if no sizes are available
     }
+};
+
+const handleSave = async () => {
+  const formData = new FormData();
+
+  // Add product data (excluding images and delete IDs)
+  Object.keys(productData).forEach((key) => {
+    if (key !== 'images' && key !== 'delete_image_ids') {
+      formData.append(key, productData[key]);
+    }
+  });
+
+  // Add new images
+  productData.images.forEach((img) => {
+    if (img.file instanceof File) {
+      formData.append('uploaded_images', img.file);
+    }
+  });
+
+  // Add existing image URLs directly
+  productData.images
+    .filter((img) => !(img.file instanceof File))
+    .forEach((img) => {
+      formData.append('existing_images', img.image);
+    });
+
+  // Add delete image IDs as a JSON array
+  if (productData.delete_image_ids?.length > 0) {
+    productData.delete_image_ids.forEach((id) => {
+      formData.append('delete_image_ids', id); // Add each ID as a separate entry
+    });
+  }
+  
+
+  console.log('FormData contents:');
+  formData.forEach((value, key) => {
+    console.log(key, value);
+  });
+
+  try {
+    const response = await editProduct(productData.id, formData, {
+      Authorization: `Bearer ${access_token}`,
+    });
+
+    if (response.status === 200) {
+      console.log('Product updated successfully');
+      setProductData((prev) => ({
+        ...prev,
+        ...response.data,
+      }));
+      onClose();
+    } else {
+      throw new Error('Failed to update product.');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    setError('An error occurred while updating the product.');
+  } finally {
+    setIsLoading(false);
+  }
 };
 
 
@@ -243,53 +297,91 @@ function EditProductModal({ open, onClose, product, onChange,reqHeader, onSubmit
           <TextField
             margin="dense"
             label="Price"
-            name="price"
+            name="price_per_meter"
             fullWidth
             variant="outlined"
             type="number"
-            value={product.price || ''}
+            value={productData?.price_per_meter || ''}
             onChange={handleInputChange}
             required
           />
         </Grid>
-  
+        <Grid item xs={6}>
+          <TextField
+            margin="dense"
+            label="Offer price"
+            name="offer_price_per_meter"
+            fullWidth
+            variant="outlined"
+            type="number"
+            value={productData?.offer_price_per_meter || ''}
+            onChange={handleInputChange}
+            required
+          />
+        </Grid>
         {/* Offer Price */}
         <Grid item xs={6}>
           <TextField
             margin="dense"
             label="Offer Price"
-            name="offer_price"
+            name="offer_price_per_meter"
             fullWidth
             variant="outlined"
             type="number"
-            value={product.offer_price || ''}
+            value={productData?.offer_price_per_meter || ''}
             onChange={handleInputChange}
           />
         </Grid>
   
-        {/* Discount */}
         <Grid item xs={6}>
-          <TextField
-            margin="dense"
-            label="Discount (%)"
-            name="discount"
-            fullWidth
-            variant="outlined"
-            type="number"
-            value={product.discount || ''}
-            onChange={handleInputChange}
-          />
-        </Grid>
+  <TextField
+    margin="dense"
+    label="Select Offer"
+    name="offer_id" // Ensure this matches the key in productData
+    fullWidth
+    select
+    variant="outlined"
+    value={product.offer_id} // Ensure this reflects the selected offer
+    onChange={handleInputChange}
+  >
+    {alloffers && alloffers.length > 0 ? (
+      alloffers.map((item) => (
+        <MenuItem key={item.id} value={item.id}>
+          {item.name}
+        </MenuItem>
+      ))
+    ) : (
+      <MenuItem disabled>No offers available</MenuItem>
+    )}
+  </TextField>
+</Grid>
+
+
+
+
+
   
         {/* Length */}
         <Grid item xs={6}>
           <TextField
             margin="dense"
-            label="Length"
-            name="Length"
+            label="Stock Length"
+            name="stock_length"
             fullWidth
             variant="outlined"
-            value={product.Length || ''}
+            value={productData?.stock_length || ''}
+            onChange={handleInputChange}
+            required
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            margin="dense"
+            label="GSM"
+            name="gsm"
+            fullWidth
+            variant="outlined"
+            value={productData?.gsm || ''}
             onChange={handleInputChange}
             required
           />
@@ -317,20 +409,83 @@ function EditProductModal({ open, onClose, product, onChange,reqHeader, onSubmit
 </Grid>
         {/* Is Popular Product */}
         <Grid item xs={6}>
-          <FormControl component="fieldset" margin="dense">
-            <FormLabel component="legend">Is Popular</FormLabel>
-            <RadioGroup
-              row
-              name="is_popular_product"
-              value={product.is_popular_product ? 'yes' : 'no'}
-              onChange={handleInputChange}
-            >
-              <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-              <FormControlLabel value="no" control={<Radio />} label="No" />
-            </RadioGroup>
-          </FormControl>
+    <FormControl component="fieldset" margin="dense">
+      <FormLabel component="legend">Is Popular</FormLabel>
+      <RadioGroup
+        row
+        name="is_popular"
+        value={productData.is_popular ? 'yes' : 'no'}
+        onChange={handleInputChange}
+      >
+        <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+        <FormControlLabel value="no" control={<Radio />} label="No" />
+      </RadioGroup>
+    </FormControl>
+  </Grid>
+
+  {/* Is Offer */}
+  <Grid item xs={6}>
+    <FormControl component="fieldset" margin="dense">
+      <FormLabel component="legend">Is Offer</FormLabel>
+      <RadioGroup
+        row
+        name="is_offer_product"
+        value={productData.is_offer_product ? 'yes' : 'no'}
+        onChange={handleInputChange}
+      >
+        <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+        <FormControlLabel value="no" control={<Radio />} label="No" />
+      </RadioGroup>
+    </FormControl>
+  </Grid>
+
+          <Grid item xs={12}>
+        <Typography variant="h6">Images</Typography>
+        <Grid container spacing={2}>
+          {productData.images?.map((image, index) => (
+            <Grid item xs={3} key={index}>
+              <Box position="relative">
+                <img
+                  src={image?.image || 'placeholder-image.jpg'}
+                  alt={`Product Image ${index + 1}`}
+                  style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 8 }}
+                />
+                <Box
+                  position="absolute"
+                  top={8}
+                  right={8}
+                  display="flex"
+                  gap={1}
+                >
+                  {/* Edit Icon */}
+                  <IconButton
+                    onClick={() => handleEditImage(index)}
+                    color="primary"
+                    size="small"
+                  >
+                    <EditIcon />
+                  </IconButton>
+                  {/* Delete Icon */}
+                  <IconButton
+                    onClick={() => handleDeleteImage(index)}
+                    color="secondary"
+                    size="small"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+                {image.isEditing && (
+                  <input
+                    type="file"
+                    onChange={(e) => handleReplaceImage(index, e.target.files[0])}
+                    style={{ marginTop: 8 }}
+                  />
+                )}
+              </Box>
+            </Grid>
+          ))}
         </Grid>
-  
+      </Grid>
         {/* Product Description */}
         <Grid item xs={12}>
           <TextField
@@ -341,18 +496,12 @@ function EditProductModal({ open, onClose, product, onChange,reqHeader, onSubmit
             variant="outlined"
             multiline
             rows={4}
-            value={product.description || ''}
+            value={productData?.description || ''}
             onChange={handleInputChange}
           />
         </Grid>
   
-        {/* Product Image Upload */}
-        <Grid item xs={12}>
-          <Button variant="contained" component="label" fullWidth>
-            Upload Product Image
-            <input type="file" hidden onChange={handleProductImageUpload} />
-          </Button>
-        </Grid>
+       
   
         {/* Image Preview */}
         {imagePreview && (
