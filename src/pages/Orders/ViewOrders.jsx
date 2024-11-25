@@ -557,13 +557,11 @@ const ViewOrders = () => {
             </Typography>
 
             <Typography>
-              <b> Name:</b>{selectedOrder?.shipping_address?.name}
+            <b>Name:</b> {selectedOrder?.shipping_address?.name || selectedOrder?.user?.name}
             </Typography>
+          
             <Typography>
-              <b>Email:</b>{selectedOrder?.shipping_address?.email}
-            </Typography>
-            <Typography>
-              <b>Phone:</b>{selectedOrder?.shipping_address?.mobile_number}
+              <b>Phone:</b>{selectedOrder?.shipping_address?.mobile_number || selectedOrder?.user?.mobile_number}
             </Typography>
             <Typography>
               <b>Address:</b>{selectedOrder?.shipping_address?.address}

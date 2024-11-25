@@ -282,7 +282,8 @@ function ViewProduct() {
 
         <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Product Name</b></TableCell>
         <TableCell><b>Category</b></TableCell>
-        <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Sub Category</b></TableCell>
+        {/* <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Sub Category</b></TableCell> */}
+        <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Wholesale Price</b></TableCell>
         <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Price (Length)</b></TableCell>
         <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Offer Price</b></TableCell>
         <TableCell><b>Discount</b></TableCell>
@@ -315,8 +316,12 @@ function ViewProduct() {
 
           <TableCell style={{ textAlign: 'center' }}>{product.name}</TableCell>
           <TableCell>{product.category_name}</TableCell>
-          <TableCell style={{ textAlign: 'center' }}>{product.sub_category_name || 'N/A'}</TableCell>
+          {/* <TableCell style={{ textAlign: 'center' }}>{product.sub_category_name || 'N/A'}</TableCell> */}
+          <TableCell style={{ textAlign: 'center' }}>{product.wholesale_price_per_meter}</TableCell>
+
           <TableCell style={{ textAlign: 'center' }}>{product.price_per_meter}</TableCell>
+
+         
           <TableCell style={{ textAlign: 'center' }}>{product.offer_price_per_meter || 'N/A'}</TableCell>
           
           {/* Display offer name as discount if available */}

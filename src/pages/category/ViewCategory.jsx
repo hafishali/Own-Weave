@@ -212,6 +212,7 @@ console.log(selectedCategory)
         selectedCategory={selectedCategory} 
         setSelectedCategory={setSelectedCategory}
         handleGetAllcategories={handleGetAllcategories}
+        
       />
       
 
@@ -237,7 +238,7 @@ console.log(selectedCategory)
         <Table>
                 <TableHead>
                   <TableRow>
-
+                  <TableCell><b> Width</b></TableCell>
                     <TableCell><b> L full length</b></TableCell>
                     <TableCell><b> L half length</b></TableCell>
                     <TableCell><b> XL full length</b></TableCell>
@@ -252,6 +253,7 @@ console.log(selectedCategory)
                 {selectedCategory && selectedCategory.sizes && selectedCategory.sizes.length > 0 ? (
                     selectedCategory.sizes.map((size, index) => (
                         <TableRow key={size.id || index}>
+                          <TableCell>{size.width || 'N/A'}</TableCell>
                             <TableCell>{size.size_L_full_length || 'N/A'}</TableCell>
                             <TableCell>{size.size_L_half_length || 'N/A'}</TableCell>
                             <TableCell>{size.size_XL_full_length || 'N/A'}</TableCell>

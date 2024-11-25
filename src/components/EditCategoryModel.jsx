@@ -147,7 +147,9 @@ function EditCategoryModel({ openEditDialog, setOpenEditDialog, selectedCategory
         if (sizes && sizes.length > 0) {
           await updateSizes(id, sizes, reqHeader);
         }
-  
+        
+        handleGetAllcategories()
+        
         // Optionally reload or refresh the category list
         setOpenEditDialog(false);
       } else {

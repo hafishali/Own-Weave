@@ -44,6 +44,7 @@ function NotificationsView() {
           </IconButton>
         )}
       </ListItem>
+      
       <Divider />
     </Box>)
      
@@ -69,6 +70,7 @@ function NotificationsView() {
           {renderNotifications(tabValue)}
         </List>
       </Box>
+      
     </Box>
   );
 }

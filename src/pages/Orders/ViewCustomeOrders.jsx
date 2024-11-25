@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import ReactDOM from 'react-dom';
 import {
   Table,
   TableBody,
@@ -16,47 +17,47 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField, Grid, MenuItem, Select, FormControl, InputLabel
+  TextField, Grid, MenuItem, Select, FormControl, InputLabel,FormControlLabel
 
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
-import DoneIcon from '@mui/icons-material/Done';
-import CancelIcon from '@mui/icons-material/Cancel';
 import { toast, ToastContainer } from 'react-toastify';
 import { addCustomeOrders, editCustomOrders, viewCustomOrders } from '../../services/allApi';
-import DescriptionIcon from '@mui/icons-material/Description';
 import * as XLSX from 'xlsx';
-
+import Switch from '@mui/material/Switch';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import BillComponent from '../../components/BillComponent';
+import { useRef } from 'react';
 
 function ViewCustomeOrders() {
   const [addOrderModal, setAddOrderModal] = useState(false)
   const [customOrder, setCustomOrder] = useState([])
   const [open, setOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [openCustomer, setOpenCustomer] = useState(false)
+  const [openofferProduct, setOpenofferProduct] = useState(false)
   const [addressModal, setAddressModal] = useState(false)
   const [trackmodal, setTrackmodal] = useState(false)
+  const [checked, setChecked] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    phoneNumber: '',
+    phone_number: '',
     address: '',
     state: '',
     pincode: '',
     city: '',
     district: '',
     product_code: '',
-    size: '',
     custom_length: '',
-    quantity: '',
-    sleeve: '',
-    paymentMethod: '',
-    paymentStatus: '',
+    free_product_code: "",
+    custom_total_price:"",
+    payment_status: '',
+    payment_method: '',
 
   });
   const [updatedCustom, setUpdatedCustom] = useState({
-    paymentStatus: ""
+    payment_status: ""
   })
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -65,21 +66,26 @@ function ViewCustomeOrders() {
       [name]: value,
     }));
   };
+  const handleChangeOffer = (e) => {
+    setChecked(e.target.checked);
+  };
   const handleopenorder = (item) => {
     setSelectedOrder(item)
     setOpen(true)
+  }
+  const handleopenoffer = (item) => {
+    setSelectedOrder(item)
+    setOpenofferProduct(true)
   }
 
   const handleClose = () => {
     setOpen(false);
     setSelectedOrder(null);
   };
-
-  const handleCustomerOpen = (item) => {
-    setOpenCustomer(true)
-    setSelectedOrder(item)
-
-  }
+  const handleCloseoffer = () => {
+    setOpenofferProduct(false);
+    setSelectedOrder(null);
+  };
   const handleaddressOpen = (item) => {
     setSelectedOrder(item)
     setAddressModal(true)
@@ -88,22 +94,24 @@ function ViewCustomeOrders() {
     setAddOrderModal(false)
     setFormData({
       name: '',
-    phoneNumber: '',
-    address: '',
-    state: '',
-    pincode: '',
-    city: '',
-    district: '',
-    product_code: '',
-    size: '',
-    customSize: '',
-    quantity: '',
-    sleeveType: '',
-    paymentMethod: '',
-    paymentStatus: '',
+      phone_number: '',
+      address: '',
+      state: '',
+      pincode: '',
+      city: '',
+      district: '',
+      product_code: '',
+      /*  size: '', */
+      custom_length: '',
+      /*   quantity: '', */
+      /*   sleeve: '', */
+      free_product_code: "",
+      custom_total_price:"",
+      payment_method: '',
+      payment_status: '',
     })
   }
-
+  console.log(checked)
   const handleEdit = (order) => {
     setTrackmodal(true)
     setSelectedOrder(order)
@@ -126,60 +134,92 @@ function ViewCustomeOrders() {
   useEffect(() => {
     handleGetCustom()
   }, [])
+
+  
   const handleAddCustomeorder = async () => {
-    const { name, phoneNumber, address, state, pincode, city, district, product_code, size, custom_length, quantity, sleeve, paymentMethod, paymentStatus } = formData
+    const { name, phone_number, address, state, pincode, city, district, product_code, custom_length, payment_method, payment_status, custom_total_price } = formData;
+  
     try {
-      if (!name || !phoneNumber || !address || !state || !pincode || !city || !district || !product_code || !quantity || !sleeve || !paymentMethod || !paymentStatus) {
-        toast.error("All fields are required")
-      }
-      else if (!size && !custom_length) {
-        toast.error("Please select either Size or Custom Size.")
-      }
-      else {
-        const response = await addCustomeOrders(formData)
+      if (!name || !phone_number || !address || !state || !pincode || !city || !district) {
+        toast.error("Please fill the user details completely");
+      } else if (!custom_length || !product_code) {
+        toast.error("Product code and Length are required");
+      } else if (!payment_method || !payment_status || !custom_total_price) {
+        toast.error("Payment details are required");
+      } else {
+        const response = await addCustomeOrders(formData);
+  
         if (response.status === 201) {
-          toast.success("order created successfully")
-          handleClose()
+          toast.success("Order created successfully");
+          handleClose();
+  
+          // Pass order details and trigger PDF generation
+          generatePDF(response.data);
+  
+          // Reset form data
           setFormData({
             name: '',
-            phoneNumber: '',
+            phone_number: '',
             address: '',
             state: '',
             pincode: '',
             city: '',
             district: '',
             product_code: '',
-            size: '',
             custom_length: '',
-            quantity: '',
-            sleeve: '',
-            paymentMethod: '',
-            paymentStatus: '',
-            
-          })
+            free_product_code: '',
+            custom_total_price: '',
+            payment_method: '',
+            payment_status: '',
+          });
         }
-        handleGetCustom()
+        handleGetCustom();
       }
     } catch (error) {
-      console.log(error)
-      toast.error("some thing went wrong")
+      console.log(error);
+      toast.error("Something went wrong");
     }
-  }
+  };
+  const pdfRef = useRef();
+  // PDF generation function
+  const generatePDF = (orderDetails) => {
+   
+  
+    // Create a temporary component render container
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+  
+    ReactDOM.render(<BillComponent ref={pdfRef} orderDetails={orderDetails} />, container);
+  
+    html2canvas(pdfRef.current).then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`order-${orderDetails.phone_number}.pdf`);
+  
+      // Clean up temporary container
+      ReactDOM.unmountComponentAtNode(container);
+      document.body.removeChild(container);
+    });
+  };
 
   const handleEditCustomer = async (id) => {
     try {
       const response = await editCustomOrders(id, updatedCustom)
-      if(response.status===200){
+      if (response.status === 200) {
         toast.success("payment status updated successfully ")
         handleGetCustom()
         handleCloseEdit()
         setUpdatedCustom({
-          paymentStatus: ""
+          payment_status: ""
         })
       }
     } catch (error) {
-console.log(error)
-toast.error("Something went wrong at editing status")
+      console.log(error)
+      toast.error("Something went wrong at editing status")
     }
   }
 
@@ -195,9 +235,7 @@ toast.error("Something went wrong at editing status")
         'Product Name',
         'Product Code',
         'Product Color',
-        'Product Size',
-        'Product Sleeve',
-        'Quantity',
+        'custome size',
         'Price',
         'Total Price',
         'Payment Option',
@@ -220,12 +258,12 @@ toast.error("Something went wrong at editing status")
           status,
           created_at,
         } = order || {}; // Ensure `order` exists
-  
+
         // Format shipping address as a single string, using optional chaining
         const formattedAddress = shipping_address
           ? `${shipping_address?.address || 'N/A'}, ${shipping_address?.block || 'N/A'}, ${shipping_address?.district || 'N/A'}, ${shipping_address?.state || 'N/A'}, ${shipping_address?.country || 'N/A'} - ${shipping_address?.pincode || 'N/A'}`
           : 'N/A';
-  
+
         // Map each product in the items array to a row
         return items?.map((item) => [
           id || 'N/A', // Order ID
@@ -251,12 +289,12 @@ toast.error("Something went wrong at editing status")
         ]) || []; // Ensure `items` exists
       }),
     ];
-  
+
     // Create a new workbook and add the worksheet data
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders Report');
-  
+
     // Trigger download
     XLSX.writeFile(workbook, 'orders_report.xlsx');
   };
@@ -266,9 +304,9 @@ toast.error("Something went wrong at editing status")
         <Typography variant="h4" gutterBottom>
           View Custome Orders
         </Typography>
-        <Button variant="contained" color="primary" /* onClick={downloadExcel} */>
+       {/*  <Button variant="contained" color="primary" onClick={downloadExcel}>
           Export as excel <DescriptionIcon sx={{ ml: 1 }} />
-        </Button>
+        </Button> */}
       </Box>
 
       {/* Date filters */}
@@ -308,14 +346,15 @@ toast.error("Something went wrong at editing status")
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>SI</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Name</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Mobile Number</b></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Orders</b></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Custom Size</b></TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Products</b></TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b> Offer products</b></TableCell>
+
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b> Size</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Date</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Address</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Payment Method</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Payment Status</b></TableCell>
-              {/* <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Track id</b></TableCell> */}
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b> Offer</b></TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b> Offer Type</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Actions</b></TableCell>
             </TableRow>
           </TableHead>
@@ -330,17 +369,13 @@ toast.error("Something went wrong at editing status")
               </TableCell>
               <TableCell
                 style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
-              /*  sx={{ color: "blue", cursor: "pointer" }} */
-              /*  onClick={() => handleCustomerOpen()} */
               >
                 {item.name}
               </TableCell>
               <TableCell
                 style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
-              /*  sx={{ color: "blue", cursor: "pointer" }} */
-              /*  onClick={() => handleCustomerOpen()} */
               >
-                {item.phoneNumber}
+                {item.phone_number}
               </TableCell>
               <TableCell
                 style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
@@ -349,13 +384,20 @@ toast.error("Something went wrong at editing status")
               >
                 <u>Product</u>
               </TableCell>
+              <TableCell
+                style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
+                sx={{ color: "blue", cursor: "pointer" }}
+                onClick={() => handleopenoffer(item)}
+              >
+                <u> Offer Product</u>
+              </TableCell>
 
               {/* Additional Empty Columns */}
 
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}> {item.customSize}</TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}> {item.custom_length}</TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{new Date(item?.created_at).toLocaleString()}</TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center', color: "blue", cursor: "pointer" }} onClick={() => handleaddressOpen(item)}><u>View</u></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item.paymentMethod}</TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item.payment_method}</TableCell>
 
 
               {/* Track ID Column */}
@@ -363,12 +405,12 @@ toast.error("Something went wrong at editing status")
                 style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
 
               >
-                {item.paymentStatus}
+                {item.payment_status}
               </TableCell>
 
 
               <TableCell style={{ textAlign: 'center' }}>
-                <Button ></Button>
+               {item.offer_type	}
 
               </TableCell>
 
@@ -393,7 +435,7 @@ toast.error("Something went wrong at editing status")
       </TableContainer>
 
       {/* modal for customer details */}
-      <Modal open={openCustomer} onClose={() => setOpenCustomer(false)}>
+      {/* <Modal open={openCustomer} onClose={() => setOpenCustomer(false)}>
         <Box
           sx={{
             position: 'absolute',
@@ -438,10 +480,10 @@ toast.error("Something went wrong at editing status")
           </>
 
         </Box>
-      </Modal>
+      </Modal> */}
 
       {/* modal for add orders */}
-      <Modal open={addOrderModal} onClose={ handleaddModalClose}>
+      <Modal open={addOrderModal} onClose={handleaddModalClose}>
         <Box
           sx={{
             position: 'absolute',
@@ -459,7 +501,7 @@ toast.error("Something went wrong at editing status")
         >
           <IconButton
             aria-label="close"
-            onClick={ handleaddModalClose}
+            onClick={handleaddModalClose}
             sx={{
               position: 'absolute',
               right: 8,
@@ -490,11 +532,11 @@ toast.error("Something went wrong at editing status")
                   <Grid item xs={6}>
                     <TextField
                       fullWidth
-                      name='phoneNumber'
+                      name='phone_number'
                       label="Phone Number"
                       variant="outlined"
                       type="text"
-                      value={formData.phoneNumber}
+                      value={formData.phone_number}
                       onChange={handleChange}
 
                     />
@@ -561,7 +603,7 @@ toast.error("Something went wrong at editing status")
                 <Typography variant="h6">Product Details:</Typography>
                 <Grid container spacing={2}>
 
-                  <Grid item xs={6}>
+                  <Grid item xs={4}>
                     <TextField
                       fullWidth
                       name='product_code'
@@ -574,7 +616,7 @@ toast.error("Something went wrong at editing status")
 
                     />
                   </Grid>
-                  <Grid item xs={6}>
+                  {/* <Grid item xs={6}>
                     <FormControl fullWidth variant="outlined">
                       <InputLabel>Size</InputLabel>
                       <Select
@@ -591,7 +633,7 @@ toast.error("Something went wrong at editing status")
                         <MenuItem value="4XL">4XL</MenuItem>
                       </Select>
                     </FormControl>
-                  </Grid>
+                  </Grid> */}
 
 
                   <Grid item xs={4}>
@@ -606,6 +648,42 @@ toast.error("Something went wrong at editing status")
                     />
                   </Grid>
                   <Grid item xs={4}>
+                    <FormControlLabel
+                    label="Enable Offer"
+                      control={
+                        <Switch
+                          checked={checked}
+                          onChange={handleChangeOffer}
+                          inputProps={{ 'aria-label': 'controlled' }}
+                        />
+                      }
+                       
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      name='free_product_code'
+                      label="Free product code"
+                      variant="outlined"
+                      type="text"
+                      disabled={!checked}
+                      value={formData.free_product_code}
+                      onChange={handleChange}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      name='custom_total_price'
+                      label="Price"
+                      variant="outlined"
+                      type="number"
+                      value={formData.custom_total_price}
+                      onChange={handleChange}
+                    />
+                  </Grid>
+                  {/* <Grid item xs={4}>
                     <TextField
                       fullWidth
                       name='quantity'
@@ -615,8 +693,8 @@ toast.error("Something went wrong at editing status")
                       value={formData.quantity}
                       onChange={handleChange}
                     />
-                  </Grid>
-                  <Grid item xs={4}>
+                  </Grid> */}
+                  {/* <Grid item xs={4}>
                     <FormControl fullWidth variant="outlined">
                       <InputLabel>Sleeve Type</InputLabel>
                       <Select
@@ -630,34 +708,34 @@ toast.error("Something went wrong at editing status")
                         <MenuItem value="half">Half Sleeve</MenuItem>
                       </Select>
                     </FormControl>
-                  </Grid>
-                  <Grid item xs={4}>
+                  </Grid> */}
+                  <Grid item xs={6}>
                     <FormControl fullWidth variant="outlined">
                       <InputLabel>Payment Method</InputLabel>
                       <Select
                         label="Payment Method"
-                        name='paymentMethod'
+                        name='payment_method'
                         defaultValue=""
-                        value={formData.paymentMethod}
-                        onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                        value={formData.payment_method}
+                        onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
                       >
                         <MenuItem value="COD">COD</MenuItem>
                         <MenuItem value="Online">UPI</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid item xs={4}>
+                  <Grid item xs={6}>
                     <FormControl fullWidth variant="outlined">
                       <InputLabel>Payment Status</InputLabel>
                       <Select
                         label="Payment Status"
-                        name='paymentStatus'
+                        name='payment_status'
                         defaultValue=""
-                        value={formData.paymentStatus}
-                        onChange={(e) => setFormData({ ...formData, paymentStatus: e.target.value })}
+                        value={formData.payment_status}
+                        onChange={(e) => setFormData({ ...formData, payment_status: e.target.value })}
                       >
                         <MenuItem value="Pending">Pending</MenuItem>
-                        <MenuItem value="Completed">Paid</MenuItem>
+                        <MenuItem value="Paid">Paid</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
@@ -690,7 +768,7 @@ toast.error("Something went wrong at editing status")
         </Box>
       </Modal>
 
-      {/* Modal to display order details */}
+      {/* Modal to display product details */}
       <Modal open={open} onClose={handleClose}>
         <Box
           sx={{
@@ -720,15 +798,14 @@ toast.error("Something went wrong at editing status")
           </IconButton>
 
           <Typography variant="h4" gutterBottom>
-            Order Details
+            Product Details
           </Typography>
 
           {/* Order Information */}
           <Typography><b>Order ID:</b> {selectedOrder?.id}</Typography>
-          <Typography><b>size:</b> {selectedOrder?.size}</Typography>
-          <Typography><b>customSize:</b> {selectedOrder?.customSize}</Typography>
-          <Typography><b>Sleeve Type:</b> {selectedOrder?.sleeveType}</Typography>
+          <Typography><b>Length:</b> {selectedOrder?.custom_length}</Typography>
           <Typography><b>Total Price:</b> RS. {selectedOrder?.total_price}</Typography>
+          <Typography><b>Discounted Price:</b> RS. {selectedOrder?.custom_total_price}</Typography>
           <Typography><b>Order Time:</b> {new Date(selectedOrder?.created_at).toLocaleString()}</Typography>
 
           <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
@@ -743,25 +820,94 @@ toast.error("Something went wrong at editing status")
                 <TableCell><b>Product Code</b></TableCell>
                 <TableCell><b>Product Name</b></TableCell>
                 <TableCell><b>Product Color</b></TableCell>
-                <TableCell><b>Quantity</b></TableCell>
                 <TableCell><b>Category</b></TableCell>
                 <TableCell><b>Price</b></TableCell>
-                <TableCell><b> Offer Price</b></TableCell>
-                <TableCell><b> Total Price</b></TableCell>
+                <TableCell><b>Total Price</b></TableCell>
+                <TableCell><b> Discounted Price</b></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
 
               <TableRow>
 
-                <TableCell>{selectedOrder?.product_code}</TableCell>
+              <TableCell>{selectedOrder?.product_details?.['product code']}</TableCell>
                 <TableCell>{selectedOrder?.product_details?.name}</TableCell>
                 <TableCell>{selectedOrder?.product_details?.color}</TableCell>
-                <TableCell>{selectedOrder?.quantity}</TableCell>
-                <TableCell>{selectedOrder?.product_details?.category}</TableCell>
+                <TableCell>{selectedOrder?.product_details?.['category name']}</TableCell>
                 <TableCell>RS.{selectedOrder?.product_details?.price_per_meter}</TableCell>
-                <TableCell>RS.{selectedOrder?.product_details?.offer_price_per_meter}</TableCell>
                 <TableCell>RS.{selectedOrder?.total_price}</TableCell>
+                <TableCell>RS.{selectedOrder?.custom_total_price}</TableCell>
+
+              </TableRow>
+
+            </TableBody>
+          </Table>
+        </Box>
+      </Modal>
+         {/* Modal to display product details */}
+         <Modal open={openofferProduct} onClose={handleCloseoffer}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 600,
+            bgcolor: 'background.paper',
+            p: 4,
+            boxShadow: 24,
+            maxHeight: '80vh', // Limit height of modal
+            overflowY: 'auto',  // Enable vertical scrolling
+          }}
+        >
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseoffer}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'grey.500',
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+
+          <Typography variant="h4" gutterBottom>
+           Offer Product Details
+          </Typography>
+
+          {/* Order Information */}
+          <Typography><b>Order ID:</b> {selectedOrder?.id}</Typography>
+          <Typography><b>Length:</b> {selectedOrder?.custom_length}</Typography>
+          <Typography><b>Order Time:</b> {new Date(selectedOrder?.created_at).toLocaleString()}</Typography>
+
+          <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+            Offer Products:
+          </Typography>
+
+          {/* Product Table */}
+          <Table>
+            <TableHead>
+              <TableRow>
+
+                <TableCell><b>Product Code</b></TableCell>
+                <TableCell><b>Product Name</b></TableCell>
+                <TableCell><b>Product Color</b></TableCell>
+                <TableCell><b>Category</b></TableCell>
+                <TableCell><b>Price</b></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+
+              <TableRow>
+
+              <TableCell>{selectedOrder?.free_product_details?.['product code']}</TableCell>
+                <TableCell>{selectedOrder?.free_product_details?.name}</TableCell>
+                <TableCell>{selectedOrder?.free_product_details?.color}</TableCell>
+                <TableCell>{selectedOrder?.free_product_details?.['category name']}</TableCell>
+                <TableCell>RS.{selectedOrder?.free_product_details?.price_per_meter}</TableCell>
+
               </TableRow>
 
             </TableBody>
@@ -808,7 +954,7 @@ toast.error("Something went wrong at editing status")
             </Typography>
 
             <Typography>
-              <b>Phone:</b>{selectedOrder?.phoneNumber}
+              <b>Phone:</b>{selectedOrder?.phone_number}
             </Typography>
             <Typography>
               <b>Address:</b>{selectedOrder?.address}
@@ -870,17 +1016,17 @@ toast.error("Something went wrong at editing status")
                   <Select
                     labelId="status-select-label"
                     label="Choose Payment Status"
-                    value={updatedCustom.paymentStatus}
-                    onChange={(e) => setUpdatedCustom({ ...updatedCustom, paymentStatus: e.target.value })}
+                    value={updatedCustom.payment_status}
+                    onChange={(e) => setUpdatedCustom({ ...updatedCustom, payment_status: e.target.value })}
                   >
                     <MenuItem value="Pending">Pending</MenuItem>
-                    <MenuItem value="Completed">Paid</MenuItem>
+                    <MenuItem value="Paid">Paid</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
             </Grid>
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Button variant='success' sx={{ backgroundColor: "green", marginTop: '5px' }} onClick={()=>handleEditCustomer(selectedOrder.id)}   > save Changes</Button>
+              <Button variant='success' sx={{ backgroundColor: "green", marginTop: '5px' }} onClick={() => handleEditCustomer(selectedOrder.id)}   > save Changes</Button>
             </Box>
           </>
 

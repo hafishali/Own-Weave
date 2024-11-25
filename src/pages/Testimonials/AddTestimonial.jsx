@@ -129,6 +129,7 @@ function AddTestimonial() {
             if (response.status === 204) {
                 toast.success("Testimonial deleted successfully")
                 getTestimonials()
+                handleCanceldelete()
             }
         } catch (error) {
             console.log(error)
