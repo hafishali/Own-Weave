@@ -2,34 +2,26 @@ import React, { useState } from 'react';
 import { TextField, Button, Checkbox, FormControlLabel, FormGroup, Typography, Box, Grid, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { createSubadmin } from '../../services/allApi';
 
 
 function AddSubAdmin() {
+  const [isModalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
+    mobile_number:'',
     email: '',
     password: '',
-    permissions: {
-      products: false,
-      orders: false,
-      users: false,
-    },
+    
   });
-
-  const [mainAdminData, setMainAdminData] = useState({
-    name: '',
-    email: '',
-    password: '',
-  });
-
   const [errors, setErrors] = useState({
     name: '',
+    mobile_number:'',
     email: '',
     password: '',
   });
 
-  const [isModalOpen, setModalOpen] = useState(false);
-
+ 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -51,6 +43,11 @@ function AddSubAdmin() {
       newErrors.name = 'Name is required';
       valid = false;
     }
+    if (!/^\d{10}$/.test(formData.mobile_number)) {
+      newErrors.mobile_number = 'Mobile number must be exactly 10 digits';
+      valid = false;
+    }
+  
 
     if (!validateEmail(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
@@ -66,8 +63,35 @@ function AddSubAdmin() {
     return valid;
   };
 
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      try {
+        const response = await createSubadmin(formData);
+        if (response.status === 201) {
+          toast.success('Sub-admin added successfully!');
+          setFormData({
+            name: '',
+            mobile_number: '',
+            email: '',
+            password: '',
+          });
+          setErrors({});
+        }
+      } catch (error) {
+        console.log(error)
+        if (error.response && error.response.data && error.response.data.message) {
+          toast.error(error.response.data.message); // Display backend error message
+        } else {
+          // Fallback error message for unexpected cases
+          toast.error("Something went wrong while adding the category.");
+        }
+      }
+    }
+  };
+
  
-  
+  console.log(formData)
 
   return (
     <Box sx={{ p: 3 }}>
@@ -75,13 +99,13 @@ function AddSubAdmin() {
         <Typography variant="h4" gutterBottom>
           <b>Add Sub Admin</b>
         </Typography>
-        <Button variant="contained" color="secondary" onClick={() => setModalOpen(true)}>
+        {/* <Button variant="contained" color="secondary" onClick={() => setModalOpen(true)}>
           Add Main Admin
-        </Button>
+        </Button> */}
       </Grid>
 
       {/* Modal for adding Main Admin */}
-      <Dialog open={isModalOpen} onClose={() => setModalOpen(false)}>
+      {/* <Dialog open={isModalOpen} onClose={() => setModalOpen(false)}>
         <DialogTitle>Add Main Admin</DialogTitle>
         <DialogContent>
           <TextField
@@ -121,9 +145,9 @@ function AddSubAdmin() {
             Add Main Admin
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
-      <form  >
+      <form onSubmit={handleAdd} >
         <Grid container spacing={2} sx={{mt:1}}>
           <Grid item xs={12}>
             <TextField
@@ -137,6 +161,21 @@ function AddSubAdmin() {
               variant="outlined"
             />
           </Grid>
+          
+          <Grid item xs={12}>
+  <TextField
+    fullWidth
+    label="Mobile Number"
+    name="mobile_number"
+    value={formData.mobile_number}
+    type="number"
+    onChange={handleInputChange}
+    error={!!errors.mobile_number}
+    helperText={errors.mobile_number}
+    variant="outlined"
+  />
+</Grid>
+
 
           <Grid item xs={12}>
             <TextField
@@ -166,7 +205,7 @@ function AddSubAdmin() {
             />
           </Grid>
 
-          <Grid item xs={12}>
+          {/* <Grid item xs={12}>
             <Typography variant="h6" gutterBottom>
               <b>Permissions</b>
             </Typography>
@@ -202,7 +241,7 @@ function AddSubAdmin() {
                 label="Orders"
               />
             </FormGroup>
-          </Grid>
+          </Grid> */}
 
           <Grid item xs={12}>
             <Button type="submit" variant="contained" color="primary">

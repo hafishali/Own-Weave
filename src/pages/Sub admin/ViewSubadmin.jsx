@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton,
-  Button, CircularProgress
+  Button, CircularProgress,Dialog,DialogTitle,DialogContent,DialogContentText,DialogActions
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import {  deleteSubAdmin, editSubAdmin, getSubAdmins } from '../../services/allApi';
+import {  DeleteSubadmin,  getSubadmins } from '../../services/allApi';
+import { toast,ToastContainer } from 'react-toastify';
+
 
 function ViewSubAdmin() {
   const [subAdmins, setSubAdmins] = useState([]);
@@ -14,7 +16,7 @@ function ViewSubAdmin() {
   const [totalPages, setTotalPages] = useState(1); // Track total pages
   const [selectedSubAdmin, setSelectedSubAdmin] = useState(null);
   const [error, setError] = useState(null);
-  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
   const [count, setCount] = useState(0); // Track total sub-admin count
   const resultsPerPage = 10;
 
@@ -25,14 +27,9 @@ function ViewSubAdmin() {
 
 
 
-  const handleOpenEditDialog = (subdmin) => {
-    
-    setOpenEditDialog(true);
-  };
+ 
 
-  const handleCloseEditDialog = () => {
-    setOpenEditDialog(false);
-  };
+ 
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -46,6 +43,52 @@ function ViewSubAdmin() {
     }
   };
 
+  const handleGetsubadmins=async()=>{
+    try {
+      const response=await getSubadmins()
+      if(response.status===200){
+        setSubAdmins(response.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(()=>{
+    handleGetsubadmins()
+  },[])
+
+  const handleDelete=(item)=>{
+    setOpenDialog(true);
+    setSelectedSubAdmin(item)
+  }
+  const handleConfirmDelete=async()=>{
+   
+    try {
+      const response=await DeleteSubadmin(selectedSubAdmin.mobile_number)
+      if(response.status===204){
+        toast.success("subadmin has been deleted successfully")
+        handleGetsubadmins()
+        setSelectedSubAdmin(null)
+        cancelDelete()
+      }
+    } catch (error) {
+      console.log(error)
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message); // Display backend error message
+      } else {
+        // Fallback error message for unexpected cases
+        toast.error("Something went wrong ");
+      }
+    }
+   
+  }
+    const cancelDelete = () => {
+      setOpenDialog(false);
+      setSelectedSubAdmin(null);
+    };
+  
+
   // if (loading) {
   //   return (
   //     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -53,7 +96,7 @@ function ViewSubAdmin() {
   //     </Box>
   //   );
   // }
-
+console.log(subAdmins)
   return (
     <Box sx={{ maxWidth: '100%', margin: 'auto' }}>
       {/* Error Alert */}
@@ -80,28 +123,37 @@ function ViewSubAdmin() {
               <TableCell><b>SI NO</b></TableCell>
               <TableCell><b>Name</b></TableCell>
               <TableCell><b>Email</b></TableCell>
-              <TableCell><b>Permissions</b></TableCell>
-              <TableCell><b>Status</b></TableCell>
+              <TableCell><b>Phone Number</b></TableCell>
               <TableCell><b>Actions</b></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            
-              <TableRow >
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-                <TableCell> </TableCell>
-                <TableCell>
-                  <IconButton onClick={() => handleOpenEditDialog()} aria-label={`Edit `}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton  aria-label={`Delete `}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
+          {subAdmins && subAdmins.length > 0 ? (
+  subAdmins
+    .filter((item) => item.is_staff)  // Filter only items with is_staff: true
+    .map((item, index) => (
+      <TableRow key={index}>
+        <TableCell>{index + 1}</TableCell>
+        <TableCell>{item.name}</TableCell>
+        <TableCell>{item.email}</TableCell>
+        <TableCell>{item.mobile_number}</TableCell>
+        <TableCell>
+          {/* <IconButton onClick={() => handleOpenEditDialog(true)} aria-label={`Edit `}>
+            <EditIcon />
+          </IconButton> */}
+          <IconButton aria-label="Delete" color="secondary" onClick={() => handleDelete(item)}>
+            <DeleteIcon />
+          </IconButton>
+        </TableCell>
+      </TableRow>
+    ))
+) : (
+  <TableRow>
+    <TableCell colSpan={5} align="center">No sub-admins</TableCell>
+  </TableRow>
+)}
+
+              
             
           </TableBody>
         </Table>
@@ -130,7 +182,25 @@ function ViewSubAdmin() {
           </Button>
         </Box>
       </Box>
-      {/* Edit Sub Admin Modal */}
+      {/* delete Sub Admin Modal */}
+      <Dialog open={openDialog} onClose={cancelDelete}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this category? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelDelete} color="primary">
+            Cancel
+          </Button>
+          <Button  color="secondary" onClick={handleConfirmDelete}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+<ToastContainer/>
     </Box>
   );
 }

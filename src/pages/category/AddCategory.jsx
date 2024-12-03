@@ -135,7 +135,12 @@ function AddCategory() {
       }
     } catch (error) {
       console.error("Error while adding category:", error);
-      toast.error("Something went wrong while adding the category.");
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message); // Display backend error message
+      } else {
+        // Fallback error message for unexpected cases
+        toast.error("Something went wrong while adding the category.");
+      }
     }
   };
   
@@ -195,7 +200,12 @@ function AddCategory() {
       }
     } catch (error) {
       console.error("Error while adding category:", error);
-      toast.error("Something went wrong while adding the category.");
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message); // Display backend error message
+      } else {
+        // Fallback error message for unexpected cases
+        toast.error("Something went wrong while adding the category.");
+      }
     }
   };
   
@@ -366,7 +376,7 @@ console.log(categoryDts)
 
 
 {/* Sizes for XL, XXL, XXXL, 4XL, etc. (separate full and half lengths) */}
-{[ 'L', 'XL', 'XXL', 'XXXL', '4XL'].map((size) => (
+{[  'XL', 'XXL', 'XXXL'].map((size) => (
   <React.Fragment key={size}>
     <Grid item xs={2}>
       <InputLabel>{`Size of ${size} (Full Length)`}</InputLabel>

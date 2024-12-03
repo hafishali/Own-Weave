@@ -8,8 +8,8 @@ export const adminLogin = async (reqBody) => {
 }
 
 // admin logout
-export const adminLogout = async (reqBody) => {
-    return await commonApi('POST', `${BASE_URL}accounts/logout/`,reqBody,null)
+export const adminLogout = async (reqBody,reqHeader) => {
+    return await commonApi('POST', `${BASE_URL}accounts/logout/`,reqBody,reqHeader)
 }
 
 // refresh tokens
@@ -112,6 +112,13 @@ export const editOrder=async(id,reqBody)=>{
     return await commonApi('PATCH', `${BASE_URL}orders/orders/${id}/update/`,reqBody,null)
 }
 
+// bulk edit
+export const BulkEditOrder=async(reqBody)=>{
+    return await commonApi('PATCH', `${BASE_URL}orders/bulk-update/`,reqBody,null)
+}
+
+
+
 
 // view returns-------------------------------------------------------------------------------------------------------------
 export const viewReturn=async()=>{
@@ -183,9 +190,45 @@ export const EditTestimonials=async(id,reqBody)=>{
 }
 
 // delete testimonials
-export const DeleteTestimonials=async(id,reqBody)=>{
-return await commonApi('DELETE', `${BASE_URL}product/Testmonial/${id}/`,reqBody,null)
+export const DeleteTestimonials=async(id)=>{
+return await commonApi('DELETE', `${BASE_URL}product/Testmonial/${id}/`,"",null)
 }
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------
+// subadmin
+
+// add sub admin
+export const createSubadmin=async(reqBody)=>{
+    return await commonApi('POST', `${BASE_URL}accounts/create-staff/`,reqBody,null)
+}
+
+// get subadmin
+export const getSubadmins=async()=>{
+    return await commonApi('GET', `${BASE_URL}accounts/staff/`,"",null)
+}
+
+// edit
+
+
+
+// delete
+export const DeleteSubadmin=async(id)=>{
+    return await commonApi('DELETE', `${BASE_URL}accounts/staff/${id}/delete/`,"",null)
+    }
+
+
+// --------------------------------------------------------------------------------------------------------------------------------------
+// Dashboard
+
+export const ViewDashboardstatistics=async()=>{
+    return await commonApi('GET', `${BASE_URL}orders/dashboard/`,"",null)
+}
+
+export const ViewSalesoverview=async()=>{
+    return await commonApi('GET', `${BASE_URL}orders/order-analytics/`,"",null)
+}
+
 
 
 

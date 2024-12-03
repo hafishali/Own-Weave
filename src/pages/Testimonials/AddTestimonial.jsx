@@ -133,7 +133,13 @@ function AddTestimonial() {
             }
         } catch (error) {
             console.log(error)
-            toast.error("something went wrong at deleting")
+            if (error.response && error.response.data && error.response.data.message) {
+                toast.error(error.response.data.message); // Display backend error message
+              } else {
+                // Fallback error message for unexpected cases
+                toast.error("Something went wrong ");
+              }
+            
         }
     }
     return (

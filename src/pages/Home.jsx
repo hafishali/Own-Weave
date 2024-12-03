@@ -22,36 +22,56 @@ import Stocks from './Products/Stocks';
 import AnalyticalReport from './Analytical report/AnalyticalReport';
 import AddPoster from './AddPoster';
 import AddHomeImage from './AddHomeImage';
-// import DeliveryBoyManagement from './Offers/DeliveryBoy';
 import ViewReturn from './Orders/ViewReturn';
 import AddOffers from './Offers/AddOffers';
 import ViewOffers from './Offers/ViewOffers';
 import ViewCustomeOrders from './Orders/ViewCustomeOrders';
 import AddTestimonial from './Testimonials/AddTestimonial';
+import { useLocation } from 'react-router-dom';
+import CompletedOrders from './Orders/CompletedOrders';
+import RejectedOrders from './Orders/RejectedOrders';
 
 function Home() {
-    const [selectedOption, setSelectedOption] = useState('dashboard'); // Default to dashboard
-    const [userPermissions, setUserPermissions] = useState(null);
+    const location = useLocation();
+    const [selectedOption, setSelectedOption] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isAdmin,setIsAdmin]=useState(false)
 
     const handleDrawerToggle = () => {
       setIsSidebarOpen((prevOpen) => !prevOpen);
     };
 
-  
-
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const actionFromUrl = params.get('action');
+        if (actionFromUrl) {
+          setSelectedOption(actionFromUrl);
+        }
+      }, [location.search]);
     const handleMenuClick = (option) => {
         setSelectedOption(option);
     };
 
+    useEffect(() => {
+        const role = localStorage.getItem('role'); 
+        if (role === 'Admin') {
+            setIsAdmin(true); 
+        } else {
+            setSelectedOption(false); 
+        }
+    }, []);
+
     const renderContent = () => {
+        if (selectedOption === '') {
+            // Fallback logic: if no option is selected, render based on `isAdmin`
+            return isAdmin ? <Dashboard /> : <ViewOrders />;
+        }
+    
         switch (selectedOption) {
             case 'addProduct':
                 return <AddProduct />;
-           
-             case 'viewOffers':
+            case 'viewOffers':
                 return <ViewOffers />;
-
             case 'addCategory':
                 return <AddCategory />;
             case 'viewProduct':
@@ -66,18 +86,22 @@ function Home() {
                 return <Dashboard />;
             case 'viewOrders':
                 return <ViewOrders />;
+            case 'RejectedOrders':
+                return <RejectedOrders />;
+            case 'CompletedOrders':
+                return <CompletedOrders />;
             case 'ViewReturns':
-                return <ViewReturn/>
+                return <ViewReturn />;
             case 'CustomOrders':
-                    return <ViewCustomeOrders />;
+                return <ViewCustomeOrders />;
             case 'notifications':
                 return <Notifications />;
             case 'addCarosal':
                 return <AddImagePage />;
-                case 'addPoster':
-                    return <AddPoster />;
-                    case 'addHomeImage':
-                        return <AddHomeImage />;
+            case 'addPoster':
+                return <AddPoster />;
+            case 'addHomeImage':
+                return <AddHomeImage />;
             case 'addSubcategory':
                 return <AddSubcategory />;
             case 'viewSubcategory':
@@ -92,34 +116,39 @@ function Home() {
                 return <Stocks />;
             case 'reports':
                 return <AnalyticalReport />;
-                case 'testimonials':
-                    return <AddTestimonial />;
-                
+            case 'testimonials':
+                return <AddTestimonial />;
             default:
-                return <Dashboard />; // Fallback to Dashboard
+                return isAdmin ? <Dashboard /> : <ViewOrders />; // Fallback based on `isAdmin`
         }
     };
-console.log(selectedOption)
+    
+
     return (
         <Box sx={{ display: 'flex', height: '100vh' }}>
-                 <Header handleDrawerToggle={handleDrawerToggle} />
-      <SideBar isSidebarOpen={isSidebarOpen} handleDrawerToggle={handleDrawerToggle} setSelectedOption={setSelectedOption}  />
-
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    p: 3,
-                    ml: { xs: 0, sm: '240px' }, // Adjust the margin-left to match the sidebar width
-                    overflowY: 'auto', // Allow vertical scrolling
-                    height: 'calc(100vh - 64px)', // Subtract header height
-                    position: 'relative', // Ensure it doesn't overlap the sidebar
-                }}
-            >
-                <Toolbar />
+        <Header handleDrawerToggle={handleDrawerToggle} />
+        <SideBar 
+            isSidebarOpen={isSidebarOpen} 
+            handleDrawerToggle={handleDrawerToggle} 
+            setSelectedOption={setSelectedOption} 
+        />
+        <Box
+            component="main"
+            sx={{
+                flexGrow: 1,
+                p: 3,
+                ml: { xs: 0, sm: '240px' }, // Adjust the margin-left to match the sidebar width
+                overflowY: 'auto', // Allow vertical scrolling
+                height: 'calc(100vh - 64px)', // Subtract header height
+                position: 'relative', // Ensure it doesn't overlap the sidebar
+            }}
+        >
+            <Toolbar />
+            <div key={selectedOption}> {/* This key forces re-render on option change */}
                 {renderContent()}
-            </Box>
+            </div>
         </Box>
+    </Box>
     );
 }
 

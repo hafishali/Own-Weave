@@ -16,6 +16,10 @@ import ViewSubcategory from './pages/category/ViewSubCategory';
 import AddSubAdmin from './pages/Sub admin/AddSubadmin';
 import ViewSubAdmin from './pages/Sub admin/ViewSubadmin';
 import SendNotification from './pages/Notifications/SendNotifications';
+import BillComponent from './components/BillComponent';
+import BillComponentOrders from './components/BillComponentOrders';
+import CustomInvoice from './components/CustomInvoice';
+import InvoicePrint from './components/InvoicePrint';
 
 function App() {
   // const isAdminLoggedIn = () => {
@@ -35,6 +39,10 @@ function App() {
         <Route path='/viewcategory' element={<AdminRoute element={<ViewCategory></ViewCategory>}/> }></Route>
         <Route path='/viewpayments' element={<AdminRoute element={<ViewPayments></ViewPayments>}/> }></Route> */}
         <Route path='/' element={<LoginPage></LoginPage>}></Route>
+        <Route path='/bill' element={<BillComponent></BillComponent>}></Route>
+        <Route path='/bill/orders' element={<BillComponentOrders></BillComponentOrders>}></Route>
+        <Route path='/invoice' element={<InvoicePrint></InvoicePrint>}></Route>
+        
         {/* <Route path='/dashboard' element={<AdminRoute element={<Dashboard></Dashboard>}/> }></Route>
         <Route path='/vieworders' element={<AdminRoute element={<ViewOrders></ViewOrders>}/> }></Route>
         <Route path='/notifications' element={<AdminRoute element={<Notifications></Notifications>}/> }></Route>

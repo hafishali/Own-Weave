@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation,useNavigate  } from 'react-router-dom';
 import Drawer from '@mui/material/Drawer';
 import Hidden from '@mui/material/Hidden';
 import Toolbar from '@mui/material/Toolbar';
@@ -26,6 +27,8 @@ import AddTestimonial from '../pages/Testimonials/AddTestimonial';
 function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
   const theme = useTheme();
   const isLargeScreen = useMediaQuery(theme.breakpoints.up('md'));
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [open, setOpen] = useState({
     category: false,
@@ -35,6 +38,9 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
 
   const [selectedMenu, setSelectedMenu] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(isLargeScreen);
+
+
+  const userRole = localStorage.getItem('role');
 
   useEffect(() => {
     // Update drawer state when screen size changes
@@ -46,8 +52,13 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
   };
 
   const handleMenuClick = (action) => {
-    setSelectedOption(action);
+    // setSelectedOption(action);
     setSelectedMenu(action);
+    // const params = new URLSearchParams(location.search);
+    // params.set('action', action); 
+    // window.history.pushState(null, '', `?${params.toString()}`);
+    navigate(`?action=${action}`)
+    // window.location.reload()
   };
 
   const handleDrawerToggleInternal = () => {
@@ -71,24 +82,26 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
   };
 
   const menuItems = [
-    { text: 'Dashboard', icon: <Dashboard />, action: 'dashboard' },
-    { text: 'Analytical Report', icon: <Assessment />, action: 'reports' },
+    { text: 'Dashboard', icon: <Dashboard />, action: 'dashboard',roles: ['Admin'] },
+    { text: 'Analytical Report', icon: <Assessment />, action: 'reports',roles: ['Admin'] },
     {
       text: 'Offers',
       icon: <LocalOfferOutlinedIcon />,
       action: null,
-     
+      roles: ['Admin','Staff'],
+      
       children: [
        
-        { text: 'View Offer', icon: <LocalOfferOutlinedIcon />, action: 'viewOffers' },
+        { text: 'View Offer', icon: <LocalOfferOutlinedIcon />, action: 'viewOffers',roles: ['Admin','Staff'] },
       ],
     },
     {
       text: 'Category',
       icon: <Category />,
+      roles: ['Admin','Staff'],
       children: [
-        { text: 'View Category', icon: <ViewList />, action: 'viewCategory' },
-        { text: 'Add Category', icon: <AddBox />, action: 'addCategory' },
+        { text: 'View Category', icon: <ViewList />, action: 'viewCategory',roles: ['Admin','Staff'] },
+        { text: 'Add Category', icon: <AddBox />, action: 'addCategory',roles: ['Admin','Staff'] },
         // { text: 'View Subcategory', icon: <ViewList />, action: 'viewSubcategory' },
         // { text: 'Add Subcategory', icon: <AddBox />, action: 'addSubcategory' },
       ],
@@ -96,22 +109,26 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
     {
       text: 'Product',
       icon: <Category />,
+      roles: ['Admin','Staff'],
       children: [
-        { text: 'Add Product', icon: <AddBox />, action: 'addProduct' },
-        { text: 'View Product', icon: <ViewList />, action: 'viewProduct' },
+        { text: 'Add Product', icon: <AddBox />, action: 'addProduct',roles: ['Admin','Staff'] },
+        { text: 'View Product', icon: <ViewList />, action: 'viewProduct',roles: ['Admin','Staff'] },
         // { text: 'View Stocks', icon: <ProductionQuantityLimitsIcon />, action: 'viewStocks' },
       ],
     },
     { text: 'Orders', icon: <ShoppingCart />, action: null,
+      roles: ['Admin','Staff'],
       children: [
-        { text: 'View Orders', icon: <ShoppingCart />, action: 'viewOrders' },
-        { text: 'View Returns', icon: <ShoppingCart />, action: 'ViewReturns' },
-        { text: 'Custom Orders', icon: <ShoppingCart />, action: 'CustomOrders' },
+        { text: 'View Orders', icon: <ShoppingCart />, action: 'viewOrders' ,roles: ['Admin','Staff']},
+        { text: 'Rejected Orders', icon: <ShoppingCart />, action: 'RejectedOrders' ,roles: ['Admin','Staff']},
+        { text: 'View Returns', icon: <ShoppingCart />, action: 'ViewReturns',roles: ['Admin','Staff'] },
+        { text: 'Completed Orders', icon: <ShoppingCart />, action: 'CompletedOrders' ,roles: ['Admin','Staff']},
+        { text: 'Custom Orders', icon: <ShoppingCart />, action: 'CustomOrders',roles: ['Admin','Staff'] },
         
       ],
      },
-    { text: 'Customers', icon: <People />, action: 'viewCustomers' },
-    { text: 'Payments', icon: <Payment />, action: 'viewPayments' },
+    { text: 'Customers', icon: <People />, action: 'viewCustomers',roles: ['Admin','Staff'] },
+    { text: 'Payments', icon: <Payment />, action: 'viewPayments',roles: ['Admin'] },
     // {
     //   text: 'Add Carousal',
     //   icon: <ImageIcon />,
@@ -127,15 +144,16 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
       text: 'Sub Admin',
       icon: <People />,
       action: null,
+      roles: ['Admin'],
      
       children: [
-        { text: 'Add Sub Admin', icon: <AddBox />, action: 'addSubAdmin' },
-        { text: 'View Sub Admin', icon: <ViewList />, action: 'viewSubAdmin' },
+        { text: 'Add Sub Admin', icon: <AddBox />, action: 'addSubAdmin' ,roles: ['Admin']},
+        { text: 'View Sub Admin', icon: <ViewList />, action: 'viewSubAdmin',roles: ['Admin'] },
       ],
     },
-    { text: 'Testimonials', icon: <ReviewsIcon />, action: 'testimonials' },
-    { text: 'Notification', icon: <Notifications />, action: 'notifications' },
-    { text: 'Send Notifications', icon: <Notifications />, action: 'sendNotifications' },
+    { text: 'Testimonials', icon: <ReviewsIcon />, action: 'testimonials',roles: ['Admin','Staff'] },
+    { text: 'Notification', icon: <Notifications />, action: 'notifications',roles: ['Admin','Staff'] },
+    { text: 'Send Notifications', icon: <Notifications />, action: 'sendNotifications',roles: ['Admin','Staff'] },
   ];
 
   return (
@@ -151,7 +169,8 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
         >
           <Toolbar />
           <List component="nav">
-            {menuItems.map((item) => (
+          {menuItems.map((item) => (
+              item.roles.includes(userRole) && (
               <React.Fragment key={item.text}>
                 <ListItem
                   button
@@ -181,7 +200,8 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
                 )}
                 <Divider sx={{ backgroundColor: 'rgba(255, 255, 255, 0.3)' }} />
               </React.Fragment>
-            ))}
+            )
+          ))}
           </List>
         </Drawer>
       </Hidden>
@@ -191,7 +211,8 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
         <Drawer variant="persistent" open={isDrawerOpen} sx={drawerStyles}>
           <Toolbar />
           <List component="nav">
-            {menuItems.map((item) => (
+          {menuItems.map((item) => (
+              item.roles.includes(userRole) && (
               <React.Fragment key={item.text}>
                 <ListItem
                   button
@@ -221,6 +242,7 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
                 )}
                 <Divider sx={{ backgroundColor: 'rgba(255, 255, 255, 0.3)' }} />
               </React.Fragment>
+             )
             ))}
           </List>
         </Drawer>

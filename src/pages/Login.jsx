@@ -27,6 +27,7 @@ function LoginPage() {
         toast.success("Login Successfull")
         localStorage.setItem('refresh', result.data.token.refresh); 
         localStorage.setItem('access', result.data.token.access);
+        localStorage.setItem('role', result.data.role);
         navigate('/home')
        
       } else {

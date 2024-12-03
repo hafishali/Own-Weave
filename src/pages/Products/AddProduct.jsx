@@ -170,13 +170,13 @@ const handleAddProduct = async () => {
     formData.append("gsm", gsm);
     formData.append("is_popular", is_popular);
     formData.append("is_offer_product", is_offer_product);
-    formData.append("description", description);
+    // formData.append("description", description);
     formData.append("fabric", fabric);
     formData.append("pattern", pattern);
     formData.append("fabric_composition", fabric_composition);
     formData.append("fit", fit);
     formData.append("style", style);
-    formData.append("color", color);
+    // formData.append("color", color);
 
     const response = await addProduct(formData, reqHeader);
     console.log('Response:', response);
@@ -199,7 +199,12 @@ const handleAddProduct = async () => {
     }
   } catch (error) {
     console.error("Error while adding product:", error);
-    toast.error("Something went wrong while adding the product.");
+    if (error.response && error.response.data && error.response.data.message) {
+      toast.error(error.response.data.message); // Display backend error message
+    } else {
+      // Fallback error message for unexpected cases
+      toast.error("Something went wrong while adding the category.");
+    }
   }
 };
 
@@ -237,7 +242,7 @@ const handleRadioChange = (event, fieldName) => {
 
 
       <Grid container spacing={2}>
-        <Grid item xs={3}>
+        <Grid item xs={4}>
         <TextField
             fullWidth
             label="Product Name"
@@ -246,7 +251,7 @@ const handleRadioChange = (event, fieldName) => {
            onChange={(e) => setProduct({ ...product, name: e.target.value })}
            />
         </Grid>
-        <Grid item xs={3}>
+        <Grid item xs={4}>
         <TextField
             fullWidth
             label="Product Code"
@@ -256,7 +261,7 @@ const handleRadioChange = (event, fieldName) => {
            />
         </Grid>
 
-        <Grid item xs={3}>
+        {/* <Grid item xs={3}>
         <TextField
             fullWidth
             label="Product Color"
@@ -264,8 +269,8 @@ const handleRadioChange = (event, fieldName) => {
            value={product.color}
            onChange={(e) => setProduct({ ...product, color: e.target.value })}
            />
-        </Grid>
-        <Grid item xs={3}>
+        </Grid> */}
+        <Grid item xs={4}>
             <TextField
                 fullWidth
                 label="Select category"
@@ -356,7 +361,7 @@ const handleRadioChange = (event, fieldName) => {
         <Grid item xs={3}>
           <TextField
             fullWidth
-            label="price per meterr"
+            label="Actual price per meterr"
             variant="outlined"
             type="number"
             value={product.price_per_meter}
@@ -461,7 +466,7 @@ const handleRadioChange = (event, fieldName) => {
                 </RadioGroup>
             </FormControl>
         </Grid>
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <TextField
             fullWidth
             label="Product Description"
@@ -471,7 +476,7 @@ const handleRadioChange = (event, fieldName) => {
             value={product.description}
            
             onChange={(e) => setProduct({ ...product, description: e.target.value })}          />
-        </Grid>
+        </Grid> */}
         {/* <Grid item xs={12}>
           <Typography variant="body1">In Stock</Typography>
           <Switch

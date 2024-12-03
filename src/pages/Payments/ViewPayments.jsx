@@ -1,23 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton } from '@mui/material';
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton ,Button} from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { ViewallPayments } from '../../services/allApi';
+import dayjs from 'dayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { Label } from 'recharts';
 
-const payments = [
-  { id: 'P001', customerName: 'John Doe', amount: 100, date: '2024-08-01', status: 'Completed' },
-  { id: 'P002', customerName: 'Jane Smith', amount: 200, date: '2024-08-03', status: 'Pending' },
 
-];
 
 function ViewPayments() {
   const [payments, setPayments] = useState([])
+  const [filterstatus, setFilterStatus] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const handlGetAllPayments = async () => {
     try {
       const response = await ViewallPayments()
       if (response.status === 200) {
-        setPayments(response.data)
+        const sortedPayments = response.data.sort((a, b) => new Date(b.created_at	) - new Date(a.created_at));
+
+        setPayments(sortedPayments)
       }
     } catch (error) {
       console.log(error)
@@ -39,7 +46,41 @@ function ViewPayments() {
         return 'black'; // Default color for unknown status
     }
   };
+  const handleStatusChangeFilter = (event) => {
+    setFilterStatus(event.target.value);
+  };
+  const filteredorders = payments.filter(order => {
+    // Status filter
+    const statusMatch = filterstatus === 'All' || order.payment_status === filterstatus;
+  
+    // Date range filter
+    const orderDate = dayjs(order.created_at.split("T")[0]);
+    const startDateMatch = startDate ? orderDate.isAfter(dayjs(startDate).subtract(1, 'day')) : true;
+    const endDateMatch = endDate ? orderDate.isBefore(dayjs(endDate).add(1, 'day')) : true;
+  
+    return statusMatch && startDateMatch && endDateMatch;
+  });
+  const clearFilters = () => {
+    setFilterStatus("All");
+    setStartDate(null);
+    setEndDate(null);
+  };
 
+const itemsPerPage = 10;
+const indexOfLastItem = currentPage * itemsPerPage;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+const currentItems = filteredorders.slice(indexOfFirstItem, indexOfLastItem);
+
+const count = filteredorders.length; 
+const totalPages = Math.ceil(count / itemsPerPage); 
+const startCustomerIndex = indexOfFirstItem + 1;  
+const endCustomerIndex = Math.min(indexOfLastItem, count);  
+const handlePrevPage = () => {
+  setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));  
+};
+const handleNextPage = () => {
+  setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));  
+};
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
@@ -61,10 +102,10 @@ function ViewPayments() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {payments && payments.length > 0 ? (
-              payments.map((payment,index) => (
+          {currentItems.length > 0 ? (  
+    currentItems.map((payment, index) => (
                 <TableRow key={payment.id}>
-                  <TableCell>{index+1}</TableCell>
+                  <TableCell>{startCustomerIndex + index}</TableCell>
                   <TableCell>{payment.user?.name}</TableCell>
                   <TableCell>{payment.user?.mobile_number}</TableCell>
                   <TableCell>{payment.user?.email}</TableCell>
@@ -74,15 +115,40 @@ function ViewPayments() {
                     {payment.payment_status}
                   </TableCell>
                 </TableRow>
-              ))
+             ))
             ) : (
+              // Fallback Message when there are no orders
               <TableRow>
-                <TableCell colSpan={4}>No payments</TableCell>
+                <TableCell colSpan={11} style={{ textAlign: 'center' }}>  {/* Adjust colSpan based on total columns */}
+                  No  Payments
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </TableContainer>
+               {/* Pagination Controls */}
+               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
+  <Button
+    variant="contained"
+    onClick={handlePrevPage}
+    disabled={currentPage === 1}
+  >
+    Previous
+  </Button>
+
+  <Typography sx={{ mx: 2 }}>
+    {`Showing ${startCustomerIndex} to ${endCustomerIndex} of ${count}`}
+  </Typography>
+
+  <Button
+    variant="contained"
+    onClick={handleNextPage}
+    disabled={currentPage === totalPages}
+  >
+    Next
+  </Button>
+</Box>
     </Box>
   );
 }

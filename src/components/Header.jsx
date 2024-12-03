@@ -34,7 +34,6 @@ const Search = styled('div')(({ theme }) => ({
     width: 'auto',
   },
 }));
-
 const SearchIconWrapper = styled('div')(({ theme }) => ({
   padding: theme.spacing(0, 2),
   height: '100%',
@@ -64,6 +63,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 function Header({ handleDrawerToggle }) {
   const [anchorEl, setAnchorEl] = useState(null);
 
+  const userRole = localStorage.getItem('role');
 
   const navigate = useNavigate()
   const handleClick = (event) => {
@@ -75,18 +75,25 @@ function Header({ handleDrawerToggle }) {
   };
 
   const handleLogout = async () => {
+    const reqHeader={
+      refresh:localStorage.getItem('refresh')
+    }
     try {
-      const response = await adminLogout()
-      if (response.status === 200) {
+      const response = await adminLogout(reqHeader)
+      if (response.status === 205) {
         setAnchorEl(null);
         localStorage.removeItem('access')
         localStorage.removeItem('refresh')
-        navigate('/login')
+        localStorage.removeItem('role')
+        navigate('/')
       }
     } catch (error) {
       console.log(error)
     }
   }
+
+  
+
 
   return (
     <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, backgroundColor: '#043e6b' }}>
@@ -103,22 +110,23 @@ function Header({ handleDrawerToggle }) {
         <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: 'white' }}>
           <b>Own Weave</b>
         </Typography>
-        <Search>
+        {/* <Search>
           <SearchIconWrapper>
             <SearchIcon />
           </SearchIconWrapper>
           <StyledInputBase placeholder="Search…" />
-        </Search>
+        </Search> */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton color="inherit">
+          {/* <IconButton color="inherit">
             <NotificationsIcon />
-          </IconButton>
+          </IconButton> */}
+          <Typography variant="body1" sx={{ color: 'white', ml: 1 }}>
+            {userRole}
+          </Typography>
           <IconButton color="inherit" onClick={handleClick}>
             <AccountCircle />
           </IconButton>
-          <Typography variant="body1" sx={{ color: 'white', ml: 1 }}>
-            Admin
-          </Typography>
+          
           <Menu
             id="simple-menu"
             anchorEl={anchorEl}
@@ -131,14 +139,15 @@ function Header({ handleDrawerToggle }) {
               },
             }}
           >
-            <Link to={'/login'} style={{ textDecoration: 'none', color: 'white' }}>
+            <Link to={'/'} style={{ textDecoration: 'none', color: 'white' }}>
               <MenuItem onClick={handleClose}>Login</MenuItem>
             </Link>
             <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
-          <IconButton color="inherit">
+          
+          {/* <IconButton color="inherit">
             <SettingsIcon />
-          </IconButton>
+          </IconButton> */}
         </Box>
       </Toolbar>
     </AppBar>

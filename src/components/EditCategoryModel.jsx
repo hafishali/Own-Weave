@@ -18,8 +18,6 @@ function EditCategoryModel({ openEditDialog, setOpenEditDialog, selectedCategory
     offer_id: "",
     image: "",
     status: true,
-    size_L_full_length: "",
-    size_L_half_length: "",
     size_XL_full_length: "",
     size_XL_half_length: "",
     size_XXL_full_length: "",
@@ -65,13 +63,16 @@ function EditCategoryModel({ openEditDialog, setOpenEditDialog, selectedCategory
         const newSizes = [...categoryDts.sizes];
         newSizes.splice(index, 1); // Remove the size at the specified index
         setCategoryDts({ ...categoryDts, sizes: newSizes }); // Update the state with the new sizes
-        alert('Category size deleted successfully!');
-      } else {
-        alert('Failed to delete category size.');
-      }
+        toast.success('Category size deleted successfully!');
+      } 
     } catch (error) {
       console.error('Error deleting category size:', error);
-      alert('An error occurred while deleting the category size.');
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message); // Display backend error message
+      } else {
+        // Fallback error message for unexpected cases
+        toast.error("Something went wrong while adding the category.");
+      }
     }
   };
   const handleImageChange = (e) => {
@@ -157,7 +158,12 @@ function EditCategoryModel({ openEditDialog, setOpenEditDialog, selectedCategory
       }
     } catch (error) {
       console.error("Error updating category:", error);
-      toast.error("An error occurred while updating the category.");
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message); // Display backend error message
+      } else {
+        // Fallback error message for unexpected cases
+        toast.error("Something went wrong while adding the category.");
+      };
     }
   };
   
@@ -165,8 +171,7 @@ function EditCategoryModel({ openEditDialog, setOpenEditDialog, selectedCategory
   const updateSizes = async (categoryId, sizes, headers) => {
     try {
       const sizePayload = sizes.map((size) => ({
-        size_L_full_length: size.size_L_full_length || "",
-        size_L_half_length: size.size_L_half_length || "",
+       
         size_XL_full_length: size.size_XL_full_length || "",
         size_XL_half_length: size.size_XL_half_length || "",
         size_XXL_full_length: size.size_XXL_full_length || "",
@@ -299,8 +304,8 @@ function EditCategoryModel({ openEditDialog, setOpenEditDialog, selectedCategory
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell><b> L full length</b></TableCell>
-                <TableCell><b> L half length</b></TableCell>
+                {/* <TableCell><b> L full length</b></TableCell>
+                <TableCell><b> L half length</b></TableCell> */}
                 <TableCell><b> XL full length</b></TableCell>
                 <TableCell><b> XL half length</b></TableCell>
                 <TableCell><b> XXL full length</b></TableCell>
@@ -313,7 +318,7 @@ function EditCategoryModel({ openEditDialog, setOpenEditDialog, selectedCategory
   {categoryDts.sizes && categoryDts.sizes.length > 0 ? (
     categoryDts.sizes.map((size, index) => (
       <TableRow key={index}>
-        <TableCell>
+        {/* <TableCell>
           <TextField
             fullWidth
             variant="outlined"
@@ -330,7 +335,7 @@ function EditCategoryModel({ openEditDialog, setOpenEditDialog, selectedCategory
             value={size.size_L_half_length || ''}
             onChange={(e) => handleSizeChange(e, index, 'size_L_half_length')}
           />
-        </TableCell>
+        </TableCell> */}
         <TableCell>
           <TextField
             fullWidth

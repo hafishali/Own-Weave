@@ -90,8 +90,13 @@ function ViewOffers() {
         }
       }
     } catch (error) {
-      toast.error("Something went Wrong")
       console.log(error)
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message); 
+      } else {
+        
+        toast.error("Something went wrong while adding the category.");
+      }
     }
     finally{
       setAddOffers({
@@ -131,7 +136,12 @@ function ViewOffers() {
       }
     } catch (error) {
       console.log(error);
-      toast.error("Something went wrong while editing the offer");
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message); // Display backend error message
+      } else {
+        // Fallback error message for unexpected cases
+        toast.error("Something went wrong while adding the category.");
+      }
     }
   };
 
@@ -156,7 +166,12 @@ function ViewOffers() {
       }
     } catch (error) {
       console.log(error)
-      toast.error('something went wrong at deleting product')
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message); // Display backend error message
+      } else {
+        // Fallback error message for unexpected cases
+        toast.error("Something went wrong while adding the category.");
+      }
     }
     finally {
       setSelectedoffer('')

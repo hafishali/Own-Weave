@@ -46,8 +46,10 @@ function ViewCustomers() {
     try {
       const response = await ViewallCustomers();
       if (response.status === 200) {
-        setCustomers(response.data);
-        setDisplayedCustomer(response.data); // Set to `customers` state
+        const sortedreturns = response.data.sort((a, b) => new Date(b.created_at	) - new Date(a.created_at));
+
+        setCustomers(sortedreturns);
+        setDisplayedCustomer(sortedreturns); // Set to `customers` state
       }
     } catch (error) {
       console.log(error);
@@ -254,6 +256,8 @@ function ViewCustomers() {
       if (response.status === 204) {
         toast.success("customer deleted successfully")
         handleGetallCustomers()
+        cancelDelete()
+        
       }
     } catch (error) {
       console.log(error)

@@ -25,7 +25,6 @@ function ViewProduct() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editProductData, setEditProductData] = useState({});
   const [error, setError] = useState(null); // For error handling
-  const [count, setCount] = useState(0); // Add this state to store total count
   const [isInStock, setIsInStock] = useState(true);
   const [stockFilter, setStockFilter] = useState('all'); // New stock filter state
   const [openFeatures, setOpenFeatures] = useState(false)
@@ -34,17 +33,17 @@ function ViewProduct() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterStock, setFilterStock] = useState("all");
   const [filterType, setFilterType] = useState("all");
+  const [imageOpen, setImageOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
 
-  const resultsPerPage = 10;
-
-  const totalPages = Math.ceil(count / resultsPerPage);
-
+ 
   const handleGetallProducts = async () => {
     try {
       const response = await viewAllproducts();
       console.log(response); // Check response data in the console
       if (response.status === 200) {
-        setProducts(response.data); // Set products data
+        const sortedProducts = response.data.sort((a, b) => new Date(b.created_at	) - new Date(a.created_at));
+        setProducts(sortedProducts); // Set products data
       }
     } catch (error) {
       console.log(error);
@@ -74,50 +73,18 @@ function ViewProduct() {
       }
     }
   };
-  
   useEffect(() => {
     handleGetallProducts()
   }, [])
-
-  const startProductIndex = (currentPage - 1) * resultsPerPage + 1;
-  const endProductIndex = Math.min(startProductIndex + resultsPerPage - 1, count);
-
-
- 
-
-
-
- 
-
   const handleEditChange = (name, value) => {
     setEditProductData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
   };
-
-
   const handleOpenFeatures = (product) => {
     setSelectedProduct(product);  // Set the selected product data
     setOpenFeatures(true);        // Open the modal
-  };
-  
-
-
- 
-
-  const handleNextPage = async () => {
-    if (nextPageUrl) {
-      setLoading(true);
-
-    }
-  };
-
-  const handlePrevPage = async () => {
-    if (prevPageUrl) {
-      setLoading(true);
-
-    }
   };
   const reqHeader = {
     'Content-Type': 'application/json',
@@ -188,7 +155,36 @@ function ViewProduct() {
     }, 500);
     return () => clearTimeout(timeout);
 }, [searchQuery]);
+const itemsPerPage = 10;
+const indexOfLastItem = currentPage * itemsPerPage;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
 
+const count = filteredProducts.length; // Total number of items after filtering
+const totalPages = Math.ceil(count / itemsPerPage); // Calculate the total number of pages
+
+const startCustomerIndex = indexOfFirstItem + 1;  // Starting item index
+const endCustomerIndex = Math.min(indexOfLastItem, count);  // Ending item index // Ending item index
+
+// Function to handle the 'Previous' button click
+const handlePrevPage = () => {
+  setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));  // Ensure page is not less than 1
+};
+
+// Function to handle the 'Next' button click
+const handleNextPage = () => {
+  setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));  // Ensure page does not exceed totalPages
+};
+
+
+const handleImageClick = (imageUrl) => {
+  setSelectedImage(imageUrl);
+  setImageOpen(true);
+};
+
+const handleClose = () => {
+  setImageOpen(false);
+};
   return (
     <Box sx={{ maxWidth: '100%', margin: 'auto' }}>
 
@@ -286,7 +282,7 @@ function ViewProduct() {
         <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Wholesale Price</b></TableCell>
         <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Price (Length)</b></TableCell>
         <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Offer Price</b></TableCell>
-        <TableCell><b>Discount</b></TableCell>
+        <TableCell><b>Offer Type</b></TableCell>
         <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Stock Status</b></TableCell>
         <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Stock length</b></TableCell>
         <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>width</b></TableCell>
@@ -299,19 +295,20 @@ function ViewProduct() {
       </TableRow>
     </TableHead>
     <TableBody>
-    {filteredProducts.map((product, index) => (
+    {currentItems.map((product, index) =>  (
         <TableRow key={product.id}>
-          <TableCell style={{ textAlign: 'center' }}>{index + 1}</TableCell>
+          <TableCell style={{ textAlign: 'center' }}>{startCustomerIndex + index}</TableCell>
           
           {/* Display single image */}
           <TableCell>
-            <img
-              src={product.images[0]?.image || 'placeholder-image.jpg'}
-              alt={product.name}
-              style={{ width: 50, height: 50, objectFit: 'cover' }}
-              loading="lazy"
-            />
-          </TableCell>
+        <img
+          src={product.images[0]?.image || 'placeholder-image.jpg'}
+          alt={product.name}
+          style={{ width: 50, height: 50, objectFit: 'cover', cursor: 'pointer' }}
+          loading="lazy"
+          onClick={() => handleImageClick(product.images[0]?.image || 'placeholder-image.jpg')}
+        />
+      </TableCell>
           <TableCell style={{ textAlign: 'center' }}>{product.product_code}</TableCell>
 
           <TableCell style={{ textAlign: 'center' }}>{product.name}</TableCell>
@@ -328,7 +325,7 @@ function ViewProduct() {
           <TableCell>{product.offer?.name || 'No Offer'}</TableCell>
 
           <TableCell style={{ textAlign: 'center' }}>{product.stock_length >= 1.5 ? 'In Stock' : 'Out of Stock'}</TableCell>
-          <TableCell style={{ textAlign: 'center' }}>{product.stock_length || 'N/A'}</TableCell>
+          <TableCell style={{ textAlign: 'center',color: product.stock_length < 10 ? 'red' : 'inherit' }}>{product.stock_length || 'N/A'}</TableCell>
           <TableCell style={{ textAlign: 'center' }}>{product.width || 'N/A'}</TableCell>
           <TableCell style={{ textAlign: 'center' }}>{product.gsm || 'N/A'}</TableCell>
           {/* <TableCell style={{ textAlign: 'center' }}>{product.size || 'N/A'}</TableCell> */}
@@ -360,27 +357,27 @@ function ViewProduct() {
 
       {/* Pagination Controls */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
-        <Button
-          variant="contained"
-          onClick={handlePrevPage}
-          disabled={prevPageUrl === null}
-        >
-          Previous
-        </Button>
+  <Button
+    variant="contained"
+    onClick={handlePrevPage}
+    disabled={currentPage === 1}
+  >
+    Previous
+  </Button>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
-          <Typography sx={{ mr: 2 }}>
-            {`Products ${startProductIndex} to ${endProductIndex} of ${count}`}
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={handleNextPage}
-            disabled={nextPageUrl === null}
-          >
-            Next
-          </Button>
-        </Box>
-      </Box>
+  <Typography sx={{ mx: 2 }}>
+    {`Showing ${startCustomerIndex} to ${endCustomerIndex} of ${count}`}
+  </Typography>
+
+  <Button
+    variant="contained"
+    onClick={handleNextPage}
+    disabled={currentPage === totalPages}
+  >
+    Next
+  </Button>
+</Box>
+
 
 
       {/* Edit Product Modal */}
@@ -390,7 +387,8 @@ function ViewProduct() {
     onClose={handleCloseEditDialog}     
     product={editProductData}          
     categories={categories}            
-    reqHeader={reqHeader}               
+    reqHeader={reqHeader}  
+    allProducts={handleGetallProducts}             
   />
 )}
 
@@ -478,6 +476,18 @@ function ViewProduct() {
             Delete
           </Button>
         </DialogActions>
+      </Dialog>
+      {/* Dialog for Enlarged Image */}
+      <Dialog open={imageOpen} onClose={handleClose} maxWidth="md">
+        <DialogContent>
+          <Box display="flex" justifyContent="center">
+            <img
+              src={selectedImage}
+              
+              style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }}
+            />
+          </Box>
+        </DialogContent>
       </Dialog>
     </Box>
   );

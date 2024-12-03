@@ -17,7 +17,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField, Grid, MenuItem, Select, FormControl, InputLabel
+  TextField, Grid, MenuItem, Select, FormControl, InputLabel,CircularProgress
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneIcon from '@mui/icons-material/Done';
@@ -33,6 +33,10 @@ import { editOrder, viewReturn } from '../../services/allApi';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { toast, ToastContainer } from 'react-toastify';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { Label } from 'recharts';
 
 function ViewReturn() {
   const [openCustomer, setOpenCustomer] = useState(false)
@@ -45,6 +49,15 @@ function ViewReturn() {
   const [status, setStatus] = useState('');
   const [returnOrders, setReturnOrders] = useState([])
   const [selectedReturn, setSelectedReturn] = useState('')
+  const [filterstatus, setFilterStatus] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filterTrackingID, setFilterTrackingID] = useState("")
+
+  // State to manage date pickers
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  
+
   const [updatedReturns,setUpdatedReturns]=useState({
     return_status:""
   })
@@ -62,7 +75,8 @@ function ViewReturn() {
     try {
       const response = await viewReturn()
       if (response.status === 200) {
-        setReturnOrders(response.data)
+        const sortedreturns = response.data.sort((a, b) => new Date(b.created_at	) - new Date(a.created_at));
+        setReturnOrders(sortedreturns)
       }
     } catch (error) {
       console.log(error)
@@ -157,8 +171,6 @@ function ViewReturn() {
     // Trigger the download
     XLSX.writeFile(workbook, 'Return_orders_report.xlsx');
   };
-  
-
   const handleCustomerOpen = (item) => {
     setOpenCustomer(true)
     setSelectedReturn(item)
@@ -205,11 +217,7 @@ function ViewReturn() {
       console.log(error)
       toast.error("something went wrong at editing return orders")
     }
-    finally{
-      setReturnOrders({
-        return_status:""
-      })  
-    }
+    
   }
 
   const getStatusColor = (return_status) => {
@@ -225,43 +233,108 @@ function ViewReturn() {
     }
   };
 
+  const handleStatusChangeFilter = (event) => {
+    setFilterStatus(event.target.value);
+  };
+
+  const filteredorders = returnOrders.filter(order => {
+    // Status filter
+    const statusMatch = filterstatus === 'All' || order.status === filterstatus;
+
+    // Date range filter
+    const orderDate = dayjs(order.created_at.split("T")[0]);
+    const startDateMatch = startDate ? orderDate.isAfter(dayjs(startDate).subtract(1, 'day')) : true;
+    const endDateMatch = endDate ? orderDate.isBefore(dayjs(endDate).add(1, 'day')) : true;
+    const trackingIDMatch = 
+    filterTrackingID === '' || 
+    (order.Track_id?.toLowerCase().includes(filterTrackingID.toLowerCase()));
+
+  return statusMatch && startDateMatch && endDateMatch && trackingIDMatch;
+  });
+  const clearFilters = () => {
+    setFilterStatus("All");
+    setStartDate(null);
+    setEndDate(null);
+    setFilterTrackingID("")
+  };
+  const itemsPerPage = 10;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredorders.slice(indexOfFirstItem, indexOfLastItem);
+  
+  const count = filteredorders.length; 
+  const totalPages = Math.ceil(count / itemsPerPage); 
+  const startCustomerIndex = indexOfFirstItem + 1;  
+  const endCustomerIndex = Math.min(indexOfLastItem, count);  
+  const handlePrevPage = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));  
+  };
+  const handleNextPage = () => {
+    setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));  
+  };
+  // if (!Array.isArray(returnOrders)) {
+  //   return (
+  //     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+  //       <CircularProgress />
+  //     </Box>
+  //   );
+  // }
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" gutterBottom>
           View Return Orders
         </Typography>
-        <Button variant="contained" color="primary" onClick={downloadExcel}>
+        {/* <Button variant="contained" color="primary" onClick={downloadExcel}>
           Export as excel <DescriptionIcon sx={{ ml: 1 }} />
-        </Button>
+        </Button> */}
+
       </Box>
 
       {/* Date filters */}
-      {/* <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', mb: 2, gap: 2 }}>
-          <Typography gutterBottom>
-            From
-          </Typography>
-          <input
-            type="date"
-            value={fromDate}
-
-            style={{ padding: '10px', fontSize: '16px' }}
-          />
-          <Typography gutterBottom>
-            To
-          </Typography>
-          <input
-            type="date"
-            value={toDate}
-
-            style={{ padding: '10px', fontSize: '16px' }}
-          />
-          <Button variant="contained" color="secondary" >
-            Filter Orders
-          </Button>
-        </Box>
-      </Box> */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 ,mt:3}}>
+        <Grid container spacing={2}>
+          {/* <Grid item xs={3} ><FormControl fullWidth>
+          <InputLabel id="status-select-label"> Return Status</InputLabel>
+          <Select
+            labelId="status-select-label"
+            value={filterstatus}
+            onChange={handleStatusChangeFilter}
+          >
+            <MenuItem value="All">All</MenuItem>
+             <MenuItem value="Return Initiated">Return Initiated</MenuItem>
+                    <MenuItem value="Pending">Pending</MenuItem>
+                    <MenuItem value="Completed">Return Completed</MenuItem>
+          </Select>
+        </FormControl></Grid> */}
+         <Grid item xs={3}>
+            <TextField
+              fullWidth
+              label="Tracking ID"
+              value={filterTrackingID}
+              onChange={(e) => setFilterTrackingID(e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={6} sx={{display:"flex",justifyContent:"space-around"}}><LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Grid item xs={3}> <DatePicker
+            label="Start Date"
+            value={startDate}
+            onChange={(newValue) => setStartDate(newValue)}
+            sx={{ width: '100%' }}
+          /></Grid>
+          <Grid item xs={3}><DatePicker
+            label="End Date"
+            value={endDate}
+            onChange={(newValue) => setEndDate(newValue)}
+            sx={{ width: '100%' }}
+          /></Grid>
+         
+          
+        </LocalizationProvider></Grid>
+          <Grid item xs={3}  sx={{display:"flex",justifyContent:"center"}}> <Button variant="outlined" onClick={clearFilters} color="primary">Clear Filters</Button></Grid>
+          
+        </Grid>
+      </Box>
 
 
       <TableContainer component={Paper}>
@@ -283,7 +356,8 @@ function ViewReturn() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {returnOrders?.length > 0 ? returnOrders.map((item, index) => (<TableRow key={index}>
+          {currentItems.length > 0 ? (  // Check if currentItems has data
+    currentItems.map((item, index) => (<TableRow key={index}>
               <TableCell
                 style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
                 sx={{ color: "blue", cursor: "pointer" }}
@@ -336,12 +410,43 @@ function ViewReturn() {
                   <DeleteIcon />
                 </IconButton> */}
                 </TableCell>
-            </TableRow>)) : <TableRow>No returns</TableRow>}
+            </TableRow>))
+          ) : (
+            // Fallback Message when there are no orders
+            <TableRow>
+              <TableCell colSpan={11} style={{ textAlign: 'center' }}>  {/* Adjust colSpan based on total columns */}
+                No Returns
+              </TableCell>
+            </TableRow>
+          )}
 
 
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Pagination Controls */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
+  <Button
+    variant="contained"
+    onClick={handlePrevPage}
+    disabled={currentPage === 1}
+  >
+    Previous
+  </Button>
+
+  <Typography sx={{ mx: 2 }}>
+    {`Showing ${startCustomerIndex} to ${endCustomerIndex} of ${count}`}
+  </Typography>
+
+  <Button
+    variant="contained"
+    onClick={handleNextPage}
+    disabled={currentPage === totalPages}
+  >
+    Next
+  </Button>
+</Box>
 
       {/* Modal to display order details */}
       <Modal open={open} onClose={handlecloseorder}>

@@ -7,7 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { editProduct, fetchCategories, fetchSubCategories, getAlloffers, viewAllCategories } from '../../services/allApi'; 
 
-function EditProductModal({ open, onClose, product, onChange,reqHeader, onSubmit, categories: propCategories, // Pass categories as props to avoid redundant fetching
+function EditProductModal({ open, onClose, product, onChange,reqHeader, onSubmit, categories: propCategories, 
 }) {
   const [subcategories, setSubcategories] = useState([]);
   const [imagePreview, setImagePreview] = useState(product.image || null);
@@ -146,7 +146,18 @@ const handleInputChange = (e) => {
   
   
   
-  
+  const fileInputRef = React.useRef();
+
+const handleAddImage = (newFile) => {
+  setProductData((prev) => ({
+    ...prev,
+    images: [
+      ...prev.images,
+      { image: URL.createObjectURL(newFile), file: newFile },
+    ],
+  }));
+};
+
   
   const handleCategoryChange = (event) => {
     const selectedCategoryId = event.target.value;
@@ -439,53 +450,55 @@ const handleSave = async () => {
     </FormControl>
   </Grid>
 
-          <Grid item xs={12}>
-        <Typography variant="h6">Images</Typography>
-        <Grid container spacing={2}>
-          {productData.images?.map((image, index) => (
-            <Grid item xs={3} key={index}>
-              <Box position="relative">
-                <img
-                  src={image?.image || 'placeholder-image.jpg'}
-                  alt={`Product Image ${index + 1}`}
-                  style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 8 }}
-                />
-                <Box
-                  position="absolute"
-                  top={8}
-                  right={8}
-                  display="flex"
-                  gap={1}
-                >
-                  {/* Edit Icon */}
-                  <IconButton
-                    onClick={() => handleEditImage(index)}
-                    color="primary"
-                    size="small"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  {/* Delete Icon */}
-                  <IconButton
-                    onClick={() => handleDeleteImage(index)}
-                    color="secondary"
-                    size="small"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-                {image.isEditing && (
-                  <input
-                    type="file"
-                    onChange={(e) => handleReplaceImage(index, e.target.files[0])}
-                    style={{ marginTop: 8 }}
-                  />
-                )}
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
+  <Grid item xs={12}>
+  <Typography variant="h6">Images</Typography>
+  <Grid container spacing={2}>
+    {productData.images?.map((image, index) => (
+      <Grid item xs={3} key={index}>
+        <Box position="relative">
+          <img
+            src={image?.image || 'placeholder-image.jpg'}
+            alt={`Product Image ${index + 1}`}
+            style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 8 }}
+          />
+          <Box position="absolute" top={8} right={8}>
+            {/* Delete Icon */}
+            <IconButton
+              onClick={() => handleDeleteImage(index)}
+              color="secondary"
+              size="small"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Box>
+        </Box>
       </Grid>
+    ))}
+    {/* Add New Image */}
+    <Grid item xs={3}>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+        height={100}
+        border="1px dashed #ccc"
+        borderRadius={8}
+        sx={{ cursor: 'pointer' }}
+        onClick={() => fileInputRef.current.click()}
+      >
+        <Button color="primary" >add</Button>
+      </Box>
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: 'none' }}
+        onChange={(e) => handleAddImage(e.target.files[0])}
+      />
+    </Grid>
+  </Grid>
+</Grid>
+
         {/* Product Description */}
         <Grid item xs={12}>
           <TextField

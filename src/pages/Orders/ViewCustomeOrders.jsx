@@ -17,9 +17,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField, Grid, MenuItem, Select, FormControl, InputLabel,FormControlLabel
+  TextField, Grid, MenuItem, Select, FormControl, InputLabel, FormControlLabel, List, ListItem, ListItemText,
 
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import { toast, ToastContainer } from 'react-toastify';
@@ -30,7 +31,12 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import BillComponent from '../../components/BillComponent';
 import { useRef } from 'react';
-
+import dayjs from 'dayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { Label } from 'recharts';
+import CustomInvoice from '../../components/CustomInvoice';
 function ViewCustomeOrders() {
   const [addOrderModal, setAddOrderModal] = useState(false)
   const [customOrder, setCustomOrder] = useState([])
@@ -44,21 +50,63 @@ function ViewCustomeOrders() {
     name: '',
     phone_number: '',
     address: '',
-    state: '',
-    pincode: '',
-    city: '',
-    district: '',
-    product_code: '',
-    custom_length: '',
-    free_product_code: "",
-    custom_total_price:"",
+    products: [],
+    custom_total_price: "",
     payment_status: '',
     payment_method: '',
+    Track_id: "",
 
   });
   const [updatedCustom, setUpdatedCustom] = useState({
     payment_status: ""
   })
+  const [filterstatus, setFilterStatus] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [billType, setBillType] = useState("")
+  const [currentProduct, setCurrentProduct] = useState({
+    product_code: '',
+    custom_length: '',
+    free_product_code: '',
+  });
+  console.log(currentProduct)
+
+  const handleAddProduct = () => {
+    if (!currentProduct.product_code || !currentProduct.custom_length) {
+      toast.error("Product code and Length are required");
+      return;
+    }
+  
+    setFormData((prevData) => {
+      if (!prevData || !Array.isArray(prevData.products)) {
+        // Initialize products if it's undefined or not an array
+        return {
+          ...prevData,
+          products: [currentProduct],
+        };
+      }
+  
+      return {
+        ...prevData,
+        products: [...prevData.products, currentProduct],
+      };
+    });
+  
+    // Reset the current product fields
+    setCurrentProduct({
+      product_code: '',
+      custom_length: '',
+      free_product_code: '',
+    });
+  };
+  
+  const handleDeleteProduct = (index) => {
+    const updatedProducts = formData.products.filter((_, i) => i !== index);
+    setFormData({ ...formData, products: updatedProducts });
+  };
+
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -106,7 +154,7 @@ function ViewCustomeOrders() {
       /*   quantity: '', */
       /*   sleeve: '', */
       free_product_code: "",
-      custom_total_price:"",
+      custom_total_price: "",
       payment_method: '',
       payment_status: '',
     })
@@ -125,7 +173,9 @@ function ViewCustomeOrders() {
     try {
       const response = await viewCustomOrders()
       if (response.status === 200) {
-        setCustomOrder(response.data)
+        const sortedreturns = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        setCustomOrder(sortedreturns)
       }
     } catch (error) {
       console.log(error)
@@ -135,76 +185,109 @@ function ViewCustomeOrders() {
     handleGetCustom()
   }, [])
 
-  
+
   const handleAddCustomeorder = async () => {
     const { name, phone_number, address, state, pincode, city, district, product_code, custom_length, payment_method, payment_status, custom_total_price } = formData;
-  
+
     try {
-      if (!name || !phone_number || !address || !state || !pincode || !city || !district) {
+      if (!address) {
         toast.error("Please fill the user details completely");
-      } else if (!custom_length || !product_code) {
-        toast.error("Product code and Length are required");
-      } else if (!payment_method || !payment_status || !custom_total_price) {
+      }
+      else if (!payment_method || !payment_status || !custom_total_price) {
         toast.error("Payment details are required");
       } else {
         const response = await addCustomeOrders(formData);
-  
+
         if (response.status === 201) {
           toast.success("Order created successfully");
           handleClose();
+          generatePDF(response.data.order_details, billType);
+          setCurrentProduct({
+            product_code: '',
+            custom_length: '',
+            free_product_code: '',
+          });
   
-          // Pass order details and trigger PDF generation
-          generatePDF(response.data);
-  
-          // Reset form data
           setFormData({
             name: '',
             phone_number: '',
             address: '',
-            state: '',
-            pincode: '',
-            city: '',
-            district: '',
-            product_code: '',
-            custom_length: '',
-            free_product_code: '',
+            products: [],
             custom_total_price: '',
             payment_method: '',
             payment_status: '',
           });
+          handleGetCustom();
         }
-        handleGetCustom();
+       
       }
     } catch (error) {
       console.log(error);
-      toast.error("Something went wrong");
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message); // Display backend error message
+      } else {
+        // Fallback error message for unexpected cases
+        toast.error("Something went wrong while adding the category.");
+      }
     }
   };
   const pdfRef = useRef();
-  // PDF generation function
-  const generatePDF = (orderDetails) => {
-   
-  
-    // Create a temporary component render container
+  console.log(billType)
+
+  const generatePDF = (orderDetails, billType) => {
     const container = document.createElement('div');
     document.body.appendChild(container);
   
-    ReactDOM.render(<BillComponent ref={pdfRef} orderDetails={orderDetails} />, container);
+    // Conditionally render the component based on billType
+    const BillComponentToRender = billType === 'OFFLINE' ? CustomInvoice : BillComponent;
   
-    html2canvas(pdfRef.current).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    ReactDOM.render(<BillComponentToRender orderDetails={orderDetails} />, container);
   
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      pdf.save(`order-${orderDetails.phone_number}.pdf`);
+    setTimeout(() => {
+      html2canvas(container, {
+        scale: 6,  // Increase the scale for better resolution
+        useCORS: true,
+        logging: false,
+        dpi: 300,  // High DPI for better image quality
+      }).then((canvas) => {
+        const pdf = new jsPDF('p', 'mm', 'a5', true); // Higher resolution pdf
   
-      // Clean up temporary container
-      ReactDOM.unmountComponentAtNode(container);
-      document.body.removeChild(container);
-    });
+        const margin = 5;
+        const pageWidth = pdf.internal.pageSize.getWidth() - 2 * margin;
+        const pageHeight = pdf.internal.pageSize.getHeight() - 2 * margin;
+  
+        const imgData = canvas.toDataURL('image/png');
+  
+        // Set image width and height based on billType
+        let imageWidth, imageHeight;
+  
+        if (billType === 'OFFLINE') {
+          imageWidth = pageWidth;
+          imageHeight = pageHeight;
+        } else {
+          imageWidth = 590 * 0.264583;
+          imageHeight = 500 * 0.264583;
+        }
+  
+        // Add the image with better resolution
+        pdf.addImage(imgData, 'PNG', margin, margin, imageWidth, imageHeight, undefined, 'FAST');
+  
+        // Save the PDF with the order number
+        pdf.save(`order-${orderDetails.phone_number}.pdf`);
+  
+        // Clean up
+        ReactDOM.unmountComponentAtNode(container);
+        document.body.removeChild(container);
+      });
+    }, 1000);  // Wait for rendering to complete
   };
+  
+  
+  
+  
+
+
+  console.log(formData)
 
   const handleEditCustomer = async (id) => {
     try {
@@ -219,7 +302,12 @@ function ViewCustomeOrders() {
       }
     } catch (error) {
       console.log(error)
-      toast.error("Something went wrong at editing status")
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message); // Display backend error message
+      } else {
+        // Fallback error message for unexpected cases
+        toast.error("Something went wrong while adding the category.");
+      }
     }
   }
 
@@ -298,44 +386,93 @@ function ViewCustomeOrders() {
     // Trigger download
     XLSX.writeFile(workbook, 'orders_report.xlsx');
   };
+  const handleStatusChangeFilter = (event) => {
+    setFilterStatus(event.target.value);
+  };
+  const filteredorders = customOrder.filter(order => {
+    // Status filter
+    const statusMatch = filterstatus === 'All' || order.payment_status === filterstatus;
+
+    // Date range filter
+    const orderDate = dayjs(order.created_at.split("T")[0]);
+    const startDateMatch = startDate ? orderDate.isAfter(dayjs(startDate).subtract(1, 'day')) : true;
+    const endDateMatch = endDate ? orderDate.isBefore(dayjs(endDate).add(1, 'day')) : true;
+
+    return statusMatch && startDateMatch && endDateMatch;
+  });
+  const clearFilters = () => {
+    setFilterStatus("All");
+    setStartDate(null);
+    setEndDate(null);
+  };
+
+  const itemsPerPage = 10;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredorders.slice(indexOfFirstItem, indexOfLastItem);
+
+  const count = filteredorders.length;
+  const totalPages = Math.ceil(count / itemsPerPage);
+  const startCustomerIndex = indexOfFirstItem + 1;
+  const endCustomerIndex = Math.min(indexOfLastItem, count);
+  const handlePrevPage = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
+  };
+  const handleNextPage = () => {
+    setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
+  };
   return (
     <>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" gutterBottom>
           View Custome Orders
         </Typography>
-       {/*  <Button variant="contained" color="primary" onClick={downloadExcel}>
+        <Box sx={{ display: 'flex', mb: 2, gap: 2 }} >
+          <Button variant="contained" sx={{ marginTop: '10px' }} color="success" onClick={() => setAddOrderModal(true)} >
+            Add custom order
+          </Button>
+
+
+        </Box>
+        {/*  <Button variant="contained" color="primary" onClick={downloadExcel}>
           Export as excel <DescriptionIcon sx={{ ml: 1 }} />
         </Button> */}
       </Box>
 
       {/* Date filters */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', mb: 2, gap: 2 }}>
-          {/* <FormControl fullWidth>
-          <InputLabel id="status-select-label">Status</InputLabel>
-          <Select
-            labelId="status-select-label"
-            label="Choose Status"
-            value={status}
-            onChange={handleStatusChange}
-          >
-            <MenuItem value="All">All</MenuItem>
-            <MenuItem value="Accept">Accepted</MenuItem>
-            <MenuItem value="Reject">Rejected</MenuItem>
-            <MenuItem value="pending">Pending</MenuItem>
-            <MenuItem value="Return">Returned</MenuItem>
-            <MenuItem value="Completed">Completed</MenuItem>
-          </Select>
-        </FormControl> */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, mt: 3 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={3} ><FormControl fullWidth>
+            <InputLabel id="status-select-label">Paymnet Status</InputLabel>
+            <Select
+              labelId="status-select-label"
+              value={filterstatus}
+              onChange={handleStatusChangeFilter}
+            >
+              <MenuItem value="All">All</MenuItem>
+              <MenuItem value="Pending">Pending</MenuItem>
+              <MenuItem value="Paid">Paid</MenuItem>
+            </Select>
+          </FormControl></Grid>
+          <Grid item xs={6} sx={{ display: "flex", justifyContent: "space-around" }}><LocalizationProvider dateAdapter={AdapterDayjs}>
+            <Grid item xs={3}> <DatePicker
+              label="Start Date"
+              value={startDate}
+              onChange={(newValue) => setStartDate(newValue)}
+              sx={{ width: '100%' }}
+            /></Grid>
+            <Grid item xs={3}><DatePicker
+              label="End Date"
+              value={endDate}
+              onChange={(newValue) => setEndDate(newValue)}
+              sx={{ width: '100%' }}
+            /></Grid>
 
-        </Box>
-        <Box sx={{ display: 'flex', mb: 2, gap: 2 }} >
-          <Button variant="contained" sx={{ marginTop: '10px' }} color="success" onClick={() => setAddOrderModal(true)} >
-            Add custom order
-          </Button>
-        </Box>
 
+          </LocalizationProvider></Grid>
+          <Grid item xs={3} sx={{ display: "flex", justifyContent: "center" }}> <Button variant="outlined" onClick={clearFilters} color="primary">Clear Filters</Button></Grid>
+
+        </Grid>
       </Box>
 
 
@@ -354,77 +491,87 @@ function ViewCustomeOrders() {
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Address</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Payment Method</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Payment Status</b></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b> Offer Type</b></TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b> Track ID</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Actions</b></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
 
-            {customOrder && customOrder.length > 0 ? customOrder.map((item, index) => (<TableRow >
-              <TableCell
-                style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
+            {currentItems.length > 0 ? (
+              currentItems.map((item, index) => (
+                <TableRow >
+                  <TableCell
+                    style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
 
-              >
-                {index + 1}
-              </TableCell>
-              <TableCell
-                style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
-              >
-                {item.name}
-              </TableCell>
-              <TableCell
-                style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
-              >
-                {item.phone_number}
-              </TableCell>
-              <TableCell
-                style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
-                sx={{ color: "blue", cursor: "pointer" }}
-                onClick={() => handleopenorder(item)}
-              >
-                <u>Product</u>
-              </TableCell>
-              <TableCell
-                style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
-                sx={{ color: "blue", cursor: "pointer" }}
-                onClick={() => handleopenoffer(item)}
-              >
-                <u> Offer Product</u>
-              </TableCell>
+                  >
+                    {startCustomerIndex + index}
+                  </TableCell>
+                  <TableCell
+                    style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
+                  >
+                    {item.name}
+                  </TableCell>
+                  <TableCell
+                    style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
+                  >
+                    {item.phone_number}
+                  </TableCell>
+                  <TableCell
+                    style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
+                    sx={{ color: "blue", cursor: "pointer" }}
+                    onClick={() => handleopenorder(item)}
+                  >
+                    <u>Product</u>
+                  </TableCell>
+                  <TableCell
+                    style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
+                    sx={{ color: "blue", cursor: "pointer" }}
+                    onClick={() => handleopenoffer(item)}
+                  >
+                    <u> Offer Product</u>
+                  </TableCell>
 
-              {/* Additional Empty Columns */}
+                  {/* Additional Empty Columns */}
 
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}> {item.custom_length}</TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{new Date(item?.created_at).toLocaleString()}</TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center', color: "blue", cursor: "pointer" }} onClick={() => handleaddressOpen(item)}><u>View</u></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item.payment_method}</TableCell>
-
-
-              {/* Track ID Column */}
-              <TableCell
-                style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
-
-              >
-                {item.payment_status}
-              </TableCell>
+                  <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}> {item.custom_length}</TableCell>
+                  <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{new Date(item?.created_at).toLocaleString()}</TableCell>
+                  <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center', color: "blue", cursor: "pointer" }} onClick={() => handleaddressOpen(item)}><u>View</u></TableCell>
+                  <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item.payment_method}</TableCell>
 
 
-              <TableCell style={{ textAlign: 'center' }}>
-               {item.offer_type	}
+                  {/* Track ID Column */}
+                  <TableCell
+                    style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
 
-              </TableCell>
+                  >
+                    {item.payment_status}
+                  </TableCell>
 
 
-              {/* Action Buttons Based on Status */}
-              <TableCell><IconButton aria-label="Edit" onClick={() => handleEdit(item)}>
-                <EditIcon />
-              </IconButton>
+                  <TableCell style={{ textAlign: 'center' }}>
+                    {item.offer_type}
 
-                {/* <IconButton aria-label="Delete">
+                  </TableCell>
+
+
+                  {/* Action Buttons Based on Status */}
+                  <TableCell><IconButton aria-label="Edit" onClick={() => handleEdit(item)}>
+                    <EditIcon />
+                  </IconButton>
+
+                    {/* <IconButton aria-label="Delete">
               <DeleteIcon />
             </IconButton> */}
-              </TableCell>
-            </TableRow>)) : (<TableRow>No Custom Orders</TableRow>)}
+                  </TableCell>
+                </TableRow>))
+            ) : (
+              // Fallback Message when there are no orders
+              <TableRow>
+                <TableCell colSpan={11} style={{ textAlign: 'center' }}>  {/* Adjust colSpan based on total columns */}
+                  No Custom order
+                </TableCell>
+              </TableRow>
+            )}
 
 
 
@@ -433,6 +580,28 @@ function ViewCustomeOrders() {
           </TableBody>
         </Table>
       </TableContainer>
+      {/* Pagination Controls */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
+        <Button
+          variant="contained"
+          onClick={handlePrevPage}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </Button>
+
+        <Typography sx={{ mx: 2 }}>
+          {`Showing ${startCustomerIndex} to ${endCustomerIndex} of ${count}`}
+        </Typography>
+
+        <Button
+          variant="contained"
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </Button>
+      </Box>
 
       {/* modal for customer details */}
       {/* <Modal open={openCustomer} onClose={() => setOpenCustomer(false)}>
@@ -552,7 +721,7 @@ function ViewCustomeOrders() {
                       onChange={handleChange}
                     />
                   </Grid>
-                  <Grid item xs={6}>
+                  {/* <Grid item xs={6}>
                     <TextField
                       fullWidth
                       name='state'
@@ -596,7 +765,7 @@ function ViewCustomeOrders() {
                       onChange={handleChange}
                     />
 
-                  </Grid>
+                  </Grid> */}
                 </Grid>
               </Box>
               <Box mt={2}>
@@ -607,13 +776,11 @@ function ViewCustomeOrders() {
                     <TextField
                       fullWidth
                       name='product_code'
-                      label="Product code"
+                      label="Product Code"
                       variant="outlined"
                       type="text"
-                      value={formData.product_code}
-                      onChange={handleChange}
-
-
+                      value={currentProduct.product_code}
+                      onChange={(e) => setCurrentProduct({ ...currentProduct, product_code: e.target.value })}
                     />
                   </Grid>
                   {/* <Grid item xs={6}>
@@ -640,16 +807,16 @@ function ViewCustomeOrders() {
                     <TextField
                       fullWidth
                       name='custom_length'
-                      label="Custome Size"
+                      label="Custom Length"
                       variant="outlined"
                       type="number"
-                      value={formData.custom_length}
-                      onChange={handleChange}
+                      value={currentProduct.custom_length}
+                      onChange={(e) => setCurrentProduct({ ...currentProduct, custom_length: e.target.value })}
                     />
                   </Grid>
-                  <Grid item xs={4}>
+                  {/* <Grid item xs={4}>
                     <FormControlLabel
-                    label="Enable Offer"
+                      label="Enable Offer"
                       control={
                         <Switch
                           checked={checked}
@@ -657,22 +824,47 @@ function ViewCustomeOrders() {
                           inputProps={{ 'aria-label': 'controlled' }}
                         />
                       }
-                       
+
                     />
-                  </Grid>
-                  <Grid item xs={6}>
+                  </Grid> */}
+                  <Grid item xs={4}>
                     <TextField
                       fullWidth
                       name='free_product_code'
-                      label="Free product code"
+                      label="Free Product Code"
                       variant="outlined"
                       type="text"
-                      disabled={!checked}
-                      value={formData.free_product_code}
-                      onChange={handleChange}
+                      value={currentProduct.free_product_code}
+                      onChange={(e) => setCurrentProduct({ ...currentProduct, free_product_code: e.target.value })}
                     />
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid item xs={12}>
+                    <Button variant="contained" color="primary" onClick={handleAddProduct}>
+                      Add Product
+                    </Button>
+                  </Grid>
+                  <List sx={{ maxHeight: 300, overflowY: 'auto' }}>
+                    {formData.products?.map((product, index) => (
+                      <ListItem
+                        key={index}
+                        secondaryAction={
+                          <IconButton
+                            edge="end"
+                            aria-label="delete"
+                            onClick={() => handleDeleteProduct(index)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        }
+                      >
+                        <ListItemText
+                          primary={`Product ${index + 1}: ${product.product_code}`}
+                          secondary={`Custom Length: ${product.custom_length || 'N/A'} ${product.free_product_code ? `, Free Product: ${product.free_product_code}` : ''}`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                  <Grid item xs={12}>
                     <TextField
                       fullWidth
                       name='custom_total_price'
@@ -739,20 +931,33 @@ function ViewCustomeOrders() {
                       </Select>
                     </FormControl>
                   </Grid>
-                  {/* <Grid item xs={4}>
+                  <Grid item xs={12}>
                     <FormControl fullWidth variant="outlined">
-                      <InputLabel>Offers</InputLabel>
+                      <InputLabel>Select Bill Type</InputLabel>
                       <Select
                         label="Offers"
                         defaultValue=""
-                        value={formData.offer}
-                        onChange={(e) => setFormData({ ...formData, offer: e.target.value })}
+                        value={billType}
+                        onChange={(e) => setBillType(e.target.value)}
                       >
 
-                        <MenuItem value="BOGO">Buy One Get One</MenuItem>
+                        <MenuItem value="ONLINE">ONLINE INVIOCE</MenuItem>
+                        <MenuItem value="OFFLINE">OFFLINE INVIOCE</MenuItem>
                       </Select>
                     </FormControl>
-                  </Grid> */}
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      name='Track_id'
+                      label="Track id"
+                      variant="outlined"
+                      type="text"
+                      disabled={billType === 'OFFLINE'}
+                      value={formData.Track_id}
+                      onChange={handleChange}
+                    />
+                  </Grid>
                 </Grid>
               </Box>
             </Grid>
@@ -830,7 +1035,7 @@ function ViewCustomeOrders() {
 
               <TableRow>
 
-              <TableCell>{selectedOrder?.product_details?.['product code']}</TableCell>
+                <TableCell>{selectedOrder?.product_details?.['product code']}</TableCell>
                 <TableCell>{selectedOrder?.product_details?.name}</TableCell>
                 <TableCell>{selectedOrder?.product_details?.color}</TableCell>
                 <TableCell>{selectedOrder?.product_details?.['category name']}</TableCell>
@@ -844,8 +1049,8 @@ function ViewCustomeOrders() {
           </Table>
         </Box>
       </Modal>
-         {/* Modal to display product details */}
-         <Modal open={openofferProduct} onClose={handleCloseoffer}>
+      {/* Modal to display product details */}
+      <Modal open={openofferProduct} onClose={handleCloseoffer}>
         <Box
           sx={{
             position: 'absolute',
@@ -874,7 +1079,7 @@ function ViewCustomeOrders() {
           </IconButton>
 
           <Typography variant="h4" gutterBottom>
-           Offer Product Details
+            Offer Product Details
           </Typography>
 
           {/* Order Information */}
@@ -902,7 +1107,7 @@ function ViewCustomeOrders() {
 
               <TableRow>
 
-              <TableCell>{selectedOrder?.free_product_details?.['product code']}</TableCell>
+                <TableCell>{selectedOrder?.free_product_details?.['product code']}</TableCell>
                 <TableCell>{selectedOrder?.free_product_details?.name}</TableCell>
                 <TableCell>{selectedOrder?.free_product_details?.color}</TableCell>
                 <TableCell>{selectedOrder?.free_product_details?.['category name']}</TableCell>
@@ -1024,6 +1229,7 @@ function ViewCustomeOrders() {
                   </Select>
                 </FormControl>
               </Grid>
+
             </Grid>
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               <Button variant='success' sx={{ backgroundColor: "green", marginTop: '5px' }} onClick={() => handleEditCustomer(selectedOrder.id)}   > save Changes</Button>
