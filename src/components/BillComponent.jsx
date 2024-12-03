@@ -67,7 +67,7 @@ const BillComponent = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
           {/* Shipping and COD Section */}
           <Grid item xs={8}>
             <Box>
-              <Typography variant="body1" fontWeight="bold" sx={{ mb: 0.5, fontSize: '0.9rem' }}>
+              <Typography variant="body1" fontWeight="bold" sx={{ mb: 0.5, fontSize: '1.2rem' }}>
                 Shipping To:
               </Typography>
               <Typography sx={{ whiteSpace: 'pre-line', fontSize: '1rem', lineHeight: 1.4 }}>
@@ -193,7 +193,7 @@ const BillComponent = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
                       alt="Own Weave"
                       sx={{
                         width: '100%',
-                        maxWidth: 100,
+                        maxWidth: 120,
                         height: 'auto'
                       }}
                     />

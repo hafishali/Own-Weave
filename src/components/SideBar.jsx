@@ -152,8 +152,8 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
       ],
     },
     { text: 'Testimonials', icon: <ReviewsIcon />, action: 'testimonials',roles: ['Admin','Staff'] },
-    { text: 'Notification', icon: <Notifications />, action: 'notifications',roles: ['Admin','Staff'] },
-    { text: 'Send Notifications', icon: <Notifications />, action: 'sendNotifications',roles: ['Admin','Staff'] },
+    /* { text: 'Notification', icon: <Notifications />, action: 'notifications',roles: ['Admin','Staff'] },
+    { text: 'Send Notifications', icon: <Notifications />, action: 'sendNotifications',roles: ['Admin','Staff'] }, */
   ];
 
   return (

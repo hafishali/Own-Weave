@@ -65,6 +65,7 @@ function ViewCustomeOrders() {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [billType, setBillType] = useState("")
+  const [filterTrackingID, setFilterTrackingID] = useState("")
   const [currentProduct, setCurrentProduct] = useState({
     product_code: '',
     custom_length: '',
@@ -77,7 +78,7 @@ function ViewCustomeOrders() {
       toast.error("Product code and Length are required");
       return;
     }
-  
+
     setFormData((prevData) => {
       if (!prevData || !Array.isArray(prevData.products)) {
         // Initialize products if it's undefined or not an array
@@ -86,13 +87,13 @@ function ViewCustomeOrders() {
           products: [currentProduct],
         };
       }
-  
+
       return {
         ...prevData,
         products: [...prevData.products, currentProduct],
       };
     });
-  
+
     // Reset the current product fields
     setCurrentProduct({
       product_code: '',
@@ -100,7 +101,7 @@ function ViewCustomeOrders() {
       free_product_code: '',
     });
   };
-  
+
   const handleDeleteProduct = (index) => {
     const updatedProducts = formData.products.filter((_, i) => i !== index);
     setFormData({ ...formData, products: updatedProducts });
@@ -207,7 +208,7 @@ function ViewCustomeOrders() {
             custom_length: '',
             free_product_code: '',
           });
-  
+
           setFormData({
             name: '',
             phone_number: '',
@@ -216,10 +217,12 @@ function ViewCustomeOrders() {
             custom_total_price: '',
             payment_method: '',
             payment_status: '',
+            Track_id:''
           });
           handleGetCustom();
+          setAddOrderModal(false)
         }
-       
+
       }
     } catch (error) {
       console.log(error);
@@ -237,54 +240,54 @@ function ViewCustomeOrders() {
   const generatePDF = (orderDetails, billType) => {
     const container = document.createElement('div');
     document.body.appendChild(container);
-  
+
     // Conditionally render the component based on billType
     const BillComponentToRender = billType === 'OFFLINE' ? CustomInvoice : BillComponent;
-  
+
     ReactDOM.render(<BillComponentToRender orderDetails={orderDetails} />, container);
-  
+
     setTimeout(() => {
       html2canvas(container, {
-        scale: 6,  // Increase the scale for better resolution
+        scale: 2,  // Increase the scale for better resolution
         useCORS: true,
         logging: false,
         dpi: 300,  // High DPI for better image quality
       }).then((canvas) => {
         const pdf = new jsPDF('p', 'mm', 'a5', true); // Higher resolution pdf
-  
+
         const margin = 5;
         const pageWidth = pdf.internal.pageSize.getWidth() - 2 * margin;
         const pageHeight = pdf.internal.pageSize.getHeight() - 2 * margin;
-  
+
         const imgData = canvas.toDataURL('image/png');
-  
+
         // Set image width and height based on billType
         let imageWidth, imageHeight;
-  
+
         if (billType === 'OFFLINE') {
           imageWidth = pageWidth;
           imageHeight = pageHeight;
         } else {
-          imageWidth = 590 * 0.264583;
-          imageHeight = 500 * 0.264583;
+          imageWidth = 700 * 0.264583;
+          imageHeight = 350 * 0.264583;
         }
-  
+
         // Add the image with better resolution
         pdf.addImage(imgData, 'PNG', margin, margin, imageWidth, imageHeight, undefined, 'FAST');
-  
+
         // Save the PDF with the order number
         pdf.save(`order-${orderDetails.phone_number}.pdf`);
-  
+
         // Clean up
         ReactDOM.unmountComponentAtNode(container);
         document.body.removeChild(container);
       });
     }, 1000);  // Wait for rendering to complete
   };
-  
-  
-  
-  
+
+
+
+
 
 
   console.log(formData)
@@ -391,19 +394,23 @@ function ViewCustomeOrders() {
   };
   const filteredorders = customOrder.filter(order => {
     // Status filter
-    const statusMatch = filterstatus === 'All' || order.payment_status === filterstatus;
+    const statusMatch = filterstatus === 'All' || order.status === filterstatus;
 
     // Date range filter
     const orderDate = dayjs(order.created_at.split("T")[0]);
     const startDateMatch = startDate ? orderDate.isAfter(dayjs(startDate).subtract(1, 'day')) : true;
     const endDateMatch = endDate ? orderDate.isBefore(dayjs(endDate).add(1, 'day')) : true;
+    const trackingIDMatch = 
+    filterTrackingID === '' || 
+    (order.Track_id?.toLowerCase().includes(filterTrackingID.toLowerCase()));
 
-    return statusMatch && startDateMatch && endDateMatch;
+  return statusMatch && startDateMatch && endDateMatch && trackingIDMatch;
   });
   const clearFilters = () => {
     setFilterStatus("All");
     setStartDate(null);
     setEndDate(null);
+    setFilterTrackingID("")
   };
 
   const itemsPerPage = 10;
@@ -442,7 +449,7 @@ function ViewCustomeOrders() {
       {/* Date filters */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2, mt: 3 }}>
         <Grid container spacing={2}>
-          <Grid item xs={3} ><FormControl fullWidth>
+          {/* <Grid item xs={3} ><FormControl fullWidth>
             <InputLabel id="status-select-label">Paymnet Status</InputLabel>
             <Select
               labelId="status-select-label"
@@ -453,7 +460,15 @@ function ViewCustomeOrders() {
               <MenuItem value="Pending">Pending</MenuItem>
               <MenuItem value="Paid">Paid</MenuItem>
             </Select>
-          </FormControl></Grid>
+          </FormControl></Grid> */}
+          <Grid item xs={3}>
+            <TextField
+              fullWidth
+              label="Tracking ID"
+              value={filterTrackingID}
+              onChange={(e) => setFilterTrackingID(e.target.value)}
+            />
+          </Grid>
           <Grid item xs={6} sx={{ display: "flex", justifyContent: "space-around" }}><LocalizationProvider dateAdapter={AdapterDayjs}>
             <Grid item xs={3}> <DatePicker
               label="Start Date"
@@ -549,7 +564,7 @@ function ViewCustomeOrders() {
 
 
                   <TableCell style={{ textAlign: 'center' }}>
-                    {item.offer_type}
+                    {item.Track_id}
 
                   </TableCell>
 
@@ -1212,7 +1227,7 @@ function ViewCustomeOrders() {
           </IconButton>
           <>
             <Typography sx={{ display: "flex", justifyContent: "center" }} variant="h6" gutterBottom>
-              Edit Return Orders
+              Edit Custom Orders
             </Typography>
             <Grid container mt={2} >
               <Grid item xs={12} mt={3} sx={{ "marginLeft": "5px" }}>
