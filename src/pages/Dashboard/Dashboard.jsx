@@ -355,7 +355,7 @@ const [pieData, setPieData] = useState(null);
               
             </Paper>
           </Grid>
-          <Grid item xs={12} md={4}>
+          {/* <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>
                 Shop Orders
@@ -366,10 +366,10 @@ const [pieData, setPieData] = useState(null);
                 <Typography color="error"></Typography>
               
                 <Typography variant="h4">10</Typography>
-                {/* <Typography  variant="h6" sx={{textAlign:"center",}}><VisibilityIcon/></Typography> */}
+                <Typography  variant="h6" sx={{textAlign:"center",}}><VisibilityIcon/></Typography>
              
             </Paper>
-          </Grid>
+          </Grid> */}
           <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>

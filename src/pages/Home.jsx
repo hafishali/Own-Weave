@@ -30,34 +30,39 @@ import AddTestimonial from './Testimonials/AddTestimonial';
 import { useLocation } from 'react-router-dom';
 import CompletedOrders from './Orders/CompletedOrders';
 import RejectedOrders from './Orders/RejectedOrders';
+import PendingCustom from './Orders/PendingCustom';
+import RejectedCustom from './Orders/RejectedCustom';
+import CompletedCustom from './Orders/CompletedCustom';
+import ShopOrders from './Orders/ShopOrders';
+import Users from './Custom users/Users';
 
 function Home() {
     const location = useLocation();
     const [selectedOption, setSelectedOption] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isAdmin,setIsAdmin]=useState(false)
+    const [isAdmin, setIsAdmin] = useState(false)
 
     const handleDrawerToggle = () => {
-      setIsSidebarOpen((prevOpen) => !prevOpen);
+        setIsSidebarOpen((prevOpen) => !prevOpen);
     };
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const actionFromUrl = params.get('action');
         if (actionFromUrl) {
-          setSelectedOption(actionFromUrl);
+            setSelectedOption(actionFromUrl);
         }
-      }, [location.search]);
+    }, [location.search]);
     const handleMenuClick = (option) => {
         setSelectedOption(option);
     };
 
     useEffect(() => {
-        const role = localStorage.getItem('role'); 
+        const role = localStorage.getItem('role');
         if (role === 'Admin') {
-            setIsAdmin(true); 
+            setIsAdmin(true);
         } else {
-            setSelectedOption(false); 
+            setSelectedOption(false);
         }
     }, []);
 
@@ -66,7 +71,7 @@ function Home() {
             // Fallback logic: if no option is selected, render based on `isAdmin`
             return isAdmin ? <Dashboard /> : <ViewOrders />;
         }
-    
+
         switch (selectedOption) {
             case 'addProduct':
                 return <AddProduct />;
@@ -118,37 +123,49 @@ function Home() {
                 return <AnalyticalReport />;
             case 'testimonials':
                 return <AddTestimonial />;
+            case 'pendingCustom':
+                return <PendingCustom />;
+            case 'RejectedCustom':
+                return <RejectedCustom />;
+            case 'CompletedCustom':
+                return <CompletedCustom />;
+                case 'viewCustomeUsers':
+                return <Users/>
+
+            case 'shopOrders':
+                return <ShopOrders />;
+                
             default:
                 return isAdmin ? <Dashboard /> : <ViewOrders />; // Fallback based on `isAdmin`
         }
     };
-    
+
 
     return (
         <Box sx={{ display: 'flex', height: '100vh' }}>
-        <Header handleDrawerToggle={handleDrawerToggle} />
-        <SideBar 
-            isSidebarOpen={isSidebarOpen} 
-            handleDrawerToggle={handleDrawerToggle} 
-            setSelectedOption={setSelectedOption} 
-        />
-        <Box
-            component="main"
-            sx={{
-                flexGrow: 1,
-                p: 3,
-                ml: { xs: 0, sm: '240px' }, // Adjust the margin-left to match the sidebar width
-                overflowY: 'auto', // Allow vertical scrolling
-                height: 'calc(100vh - 64px)', // Subtract header height
-                position: 'relative', // Ensure it doesn't overlap the sidebar
-            }}
-        >
-            <Toolbar />
-            <div key={selectedOption}> {/* This key forces re-render on option change */}
-                {renderContent()}
-            </div>
+            <Header handleDrawerToggle={handleDrawerToggle} />
+            <SideBar
+                isSidebarOpen={isSidebarOpen}
+                handleDrawerToggle={handleDrawerToggle}
+                setSelectedOption={setSelectedOption}
+            />
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    p: 3,
+                    ml: { xs: 0, sm: '240px' }, // Adjust the margin-left to match the sidebar width
+                    overflowY: 'auto', // Allow vertical scrolling
+                    height: 'calc(100vh - 64px)', // Subtract header height
+                    position: 'relative', // Ensure it doesn't overlap the sidebar
+                }}
+            >
+                <Toolbar />
+                <div key={selectedOption}> {/* This key forces re-render on option change */}
+                    {renderContent()}
+                </div>
+            </Box>
         </Box>
-    </Box>
     );
 }
 

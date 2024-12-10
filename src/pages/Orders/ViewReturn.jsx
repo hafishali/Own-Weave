@@ -52,6 +52,7 @@ function ViewReturn() {
   const [filterstatus, setFilterStatus] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [filterTrackingID, setFilterTrackingID] = useState("")
+  const [searchQuery, setSearchQuery] = useState('')
 
   // State to manage date pickers
   const [startDate, setStartDate] = useState(null);
@@ -245,18 +246,28 @@ function ViewReturn() {
     const orderDate = dayjs(order.created_at.split("T")[0]);
     const startDateMatch = startDate ? orderDate.isAfter(dayjs(startDate).subtract(1, 'day')) : true;
     const endDateMatch = endDate ? orderDate.isBefore(dayjs(endDate).add(1, 'day')) : true;
-    const trackingIDMatch = 
-    filterTrackingID === '' || 
-    (order.Track_id?.toLowerCase().includes(filterTrackingID.toLowerCase()));
 
-  return statusMatch && startDateMatch && endDateMatch && trackingIDMatch;
-  });
-  const clearFilters = () => {
+    // Tracking ID filter
+    const trackingIDMatch = 
+        filterTrackingID === '' || 
+        (order.Track_id?.toLowerCase().includes(filterTrackingID.toLowerCase()));
+
+    // Order ID or Mobile number filter
+    const searchQueryMatch = searchQuery === '' ||
+        
+         String(order.user?.mobile_number)?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return statusMatch && startDateMatch && endDateMatch && trackingIDMatch && searchQueryMatch;
+});
+
+// Function to clear all filters
+const clearFilters = () => {
     setFilterStatus("All");
     setStartDate(null);
     setEndDate(null);
-    setFilterTrackingID("")
-  };
+    setFilterTrackingID("");
+    setSearchQuery(""); // Clear search query
+};
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -293,21 +304,23 @@ function ViewReturn() {
 
       {/* Date filters */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2 ,mt:3}}>
-        <Grid container spacing={2}>
+      <Grid container spacing={2}>
           {/* <Grid item xs={3} ><FormControl fullWidth>
-          <InputLabel id="status-select-label"> Return Status</InputLabel>
+          <InputLabel id="status-select-label">Status</InputLabel>
           <Select
             labelId="status-select-label"
             value={filterstatus}
             onChange={handleStatusChangeFilter}
           >
             <MenuItem value="All">All</MenuItem>
-             <MenuItem value="Return Initiated">Return Initiated</MenuItem>
-                    <MenuItem value="Pending">Pending</MenuItem>
-                    <MenuItem value="Completed">Return Completed</MenuItem>
+            <MenuItem value="Accept">Accepted</MenuItem>
+            <MenuItem value="Reject">Rejected</MenuItem>
+            <MenuItem value="pending">Pending</MenuItem>
+            <MenuItem value="Return">Returned</MenuItem>
+            <MenuItem value="Completed">Completed</MenuItem>
           </Select>
         </FormControl></Grid> */}
-         <Grid item xs={3}>
+          <Grid item xs={3}>
             <TextField
               fullWidth
               label="Tracking ID"
@@ -315,24 +328,33 @@ function ViewReturn() {
               onChange={(e) => setFilterTrackingID(e.target.value)}
             />
           </Grid>
-          <Grid item xs={6} sx={{display:"flex",justifyContent:"space-around"}}><LocalizationProvider dateAdapter={AdapterDayjs}>
-          <Grid item xs={3}> <DatePicker
-            label="Start Date"
-            value={startDate}
-            onChange={(newValue) => setStartDate(newValue)}
-            sx={{ width: '100%' }}
-          /></Grid>
-          <Grid item xs={3}><DatePicker
-            label="End Date"
-            value={endDate}
-            onChange={(newValue) => setEndDate(newValue)}
-            sx={{ width: '100%' }}
-          /></Grid>
-         
-          
-        </LocalizationProvider></Grid>
-          <Grid item xs={3}  sx={{display:"flex",justifyContent:"center"}}> <Button variant="outlined" onClick={clearFilters} color="primary">Clear Filters</Button></Grid>
-          
+          <Grid item xs={3}>
+            <TextField
+              fullWidth
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search by  Mobile Number"
+            />
+          </Grid>
+
+          <Grid item xs={6} sx={{ display: "flex", justifyContent: "space-around" }}><LocalizationProvider dateAdapter={AdapterDayjs}>
+            <Grid item xs={3}> <DatePicker
+              label="Start Date"
+              value={startDate}
+              onChange={(newValue) => setStartDate(newValue)}
+              sx={{ width: '100%' }}
+            /></Grid>
+            <Grid item xs={3}><DatePicker
+              label="End Date"
+              value={endDate}
+              onChange={(newValue) => setEndDate(newValue)}
+              sx={{ width: '100%' }}
+            /></Grid>
+            <Grid item xs={3} sx={{ display: "flex", justifyContent: "center" }}> <Button variant="outlined" onClick={clearFilters} color="primary">Clear Filters</Button></Grid>
+
+
+          </LocalizationProvider></Grid>
+
         </Grid>
       </Box>
 

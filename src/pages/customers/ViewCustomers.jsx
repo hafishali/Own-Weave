@@ -22,6 +22,7 @@ function ViewCustomers() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [customerCategory, setCustomerCategory] = useState('');
+  const [customerCategoryFilter, setCustomerCategoryFilter] = useState('');
   const [customerNumber, setCustomerNumber] = useState('');
   const [updatedAddresses, setUpdatedAddresses] = useState(
     selectedCustomer?.addresses || []
@@ -34,8 +35,8 @@ function ViewCustomers() {
     email: "",
     name: "",
     mobile_number: "",
-    is_vip: "",
-    is_favorite: ""
+    is_vip: false,
+    is_favorite: false,
   })
 
 
@@ -64,9 +65,12 @@ function ViewCustomers() {
       filteredCustomers = customers.filter((customer) => {
         if (customerCategory === 'VIP') return customer.is_vip;
         if (customerCategory === 'Favourite') return customer.is_favorite;
-        return true; // If no category is selected, show all customers
+        return true; 
       });
     }
+
+
+    
 
     // Paginate the filtered customers
     const paginatedCustomers = filteredCustomers.slice(
@@ -75,8 +79,17 @@ function ViewCustomers() {
     );
 
     setDisplayedCustomer(paginatedCustomers); // Set paginated customers
-  }, [customerCategory, customers, currentPage]);
+  }, [customerCategory,  currentPage]);
 
+  const handleCategoryChange = (event) => {
+    const value = event.target.value;
+  
+    setCustomerdts((prevState) => ({
+      ...prevState,
+      is_vip: value === "VIP",
+      is_favorite: value === "Favourite",
+    }));
+  };
 
   useEffect(() => {
     handleGetallCustomers();
@@ -107,7 +120,7 @@ function ViewCustomers() {
         is_favorite: selectedCustomer.is_favorite || false
       });
 
-      setCustomerCategory(selectedCustomer.is_vip ? "VIP" : selectedCustomer.is_favorite ? "Favourite" : "Normal");
+      // setCustomerCategory(selectedCustomer.is_vip ? "VIP" : selectedCustomer.is_favorite ? "Favourite" : "Normal");
     }
   }, [selectedCustomer, openEditDialog]);
 
@@ -119,15 +132,15 @@ function ViewCustomers() {
     }));
   };
 
-  const handleCategoryChange = (e) => {
-    const value = e.target.value;
-    setCustomerCategory(value);
-    setCustomerdts((prevState) => ({
-      ...prevState,
-      is_vip: value === "VIP",
-      is_favorite: value === "Favourite"
-    }));
-  };
+  // const handleCategoryChange = (e) => {
+  //   const value = e.target.value;
+  //   setCustomerCategory(value);
+  //   setCustomerdts((prevState) => ({
+  //     ...prevState,
+  //     is_vip: value === "VIP",
+  //     is_favorite: value === "Favourite"
+  //   }));
+  // };
 
 
   const handleAddressChange = (index, field, value) => {
@@ -167,7 +180,7 @@ function ViewCustomers() {
     setOpenEditDialog(true)
     setSelectedCustomer(item)
     setCustomerNumber(item.mobile_number)
-    console.log(customerNumber)
+    
   };
   const canceledit = () => {
     setOpenEditDialog(false)
@@ -431,19 +444,22 @@ function ViewCustomers() {
 
 
 
-          <FormControl variant="standard" fullWidth className='mt-3'>
-            <InputLabel id="demo-simple-select-label">Customer Type</InputLabel>
-            <Select
-              labelId="demo-simple-select-label"
-              value={customerCategory}
-              onChange={handleCategoryChange}
-            >
-              <MenuItem value="Normal">Normal</MenuItem>
-              <MenuItem value="VIP">VIP</MenuItem>
-              <MenuItem value="Favourite">Favourite</MenuItem>
-
-            </Select>
-          </FormControl>
+<FormControl variant="standard" fullWidth className='mt-3'>
+  <InputLabel id="demo-simple-select-label">Customer Type</InputLabel>
+  <Select
+    labelId="demo-simple-select-label"
+    value={
+      customerdts.is_favorite ? "Favourite" :
+      customerdts.is_vip ? "VIP" :
+      "Normal"
+    }
+    onChange={handleCategoryChange}
+  >
+    <MenuItem value="Normal">Normal</MenuItem>
+    <MenuItem value="VIP">VIP</MenuItem>
+    <MenuItem value="Favourite">Favourite</MenuItem>
+  </Select>
+</FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={canceledit} >Cancel</Button>

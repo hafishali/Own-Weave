@@ -49,36 +49,40 @@ const BillComponent = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
   return (
    <Box sx={{display:'flex',flexDirection:'column',justifyContent:'center', width: '70%', height: 'auto', margin: 'auto', padding: 4, }}>
      <Paper
-        ref={ref}
-        elevation={0}
-        sx={{
-          width: '70%',       
-          height: 'auto',      
-          padding: 2,
-          border: '2px solid #000',
-          borderRadius: '12px',
-          position: 'relative',
-          boxSizing: 'border-box',
-          transform: 'scale(1)',
-          transformOrigin: 'center',
-        }}
+      ref={ref}
+      elevation={0}
+      sx={{
+        width: '95%',       
+        height: '95%',      
+        padding: 2,
+        border: '2px solid #000',
+        borderRadius: '12px',
+        position: 'relative',
+        boxSizing: 'border-box',
+        transform: 'scale(1)',
+        transformOrigin: 'center',
+      }}
       >
         <Grid container spacing={1}>
           {/* Shipping and COD Section */}
           <Grid item xs={8}>
             <Box>
-              <Typography variant="body1" fontWeight="bold" sx={{ mb: 0.5, fontSize: '1.2rem' }}>
+              <Typography variant="body1" fontWeight="bold" sx={{ mb: 0.5, fontSize: '0.9rem' }}>
                 Shipping To:
               </Typography>
               <Typography sx={{ whiteSpace: 'pre-line', fontSize: '1rem', lineHeight: 1.4 }}>
-                {orderDetails.name || 'NA'}
+                {/* {userObject?.name || 'NA'} */}
                 {'\n'}
-                Ph {orderDetails.phone_number || 'NA'}
+               {/*  Ph {userObject?.phone_number || 'NA'} */}
                 {'\n'}
-                {orderDetails.address ? formatAddress(orderDetails.address) : 'NA'}
+                {/* {userObject?.address? formatAddress(userObject.address) : 'NA' } */}
                 {'\n'}
-
-
+                {/* {userObject.shipping_address?.post_office || 'NA'}
+                {'\n'}
+                {userObject.shipping_address?.pincode || 'NA'}
+                {'\n'}
+                {userObject.shipping_address?.district}, {userObject.shipping_address?.state} */}
+                
               </Typography>
             </Box>
           </Grid>
@@ -86,24 +90,26 @@ const BillComponent = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
             <Box sx={{ textAlign: 'right' }}>
               {/* Length */}
               {/* <Typography variant="body1" sx={{ fontSize: '1rem' }}>
-              Length: {orderDetails.length || 'NA'}
-            </Typography> */}
+                  Size: {userObject.items?.[0]?.product?.name || 'NA'}
+                </Typography> */}
               {/* COD */}
               <Typography variant="body1" sx={{ fontSize: '1rem' }}>
-                {orderDetails.payment_method || 'COD'}: Rs -{' '}
-                {/*  <Box component="span" sx={{ textDecoration: 'line-through', color: 'red', display: 'inline-block' }}>
-                {orderDetails.total_price || '0000'}/-
-              </Box> */}
-                <br />
-                Rs - {orderDetails.custom_total_price || '0000'}/-
+                {/*  {userObject.payment_method || 'NA'} Rs :{' '} */}
+                {/* <Box component="span" sx={{ textDecoration: 'line-through', color: 'red', display: 'inline-block' }}>
+                    {userObject.total_price || '0000'}/-
+                  </Box> */}
+                {/* <br /> */}
+                {/* {userObject.custom_total_price || '0000'}/- */}
               </Typography>
-              {/* co.ID */}
+              {/* Order ID */}
               <Typography sx={{ fontSize: '1rem' }}>
-                co.ID: {orderDetails.id || 'NA'}
+                {/* Order ID: {userObject.id || 'NA'} */}
               </Typography>
-             {orderDetails.payment_method==='COD' && <Typography sx={{ fontSize: '1rem' }}>
+              
+             {/* {userObject?.payment_method==='COD' && <Typography sx={{ fontSize: '1rem' }}>
                 Post Code: 55220
               </Typography>}
+              */}
             </Box>
           </Grid>
 
@@ -127,13 +133,13 @@ const BillComponent = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <FacebookIcon sx={{ fontSize: 16 }} />
                     <Typography sx={{ fontSize: '0.8rem' }}>
-                      <a style={{ textDecoration: "none", color: "black" }} href="https://www.facebook.com/profile.php?id=61554730378425">ownweave</a>
+                      <a style={{textDecoration:"none",color:"black"}} href="https://www.facebook.com/profile.php?id=61554730378425">ownweave</a>
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <InstagramIcon sx={{ fontSize: 16 }} />
                     <Typography sx={{ fontSize: '0.8rem' }}>
-                      <a style={{ textDecoration: "none", color: "black" }} href="https://www.instagram.com/ownweave/"> @ownweave</a>
+                      <a style={{textDecoration:"none",color:"black"}} href="https://www.instagram.com/ownweave/"> @ownweave</a>
                     </Typography>
                   </Box>
                 </Box>
@@ -142,7 +148,7 @@ const BillComponent = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
               <Grid item xs={12} sm={6}>
                 <Box sx={{ textAlign: { xs: 'center', sm: 'right' } }}>
                   <Typography sx={{ fontSize: '0.8rem' }}>
-                    Packing Date: {orderDetails.created_at ? formatDate(orderDetails.created_at) : 'NA'}
+                    {/* Packing Date: {formatDate(getCurrentDateIST())} */}
                   </Typography>
                   <Typography sx={{ fontSize: '0.8rem' }}>
                     Item co: {itemCodes || 'NA'}
@@ -193,11 +199,11 @@ const BillComponent = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
                       alt="Own Weave"
                       sx={{
                         width: '100%',
-                        maxWidth: 120,
+                        maxWidth: 150,
                         height: 'auto'
                       }}
                     />
-                    <Typography sx={{ fontSize: '0.7rem' }}>
+                    <Typography sx={{ fontSize: '-0.10rem' }}>
                       Handloom Cloth Manufactor
                     </Typography>
                   </Box>

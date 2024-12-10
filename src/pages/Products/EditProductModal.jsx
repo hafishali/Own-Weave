@@ -500,7 +500,7 @@ const handleSave = async () => {
 </Grid>
 
         {/* Product Description */}
-        <Grid item xs={12}>
+      {/*   <Grid item xs={12}>
           <TextField
             margin="dense"
             label="Product Description"
@@ -513,7 +513,7 @@ const handleSave = async () => {
             onChange={handleInputChange}
           />
         </Grid>
-  
+   */}
        
   
         {/* Image Preview */}

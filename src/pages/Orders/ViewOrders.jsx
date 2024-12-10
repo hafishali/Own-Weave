@@ -58,7 +58,8 @@ const ViewOrders = () => {
   const [updatedCustomer, setUpdatedCustomer] = useState({
     payment_status: "",
     status: "",
-    Track_id: ""
+    Track_id: "",
+    rejected_reason: ""
   })
   const [isEnabled, setIsEnabled] = useState(false)
   const [status, setStatus] = useState("")
@@ -69,7 +70,8 @@ const ViewOrders = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isExcelDisable,setIsExcelDisable]=useState(false)
+  const [isExcelDisable, setIsExcelDisable] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
 
   const handleGetallorders = async () => {
@@ -98,7 +100,7 @@ const ViewOrders = () => {
       const endDateMatch = endDate ? orderDate.isBefore(dayjs(endDate).add(1, 'day')) : true;
       return startDateMatch && endDateMatch;
     });
-  
+
     const worksheetData = [
       [
         'Order ID',
@@ -136,15 +138,15 @@ const ViewOrders = () => {
           status,
           created_at,
         } = order || {};
-  
+
         const formattedAddress = shipping_address
           ? `${shipping_address.address || 'N/A'}, ${shipping_address.block || 'N/A'}, ${shipping_address.district || 'N/A'}, ${shipping_address.state || 'N/A'}, ${shipping_address.country || 'N/A'} - ${shipping_address.pincode || 'N/A'}`
           : 'N/A';
-  
+
         // Create a row for each item and include free product details if available
         return items?.map((item) => {
           const freeProduct = item?.free_product || {};
-  
+
           return [
             id || 'N/A',
             user?.name || 'N/A',
@@ -171,17 +173,17 @@ const ViewOrders = () => {
         });
       }),
     ];
-  
+
     // Create a new workbook and add the worksheet data
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders Report');
-  
+
     // Trigger download
     XLSX.writeFile(workbook, 'orders_report.xlsx');
   };
-  
-  
+
+
 
   const handleStatusChange = (event) => {
     setStatus(event.target.value);
@@ -198,19 +200,31 @@ const ViewOrders = () => {
     const orderDate = dayjs(order.created_at.split("T")[0]);
     const startDateMatch = startDate ? orderDate.isAfter(dayjs(startDate).subtract(1, 'day')) : true;
     const endDateMatch = endDate ? orderDate.isBefore(dayjs(endDate).add(1, 'day')) : true;
-    const trackingIDMatch = 
-    filterTrackingID === '' || 
-    (order.Track_id?.toLowerCase().includes(filterTrackingID.toLowerCase()));
 
-  return statusMatch && startDateMatch && endDateMatch && trackingIDMatch;
+    // Tracking ID filter
+    const trackingIDMatch =
+      filterTrackingID === '' ||
+      (order.Track_id?.toLowerCase().includes(filterTrackingID.toLowerCase()));
+
+    // Order ID or Mobile number filter
+    const searchQueryMatch = searchQuery === '' ||
+
+      String(order.user?.mobile_number)?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return statusMatch && startDateMatch && endDateMatch && trackingIDMatch && searchQueryMatch;
   });
+
+  // Function to clear all filters
   const clearFilters = () => {
     setFilterStatus("All");
     setStartDate(null);
     setEndDate(null);
-    setFilterTrackingID("")
+    setFilterTrackingID("");
+    setSearchQuery(""); // Clear search query
   };
-  
+
+
+
 
 
   console.log(orders)
@@ -290,7 +304,8 @@ const ViewOrders = () => {
       setUpdatedCustomer({
         payment_status: "",
         status: "",
-        Track_id: ""
+        Track_id: "",
+        rejected_reason: ""
       })
 
     }
@@ -355,7 +370,7 @@ const ViewOrders = () => {
     if (selectAll) {
       setSelectedOrders([]);
     } else {
-      setSelectedOrders(currentItems);  // Select all orders
+      setSelectedOrders(orders);  // Select all orders
     }
     setSelectAll(!selectAll);
   };
@@ -430,6 +445,8 @@ const ViewOrders = () => {
     }
   };
 
+
+
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -457,7 +474,7 @@ const ViewOrders = () => {
           <Button sx={{ marginRight: "10px" }} variant="contained" color="primary" onClick={generateSelectedPDF} disabled={selectedOrders.length === 0}>
             Print Selected Orders
           </Button>
-          <Button variant="contained" sx={{marginRight:"10px"}} disabled={endDate===null || startDate===null}  onClick={() => downloadExcel(false)}>Export Filtered Orders <DescriptionIcon sx={{ ml: 1, }}/></Button>
+          <Button variant="contained" sx={{ marginRight: "10px" }} disabled={endDate === null || startDate === null} onClick={() => downloadExcel(false)}>Export Filtered Orders <DescriptionIcon sx={{ ml: 1, }} /></Button>
           <Button variant="contained" color="primary" onClick={() => downloadExcel(true)}>
             Export All Orders <DescriptionIcon sx={{ ml: 1 }} />
           </Button>
@@ -489,6 +506,14 @@ const ViewOrders = () => {
               onChange={(e) => setFilterTrackingID(e.target.value)}
             />
           </Grid>
+          <Grid item xs={3}>
+            <TextField
+              fullWidth
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search by  Mobile Number"
+            />
+          </Grid>
 
           <Grid item xs={6} sx={{ display: "flex", justifyContent: "space-around" }}><LocalizationProvider dateAdapter={AdapterDayjs}>
             <Grid item xs={3}> <DatePicker
@@ -503,10 +528,10 @@ const ViewOrders = () => {
               onChange={(newValue) => setEndDate(newValue)}
               sx={{ width: '100%' }}
             /></Grid>
+            <Grid item xs={3} sx={{ display: "flex", justifyContent: "center" }}> <Button variant="outlined" onClick={clearFilters} color="primary">Clear Filters</Button></Grid>
 
 
           </LocalizationProvider></Grid>
-          <Grid item xs={3} sx={{ display: "flex", justifyContent: "center" }}> <Button variant="outlined" onClick={clearFilters} color="primary">Clear Filters</Button></Grid>
 
         </Grid>
       </Box>
@@ -893,6 +918,8 @@ const ViewOrders = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
+
               <Grid item xs={12} mt={3} sx={{ "marginLeft": "5px" }}>
                 <Label>Payment status</Label>
                 <FormControl fullWidth>
@@ -913,6 +940,24 @@ const ViewOrders = () => {
                   </Select>
                 </FormControl>
               </Grid>
+              {updatedCustomer.status === 'Reject' && (
+  <Grid item xs={12} mt={3}>
+    <TextField
+      fullWidth
+      label="Reason for Reject"
+      variant="outlined"
+      multiline
+      rows={4} // Adjust the number of rows to control the height of the textarea
+      placeholder="Enter the reason here"
+      value={updatedCustomer.rejected_reason}
+      onChange={(e) =>
+        setUpdatedCustomer({ ...updatedCustomer, rejected_reason: e.target.value })
+      }
+    />
+  </Grid>
+)}
+
+
             </Grid>
 
 

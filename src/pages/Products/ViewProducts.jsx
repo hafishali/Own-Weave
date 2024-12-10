@@ -427,14 +427,14 @@ const handleClose = () => {
         <Typography sx={{ display: "flex", justifyContent: "center" }} variant="h6" gutterBottom>
           Product Features
         </Typography>
-        <Typography><b>Description:</b> {selectedProduct.description || 'N/A'}</Typography>
+        {/* <Typography><b>Description:</b> {selectedProduct.description || 'N/A'}</Typography> */}
         <Typography><b>Fabric:</b> {selectedProduct.fabric || 'N/A'}</Typography>
         <Typography><b>Pattern:</b> {selectedProduct.pattern || 'N/A'}</Typography>
         <Typography><b>Fabric Composition:</b> {selectedProduct.fabric_composition || 'N/A'}</Typography>
         <Typography><b>Fit:</b> {selectedProduct.fit || 'N/A'}</Typography>
         <Typography><b>Style:</b> {selectedProduct.style || 'N/A'}</Typography>
-        <Typography><b>Size L full length:</b> {selectedProduct.available_lengths.size_L_full_length || 'N/A'}</Typography>
-        <Typography><b>Size L half length:</b> {selectedProduct.available_lengths.size_L_half_length || 'N/A'}</Typography>
+        {/* <Typography><b>Size L full length:</b> {selectedProduct.available_lengths.size_L_full_length || 'N/A'}</Typography>
+        <Typography><b>Size L half length:</b> {selectedProduct.available_lengths.size_L_half_length || 'N/A'}</Typography> */}
         <Typography><b>Size XL full length:</b> {selectedProduct.available_lengths.size_XL_full_length || 'N/A'}</Typography>
         <Typography><b>Size XL half length:</b> {selectedProduct.available_lengths.size_XL_half_length || 'N/A'}</Typography>
         <Typography><b>Size XXL full length:</b> {selectedProduct.available_lengths.size_XXL_full_length || 'N/A'}</Typography>

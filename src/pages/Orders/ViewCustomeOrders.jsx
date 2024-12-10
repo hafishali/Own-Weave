@@ -54,6 +54,7 @@ function ViewCustomeOrders() {
     custom_total_price: "",
     payment_status: '',
     payment_method: '',
+    is_online:true,
     Track_id: "",
 
   });
@@ -66,6 +67,7 @@ function ViewCustomeOrders() {
   const [endDate, setEndDate] = useState(null);
   const [billType, setBillType] = useState("")
   const [filterTrackingID, setFilterTrackingID] = useState("")
+  const [searchQuery, setSearchQuery] = useState('')
   const [currentProduct, setCurrentProduct] = useState({
     product_code: '',
     custom_length: '',
@@ -202,7 +204,10 @@ function ViewCustomeOrders() {
         if (response.status === 201) {
           toast.success("Order created successfully");
           handleClose();
-          generatePDF(response.data.order_details, billType);
+          if(response?.data?.order_details?.is_online===false){
+            generatePDF(response.data.order_details );
+          }
+          
           setCurrentProduct({
             product_code: '',
             custom_length: '',
@@ -217,7 +222,7 @@ function ViewCustomeOrders() {
             custom_total_price: '',
             payment_method: '',
             payment_status: '',
-            Track_id:''
+            Track_id: ''
           });
           handleGetCustom();
           setAddOrderModal(false)
@@ -237,12 +242,11 @@ function ViewCustomeOrders() {
   const pdfRef = useRef();
   console.log(billType)
 
-  const generatePDF = (orderDetails, billType) => {
+  const generatePDF = (orderDetails) => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
-    // Conditionally render the component based on billType
-    const BillComponentToRender = billType === 'OFFLINE' ? CustomInvoice : BillComponent;
+    const BillComponentToRender =  CustomInvoice ;
 
     ReactDOM.render(<BillComponentToRender orderDetails={orderDetails} />, container);
 
@@ -262,15 +266,12 @@ function ViewCustomeOrders() {
         const imgData = canvas.toDataURL('image/png');
 
         // Set image width and height based on billType
-        let imageWidth, imageHeight;
+        // let imageWidth, imageHeight;
 
-        if (billType === 'OFFLINE') {
-          imageWidth = pageWidth;
-          imageHeight = pageHeight;
-        } else {
-          imageWidth = 700 * 0.264583;
-          imageHeight = 350 * 0.264583;
-        }
+      
+         const imageWidth = pageWidth;
+         const  imageHeight = pageHeight;
+       
 
         // Add the image with better resolution
         pdf.addImage(imgData, 'PNG', margin, margin, imageWidth, imageHeight, undefined, 'FAST');
@@ -400,17 +401,27 @@ function ViewCustomeOrders() {
     const orderDate = dayjs(order.created_at.split("T")[0]);
     const startDateMatch = startDate ? orderDate.isAfter(dayjs(startDate).subtract(1, 'day')) : true;
     const endDateMatch = endDate ? orderDate.isBefore(dayjs(endDate).add(1, 'day')) : true;
-    const trackingIDMatch = 
-    filterTrackingID === '' || 
-    (order.Track_id?.toLowerCase().includes(filterTrackingID.toLowerCase()));
 
-  return statusMatch && startDateMatch && endDateMatch && trackingIDMatch;
+    // Tracking ID filter
+    const trackingIDMatch =
+      filterTrackingID === '' ||
+      (order.Track_id?.toLowerCase().includes(filterTrackingID.toLowerCase()));
+
+    // Order ID or Mobile number filter
+    const searchQueryMatch = searchQuery === '' ||
+
+      String(order?.phone_number)?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return statusMatch && startDateMatch && endDateMatch && trackingIDMatch && searchQueryMatch;
   });
+
+  // Function to clear all filters
   const clearFilters = () => {
     setFilterStatus("All");
     setStartDate(null);
     setEndDate(null);
-    setFilterTrackingID("")
+    setFilterTrackingID("");
+    setSearchQuery(""); // Clear search query
   };
 
   const itemsPerPage = 10;
@@ -432,7 +443,7 @@ function ViewCustomeOrders() {
     <>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" gutterBottom>
-          View Custome Orders
+          Add Custome Orders
         </Typography>
         <Box sx={{ display: 'flex', mb: 2, gap: 2 }} >
           <Button variant="contained" sx={{ marginTop: '10px' }} color="success" onClick={() => setAddOrderModal(true)} >
@@ -450,17 +461,20 @@ function ViewCustomeOrders() {
       <Box sx={{ display: 'flex', gap: 2, mb: 2, mt: 3 }}>
         <Grid container spacing={2}>
           {/* <Grid item xs={3} ><FormControl fullWidth>
-            <InputLabel id="status-select-label">Paymnet Status</InputLabel>
-            <Select
-              labelId="status-select-label"
-              value={filterstatus}
-              onChange={handleStatusChangeFilter}
-            >
-              <MenuItem value="All">All</MenuItem>
-              <MenuItem value="Pending">Pending</MenuItem>
-              <MenuItem value="Paid">Paid</MenuItem>
-            </Select>
-          </FormControl></Grid> */}
+          <InputLabel id="status-select-label">Status</InputLabel>
+          <Select
+            labelId="status-select-label"
+            value={filterstatus}
+            onChange={handleStatusChangeFilter}
+          >
+            <MenuItem value="All">All</MenuItem>
+            <MenuItem value="Accept">Accepted</MenuItem>
+            <MenuItem value="Reject">Rejected</MenuItem>
+            <MenuItem value="pending">Pending</MenuItem>
+            <MenuItem value="Return">Returned</MenuItem>
+            <MenuItem value="Completed">Completed</MenuItem>
+          </Select>
+        </FormControl></Grid> */}
           <Grid item xs={3}>
             <TextField
               fullWidth
@@ -469,6 +483,15 @@ function ViewCustomeOrders() {
               onChange={(e) => setFilterTrackingID(e.target.value)}
             />
           </Grid>
+          <Grid item xs={3}>
+            <TextField
+              fullWidth
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search by  Mobile Number"
+            />
+          </Grid>
+
           <Grid item xs={6} sx={{ display: "flex", justifyContent: "space-around" }}><LocalizationProvider dateAdapter={AdapterDayjs}>
             <Grid item xs={3}> <DatePicker
               label="Start Date"
@@ -482,10 +505,10 @@ function ViewCustomeOrders() {
               onChange={(newValue) => setEndDate(newValue)}
               sx={{ width: '100%' }}
             /></Grid>
+            <Grid item xs={3} sx={{ display: "flex", justifyContent: "center" }}> <Button variant="outlined" onClick={clearFilters} color="primary">Clear Filters</Button></Grid>
 
 
           </LocalizationProvider></Grid>
-          <Grid item xs={3} sx={{ display: "flex", justifyContent: "center" }}> <Button variant="outlined" onClick={clearFilters} color="primary">Clear Filters</Button></Grid>
 
         </Grid>
       </Box>
@@ -499,15 +522,14 @@ function ViewCustomeOrders() {
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Name</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Mobile Number</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Products</b></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b> Offer products</b></TableCell>
+              {/* <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b> Offer products</b></TableCell> */}
 
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b> Size</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Date</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Address</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Payment Method</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Payment Status</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b> Track ID</b></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Actions</b></TableCell>
+              {/* <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Actions</b></TableCell> */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -538,17 +560,16 @@ function ViewCustomeOrders() {
                   >
                     <u>Product</u>
                   </TableCell>
-                  <TableCell
+                  {/* <TableCell
                     style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
                     sx={{ color: "blue", cursor: "pointer" }}
                     onClick={() => handleopenoffer(item)}
                   >
                     <u> Offer Product</u>
-                  </TableCell>
+                  </TableCell> */}
 
                   {/* Additional Empty Columns */}
 
-                  <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}> {item.custom_length}</TableCell>
                   <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{new Date(item?.created_at).toLocaleString()}</TableCell>
                   <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center', color: "blue", cursor: "pointer" }} onClick={() => handleaddressOpen(item)}><u>View</u></TableCell>
                   <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item.payment_method}</TableCell>
@@ -570,14 +591,10 @@ function ViewCustomeOrders() {
 
 
                   {/* Action Buttons Based on Status */}
-                  <TableCell><IconButton aria-label="Edit" onClick={() => handleEdit(item)}>
+                  {/* <TableCell><IconButton aria-label="Edit" onClick={() => handleEdit(item)}>
                     <EditIcon />
                   </IconButton>
-
-                    {/* <IconButton aria-label="Delete">
-              <DeleteIcon />
-            </IconButton> */}
-                  </TableCell>
+                  </TableCell> */}
                 </TableRow>))
             ) : (
               // Fallback Message when there are no orders
@@ -926,7 +943,7 @@ function ViewCustomeOrders() {
                         value={formData.payment_method}
                         onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
                       >
-                        <MenuItem value="COD">COD</MenuItem>
+                        <MenuItem value="COD">CASH</MenuItem>
                         <MenuItem value="Online">UPI</MenuItem>
                       </Select>
                     </FormControl>
@@ -948,17 +965,15 @@ function ViewCustomeOrders() {
                   </Grid>
                   <Grid item xs={12}>
                     <FormControl fullWidth variant="outlined">
-                      <InputLabel>Select Bill Type</InputLabel>
+                      <InputLabel>Select Order Type</InputLabel>
                       <Select
-                        label="Offers"
-                        defaultValue=""
-                        value={billType}
-                        onChange={(e) => setBillType(e.target.value)}
-                      >
-
-                        <MenuItem value="ONLINE">ONLINE INVIOCE</MenuItem>
-                        <MenuItem value="OFFLINE">OFFLINE INVIOCE</MenuItem>
-                      </Select>
+        label="Order Type"
+        value={formData.is_online}
+        onChange={(e) => setFormData({ ...formData, is_online: e.target.value === "true" })}
+      >
+        <MenuItem value="true">ONLINE ORDER</MenuItem>
+        <MenuItem value="false">SHOP INVOICE</MenuItem>
+      </Select>
                     </FormControl>
                   </Grid>
                   <Grid item xs={12}>
@@ -968,7 +983,7 @@ function ViewCustomeOrders() {
                       label="Track id"
                       variant="outlined"
                       type="text"
-                      disabled={billType === 'OFFLINE'}
+                      disabled={formData.is_online === false}
                       value={formData.Track_id}
                       onChange={handleChange}
                     />
@@ -1023,7 +1038,7 @@ function ViewCustomeOrders() {
 
           {/* Order Information */}
           <Typography><b>Order ID:</b> {selectedOrder?.id}</Typography>
-          <Typography><b>Length:</b> {selectedOrder?.custom_length}</Typography>
+          {/* <Typography><b>Length:</b> {selectedOrder?.custom_length}</Typography> */}
           <Typography><b>Total Price:</b> RS. {selectedOrder?.total_price}</Typography>
           <Typography><b>Discounted Price:</b> RS. {selectedOrder?.custom_total_price}</Typography>
           <Typography><b>Order Time:</b> {new Date(selectedOrder?.created_at).toLocaleString()}</Typography>
@@ -1039,26 +1054,33 @@ function ViewCustomeOrders() {
 
                 <TableCell><b>Product Code</b></TableCell>
                 <TableCell><b>Product Name</b></TableCell>
-                <TableCell><b>Product Color</b></TableCell>
                 <TableCell><b>Category</b></TableCell>
+                <TableCell><b>Length</b></TableCell>
                 <TableCell><b>Price</b></TableCell>
-                <TableCell><b>Total Price</b></TableCell>
-                <TableCell><b> Discounted Price</b></TableCell>
+
               </TableRow>
             </TableHead>
             <TableBody>
+              {selectedOrder?.order_products?.map((item) => (<><TableRow>
 
-              <TableRow>
+                <TableCell>{item?.product_details?.product_code}</TableCell>
+                <TableCell>{item?.product_details?.name}</TableCell>
+                <TableCell>{item?.product_details?.category_name}</TableCell>
+                <TableCell>RS.{item?.length}</TableCell>
+                <TableCell>RS.{item?.product_details?.price_per_meter}</TableCell>
 
-                <TableCell>{selectedOrder?.product_details?.['product code']}</TableCell>
-                <TableCell>{selectedOrder?.product_details?.name}</TableCell>
-                <TableCell>{selectedOrder?.product_details?.color}</TableCell>
-                <TableCell>{selectedOrder?.product_details?.['category name']}</TableCell>
-                <TableCell>RS.{selectedOrder?.product_details?.price_per_meter}</TableCell>
-                <TableCell>RS.{selectedOrder?.total_price}</TableCell>
-                <TableCell>RS.{selectedOrder?.custom_total_price}</TableCell>
 
               </TableRow>
+              {item?.product_details?.free_product_details && <TableRow sx={{backgroundColor:'green'}}>
+              <TableCell >{item?.product_details?.free_product_details?.product_code}</TableCell>
+                <TableCell>{item?.product_details?.free_product_details?.name}</TableCell>
+                <TableCell>{item?.product_details?.free_product_details?.category_name}</TableCell>
+                <TableCell>RS.{item?.length}</TableCell>
+                <TableCell>RS.{item?.product_details?.free_product_details?.price_per_meter}</TableCell>
+              </TableRow> }
+              
+            </>))}
+
 
             </TableBody>
           </Table>
@@ -1179,7 +1201,7 @@ function ViewCustomeOrders() {
             <Typography>
               <b>Address:</b>{selectedOrder?.address}
             </Typography>
-            <Typography>
+            {/* <Typography>
               <b>pincode:</b>{selectedOrder?.pincode}
             </Typography>
             <Typography>
@@ -1191,7 +1213,7 @@ function ViewCustomeOrders() {
             </Typography>
             <Typography>
               <b>State:</b>{selectedOrder?.state}
-            </Typography>
+            </Typography> */}
           </>
 
         </Box>
@@ -1230,6 +1252,17 @@ function ViewCustomeOrders() {
               Edit Custom Orders
             </Typography>
             <Grid container mt={2} >
+            <Grid item xs={12} mt={3} sx={{ "marginLeft": "5px" }}>
+            <TextField
+                  fullWidth
+                  label="Track Id"
+                  variant="outlined"
+                  placeholder='paste track id here'
+                  /* value={updatedCustomer.Track_id}
+                  onChange={(e) => setUpdatedCustomer({ ...updatedCustomer, Track_id: e.target.value })} */
+                />
+              </Grid>
+
               <Grid item xs={12} mt={3} sx={{ "marginLeft": "5px" }}>
                 <FormControl fullWidth>
                   <InputLabel id="status-select-label">Payment Status</InputLabel>

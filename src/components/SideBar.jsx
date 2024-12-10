@@ -23,6 +23,12 @@ import ProductionQuantityLimitsIcon from '@mui/icons-material/ProductionQuantity
 import Divider from '@mui/material/Divider';
 import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
 import AddTestimonial from '../pages/Testimonials/AddTestimonial';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CloseIcon from '@mui/icons-material/Close';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import HomeWorkIcon from '@mui/icons-material/HomeWork';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 
 function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
   const theme = useTheme();
@@ -119,15 +125,29 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
     { text: 'Orders', icon: <ShoppingCart />, action: null,
       roles: ['Admin','Staff'],
       children: [
-        { text: 'View Orders', icon: <ShoppingCart />, action: 'viewOrders' ,roles: ['Admin','Staff']},
-        { text: 'Rejected Orders', icon: <ShoppingCart />, action: 'RejectedOrders' ,roles: ['Admin','Staff']},
-        { text: 'View Returns', icon: <ShoppingCart />, action: 'ViewReturns',roles: ['Admin','Staff'] },
-        { text: 'Completed Orders', icon: <ShoppingCart />, action: 'CompletedOrders' ,roles: ['Admin','Staff']},
-        { text: 'Custom Orders', icon: <ShoppingCart />, action: 'CustomOrders',roles: ['Admin','Staff'] },
+        { text: 'View Orders', icon: <AccessTimeIcon />, action: 'viewOrders' ,roles: ['Admin','Staff']},
+        { text: 'Rejected Orders', icon: <CloseIcon />, action: 'RejectedOrders' ,roles: ['Admin','Staff']},
+        { text: 'View Returns', icon: <RefreshIcon />, action: 'ViewReturns',roles: ['Admin','Staff'] },
+        { text: 'Completed Orders', icon: <CheckCircleOutlineIcon />, action: 'CompletedOrders' ,roles: ['Admin','Staff']},
+       
+        
+      ],
+     },
+     { text: 'Custom Orders', icon: <ShoppingCart />, action: null,
+      roles: ['Admin','Staff'],
+      children: [
+        { text: 'Add Orders', icon: <AddShoppingCartIcon />, action: 'CustomOrders',roles: ['Admin','Staff'] },
+        { text: 'Shop Orders', icon: <HomeWorkIcon />, action: 'shopOrders' ,roles: ['Admin','Staff']},
+        { text: 'Online Pending', icon: <AccessTimeIcon />, action: 'pendingCustom' ,roles: ['Admin','Staff']},
+        { text: 'Online Rejected', icon: <CloseIcon />, action: 'RejectedCustom',roles: ['Admin','Staff'] },
+        { text: 'Completed Orders', icon: <CheckCircleOutlineIcon />, action: 'CompletedCustom' ,roles: ['Admin','Staff']},
+        
         
       ],
      },
     { text: 'Customers', icon: <People />, action: 'viewCustomers',roles: ['Admin','Staff'] },
+    { text: 'Custom Users', icon: <People />, action: 'viewCustomeUsers',roles: ['Admin','Staff'] },
+
     { text: 'Payments', icon: <Payment />, action: 'viewPayments',roles: ['Admin'] },
     // {
     //   text: 'Add Carousal',

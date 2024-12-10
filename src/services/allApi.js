@@ -144,12 +144,23 @@ export const editCustomOrders=async(id,reqBody)=>{
     return await commonApi('PATCH', `${BASE_URL}orders/admin-orders/${id}/`,reqBody,null)
 }
 
+export const bulkeditStatus=async(reqBody)=>{
+    return await commonApi('PATCH', `${BASE_URL}orders/admin-orders/bulk-update/`,reqBody,null)
+    
+}
+
 
 // -------------------------------------------------------------------------------------------------------------------------
 // get all customers
 export const ViewallCustomers=async()=>{
     return await commonApi('GET', `${BASE_URL}accounts/customers`,"",null)
 }
+
+// get all custom order customers
+export const ViewallCustomeUsers=async()=>{
+    return await commonApi('GET', `${BASE_URL}orders/user-list/admin/`,"",null)
+}
+
 
 // edit adress of the customer
 export const EditAddressCustomers=async(id,reqBody)=>{

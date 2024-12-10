@@ -111,6 +111,10 @@ const BillComponentOrders = React.forwardRef(({ ordersArray = [], logo }, ref) =
               <Typography sx={{ fontSize: '1rem' }}>
                 Order ID: {userObject.id || 'NA'}
               </Typography>
+              
+             {userObject?.payment_method==='COD' && <Typography sx={{ fontSize: '1rem' }}>
+                Post Code: 55220
+              </Typography>}
              
             </Box>
           </Grid>

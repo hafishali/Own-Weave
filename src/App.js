@@ -20,6 +20,7 @@ import BillComponent from './components/BillComponent';
 import BillComponentOrders from './components/BillComponentOrders';
 import CustomInvoice from './components/CustomInvoice';
 import InvoicePrint from './components/InvoicePrint';
+import OnlineInvoice from './components/OnlineInvoice';
 
 function App() {
   // const isAdminLoggedIn = () => {
@@ -42,6 +43,7 @@ function App() {
         <Route path='/bill' element={<BillComponent></BillComponent>}></Route>
         <Route path='/bill/orders' element={<BillComponentOrders></BillComponentOrders>}></Route>
         <Route path='/invoice' element={<InvoicePrint></InvoicePrint>}></Route>
+        <Route path='/online/bill' element={<OnlineInvoice></OnlineInvoice>}></Route>
         
         {/* <Route path='/dashboard' element={<AdminRoute element={<Dashboard></Dashboard>}/> }></Route>
         <Route path='/vieworders' element={<AdminRoute element={<ViewOrders></ViewOrders>}/> }></Route>

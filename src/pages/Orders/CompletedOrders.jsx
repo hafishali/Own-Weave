@@ -55,7 +55,8 @@ function CompletedOrders() {
   const [updatedCustomer, setUpdatedCustomer] = useState({
     payment_status: "",
     status: "",
-    Track_id: ""
+    Track_id: "",
+    rejected_reason: ""
   })
   const [isEnabled, setIsEnabled] = useState(false)
   const [status, setStatus] = useState("")
@@ -67,6 +68,7 @@ function CompletedOrders() {
   const [endDate, setEndDate] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [filterTrackingID, setFilterTrackingID] = useState("")
+  const [searchQuery, setSearchQuery] = useState('')
 
     const handleGetallorders = async () => {
         try {
@@ -179,18 +181,28 @@ function CompletedOrders() {
         const orderDate = dayjs(order.created_at.split("T")[0]);
         const startDateMatch = startDate ? orderDate.isAfter(dayjs(startDate).subtract(1, 'day')) : true;
         const endDateMatch = endDate ? orderDate.isBefore(dayjs(endDate).add(1, 'day')) : true;
-        const trackingIDMatch = 
-        filterTrackingID === '' || 
-        (order.Track_id?.toLowerCase().includes(filterTrackingID.toLowerCase()));
     
-      return statusMatch && startDateMatch && endDateMatch && trackingIDMatch;
-      });
-      const clearFilters = () => {
+        // Tracking ID filter
+        const trackingIDMatch = 
+            filterTrackingID === '' || 
+            (order.Track_id?.toLowerCase().includes(filterTrackingID.toLowerCase()));
+    
+        // Order ID or Mobile number filter
+        const searchQueryMatch = searchQuery === '' ||
+            
+             String(order.user?.mobile_number)?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+        return statusMatch && startDateMatch && endDateMatch && trackingIDMatch && searchQueryMatch;
+    });
+    
+    // Function to clear all filters
+    const clearFilters = () => {
         setFilterStatus("All");
         setStartDate(null);
         setEndDate(null);
-        setFilterTrackingID("")
-      };
+        setFilterTrackingID("");
+        setSearchQuery(""); // Clear search query
+    };
         
     
       console.log(orders)
@@ -271,7 +283,8 @@ function CompletedOrders() {
           setUpdatedCustomer({
             payment_status: "",
             status: "",
-            Track_id: ""
+            Track_id: "",
+            rejected_reason: ""
           })
     
         }
@@ -329,7 +342,7 @@ function CompletedOrders() {
         
       </Box>
       <Box sx={{ display: 'flex', gap: 2, mb: 2 ,mt:3}}>
-        <Grid container spacing={2}>
+      <Grid container spacing={2}>
           {/* <Grid item xs={3} ><FormControl fullWidth>
           <InputLabel id="status-select-label">Status</InputLabel>
           <Select
@@ -345,7 +358,7 @@ function CompletedOrders() {
             <MenuItem value="Completed">Completed</MenuItem>
           </Select>
         </FormControl></Grid> */}
-         <Grid item xs={3}>
+          <Grid item xs={3}>
             <TextField
               fullWidth
               label="Tracking ID"
@@ -353,24 +366,33 @@ function CompletedOrders() {
               onChange={(e) => setFilterTrackingID(e.target.value)}
             />
           </Grid>
-          <Grid item xs={6} sx={{display:"flex",justifyContent:"space-around"}}><LocalizationProvider dateAdapter={AdapterDayjs}>
-          <Grid item xs={3}> <DatePicker
-            label="Start Date"
-            value={startDate}
-            onChange={(newValue) => setStartDate(newValue)}
-            sx={{ width: '100%' }}
-          /></Grid>
-          <Grid item xs={3}><DatePicker
-            label="End Date"
-            value={endDate}
-            onChange={(newValue) => setEndDate(newValue)}
-            sx={{ width: '100%' }}
-          /></Grid>
-         
-          
-        </LocalizationProvider></Grid>
-          <Grid item xs={3}  sx={{display:"flex",justifyContent:"center"}}> <Button variant="outlined" onClick={clearFilters} color="primary">Clear Filters</Button></Grid>
-          
+          <Grid item xs={3}>
+            <TextField
+              fullWidth
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search by  Mobile Number"
+            />
+          </Grid>
+
+          <Grid item xs={6} sx={{ display: "flex", justifyContent: "space-around" }}><LocalizationProvider dateAdapter={AdapterDayjs}>
+            <Grid item xs={3}> <DatePicker
+              label="Start Date"
+              value={startDate}
+              onChange={(newValue) => setStartDate(newValue)}
+              sx={{ width: '100%' }}
+            /></Grid>
+            <Grid item xs={3}><DatePicker
+              label="End Date"
+              value={endDate}
+              onChange={(newValue) => setEndDate(newValue)}
+              sx={{ width: '100%' }}
+            /></Grid>
+            <Grid item xs={3} sx={{ display: "flex", justifyContent: "center" }}> <Button variant="outlined" onClick={clearFilters} color="primary">Clear Filters</Button></Grid>
+
+
+          </LocalizationProvider></Grid>
+
         </Grid>
       </Box>
 
@@ -686,7 +708,7 @@ function CompletedOrders() {
 
         </Box>
       </Modal>
-      {/* modal for track id */}
+      {/* modal for edit */}
       <Modal open={trackmodal} onClose={handleCloseEdit}>
         <Box
           sx={{
@@ -767,6 +789,22 @@ function CompletedOrders() {
                   </Select>
                 </FormControl>
               </Grid>
+              {updatedCustomer.status === 'Reject' && (
+  <Grid item xs={12} mt={3}>
+    <TextField
+      fullWidth
+      label="Reason for Reject"
+      variant="outlined"
+      multiline
+      rows={4} // Adjust the number of rows to control the height of the textarea
+      placeholder="Enter the reason here"
+      value={updatedCustomer.rejected_reason}
+      onChange={(e) =>
+        setUpdatedCustomer({ ...updatedCustomer, rejected_reason: e.target.value })
+      }
+    />
+  </Grid>
+)}
             </Grid>
 
 
