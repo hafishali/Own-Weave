@@ -82,7 +82,8 @@ const RejectedCustom = () => {
             if (response.status === 200) {
                 const sortedOrders = response.data
                     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))  // Sorting by created_at
-                    .filter(order => order.custom_status === 'Reject');
+                    .filter(order => order.custom_status === 'Reject')
+                    .filter(order => order.Order_options === 'True');
 
                 setOrders(sortedOrders);
             }

@@ -31,6 +31,8 @@ import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 
 function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
+  const [permissions, setPermissions] = useState(null);
+  const [isSuperUser, setIsSuperUser] = useState(false);
   const theme = useTheme();
   const isLargeScreen = useMediaQuery(theme.breakpoints.up('md'));
   const location = useLocation();
@@ -45,8 +47,26 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
   const [selectedMenu, setSelectedMenu] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(isLargeScreen);
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem('role');
+    const assess= JSON.parse(localStorage.getItem('permissions'))
+    if (storedUser==='Admin') {
+      setIsSuperUser(storedUser);
+    }
+    if(assess){
+      const obj = assess.reduce((acc, key) => {
+        acc[key] = key;
+        return acc;
+      }, {});
+      setPermissions(obj)
+    }
+  }, []);
+  console.log(permissions)
+
 
   const userRole = localStorage.getItem('role');
+  // const permissions = JSON.parse(localStorage.getItem('permissions'));
+
 
   useEffect(() => {
     // Update drawer state when screen size changes
@@ -88,26 +108,26 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
   };
 
   const menuItems = [
-    { text: 'Dashboard', icon: <Dashboard />, action: 'dashboard',roles: ['Admin'] },
-    { text: 'Analytical Report', icon: <Assessment />, action: 'reports',roles: ['Admin'] },
+    { text: 'Dashboard', icon: <Dashboard />, action: 'dashboard',permission: isSuperUser },
+    { text: 'Analytical Report', icon: <Assessment />, action: 'reports',permission: isSuperUser },
     {
       text: 'Offers',
       icon: <LocalOfferOutlinedIcon />,
       action: null,
-      roles: ['Admin','Staff'],
+      permission: isSuperUser || (permissions && permissions.Offers),
       
       children: [
        
-        { text: 'View Offer', icon: <LocalOfferOutlinedIcon />, action: 'viewOffers',roles: ['Admin','Staff'] },
+        { text: 'View Offer', icon: <LocalOfferOutlinedIcon />, action: 'viewOffers' },
       ],
     },
     {
       text: 'Category',
       icon: <Category />,
-      roles: ['Admin','Staff'],
+      permission: isSuperUser || (permissions && permissions.Category),
       children: [
-        { text: 'View Category', icon: <ViewList />, action: 'viewCategory',roles: ['Admin','Staff'] },
-        { text: 'Add Category', icon: <AddBox />, action: 'addCategory',roles: ['Admin','Staff'] },
+        { text: 'View Category', icon: <ViewList />, action: 'viewCategory' },
+        { text: 'Add Category', icon: <AddBox />, action: 'addCategory' },
         // { text: 'View Subcategory', icon: <ViewList />, action: 'viewSubcategory' },
         // { text: 'Add Subcategory', icon: <AddBox />, action: 'addSubcategory' },
       ],
@@ -115,40 +135,41 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
     {
       text: 'Product',
       icon: <Category />,
-      roles: ['Admin','Staff'],
+      permission: isSuperUser || (permissions && permissions.Products),
       children: [
-        { text: 'Add Product', icon: <AddBox />, action: 'addProduct',roles: ['Admin','Staff'] },
-        { text: 'View Product', icon: <ViewList />, action: 'viewProduct',roles: ['Admin','Staff'] },
+        { text: 'Add Product', icon: <AddBox />, action: 'addProduct' },
+        { text: 'View Product', icon: <ViewList />, action: 'viewProduct' },
         // { text: 'View Stocks', icon: <ProductionQuantityLimitsIcon />, action: 'viewStocks' },
       ],
     },
     { text: 'Orders', icon: <ShoppingCart />, action: null,
-      roles: ['Admin','Staff'],
+      permission: isSuperUser || (permissions && permissions.Orders),
       children: [
-        { text: 'View Orders', icon: <AccessTimeIcon />, action: 'viewOrders' ,roles: ['Admin','Staff']},
-        { text: 'Rejected Orders', icon: <CloseIcon />, action: 'RejectedOrders' ,roles: ['Admin','Staff']},
-        { text: 'View Returns', icon: <RefreshIcon />, action: 'ViewReturns',roles: ['Admin','Staff'] },
-        { text: 'Completed Orders', icon: <CheckCircleOutlineIcon />, action: 'CompletedOrders' ,roles: ['Admin','Staff']},
+        { text: 'View Orders', icon: <AccessTimeIcon />, action: 'viewOrders' },
+        { text: 'Rejected Orders', icon: <CloseIcon />, action: 'RejectedOrders' },
+        { text: 'View Returns', icon: <RefreshIcon />, action: 'ViewReturns'},
+        { text: 'Completed Orders', icon: <CheckCircleOutlineIcon />, action: 'CompletedOrders'},
        
         
       ],
      },
      { text: 'Custom Orders', icon: <ShoppingCart />, action: null,
-      roles: ['Admin','Staff'],
+      permission: isSuperUser || (permissions && permissions.custom_orders),
       children: [
-        { text: 'Add Orders', icon: <AddShoppingCartIcon />, action: 'CustomOrders',roles: ['Admin','Staff'] },
-        { text: 'Shop Orders', icon: <HomeWorkIcon />, action: 'shopOrders' ,roles: ['Admin','Staff']},
-        { text: 'Online Pending', icon: <AccessTimeIcon />, action: 'pendingCustom' ,roles: ['Admin','Staff']},
-        { text: 'Online Rejected', icon: <CloseIcon />, action: 'RejectedCustom',roles: ['Admin','Staff'] },
-        { text: 'Completed Orders', icon: <CheckCircleOutlineIcon />, action: 'CompletedCustom' ,roles: ['Admin','Staff']},
+        { text: 'Add Orders', icon: <AddShoppingCartIcon />, action: 'CustomOrders' },
+        { text: 'Shop Orders', icon: <HomeWorkIcon />, action: 'shopOrders' },
+        { text: 'Online Pending', icon: <AccessTimeIcon />, action: 'pendingCustom' },
+        { text: 'Online Rejected', icon: <CloseIcon />, action: 'RejectedCustom' },
+        { text: 'Online Returned', icon: <RefreshIcon />, action: 'ReturnedCustom' },
+        { text: 'Completed Orders', icon: <CheckCircleOutlineIcon />, action: 'CompletedCustom'},
         
         
       ],
      },
-    { text: 'Customers', icon: <People />, action: 'viewCustomers',roles: ['Admin','Staff'] },
-    { text: 'Custom Users', icon: <People />, action: 'viewCustomeUsers',roles: ['Admin','Staff'] },
+    { text: 'Customers', icon: <People />, action: 'viewCustomers',permission: isSuperUser || (permissions && permissions.website_Customers), },
+    { text: 'Custom Users', icon: <People />, action: 'viewCustomeUsers',permission: isSuperUser || (permissions && permissions.custom_Users) },
 
-    { text: 'Payments', icon: <Payment />, action: 'viewPayments',roles: ['Admin'] },
+    { text: 'Payments', icon: <Payment />, action: 'viewPayments',permission: isSuperUser},
     // {
     //   text: 'Add Carousal',
     //   icon: <ImageIcon />,
@@ -164,14 +185,14 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
       text: 'Sub Admin',
       icon: <People />,
       action: null,
-      roles: ['Admin'],
+      permission: isSuperUser,
      
       children: [
-        { text: 'Add Sub Admin', icon: <AddBox />, action: 'addSubAdmin' ,roles: ['Admin']},
-        { text: 'View Sub Admin', icon: <ViewList />, action: 'viewSubAdmin',roles: ['Admin'] },
+        { text: 'Add Sub Admin', icon: <AddBox />, action: 'addSubAdmin' },
+        { text: 'View Sub Admin', icon: <ViewList />, action: 'viewSubAdmin' },
       ],
     },
-    { text: 'Testimonials', icon: <ReviewsIcon />, action: 'testimonials',roles: ['Admin','Staff'] },
+    { text: 'Testimonials', icon: <ReviewsIcon />, action: 'testimonials',permission: isSuperUser || (permissions && permissions.Testimonials) },
     /* { text: 'Notification', icon: <Notifications />, action: 'notifications',roles: ['Admin','Staff'] },
     { text: 'Send Notifications', icon: <Notifications />, action: 'sendNotifications',roles: ['Admin','Staff'] }, */
   ];
@@ -190,7 +211,7 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
           <Toolbar />
           <List component="nav">
           {menuItems.map((item) => (
-              item.roles.includes(userRole) && (
+              item.permission && (
               <React.Fragment key={item.text}>
                 <ListItem
                   button
@@ -232,7 +253,7 @@ function Sidebar({ isSidebarOpen, handleDrawerToggle ,setSelectedOption}) {
           <Toolbar />
           <List component="nav">
           {menuItems.map((item) => (
-              item.roles.includes(userRole) && (
+              item.permission && (
               <React.Fragment key={item.text}>
                 <ListItem
                   button

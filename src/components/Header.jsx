@@ -85,6 +85,7 @@ function Header({ handleDrawerToggle }) {
         localStorage.removeItem('access')
         localStorage.removeItem('refresh')
         localStorage.removeItem('role')
+        localStorage.removeItem('permissions')
         navigate('/')
       }
     } catch (error) {

@@ -17,7 +17,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField, Grid, MenuItem, Select, FormControl, InputLabel, Checkbox
+  TextField, Grid, MenuItem, Select, FormControl, InputLabel, Checkbox, List, ListItem, ListItemText
 
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -35,7 +35,7 @@ import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { BulkEditOrder, editOrder, ViewallOrder } from '../../services/allApi';
+import { BulkEditOrder, editOrder, returnProducts, ViewallOrder } from '../../services/allApi';
 import { Label } from 'recharts';
 import { toast, ToastContainer } from 'react-toastify';
 import html2canvas from 'html2canvas';
@@ -72,6 +72,10 @@ const ViewOrders = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExcelDisable, setIsExcelDisable] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [returnproducts, setReturnproducts] = useState([]);
+  const [returnproductCode, setReturnproductCode] = useState('');
+  const [returnlength, setReturnLength] = useState('');
+
 
 
   const handleGetallorders = async () => {
@@ -272,6 +276,9 @@ const ViewOrders = () => {
       Track_id: ""
     })
     setIsEnabled(false)
+    setReturnproducts([])
+    setReturnproductCode('')
+    setReturnLength('') 
   }
 
   const handlePaymentStatusChange = (event) => {
@@ -310,6 +317,29 @@ const ViewOrders = () => {
 
     }
   }
+
+  const handleReturns = async (id) => {
+    try {
+      await handleEditorders(id);
+      const results = await returnProducts(id, returnproducts);
+      if (results.status === 200) {
+        toast.success("Order has been edited successfully");
+        handleCloseEdit();
+        handleGetallorders();
+        setReturnproducts([]);
+        setReturnproductCode('');
+        setReturnLength('');
+          
+      }
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message); // Display backend error message
+      } else {
+        toast.error("Something went wrong while adding the category.");
+      }
+    }
+  };
+  
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -446,6 +476,25 @@ const ViewOrders = () => {
   };
 
 
+  const handleAddProduct = () => {
+    if (!returnproductCode || !returnlength) return alert('Please enter a valid product code and length');
+  
+    setReturnproducts((prevProducts) => ({
+      returns: [
+        ...prevProducts.returns || [],
+        { product_code: returnproductCode, returned_length: parseFloat(returnlength) },
+      ],
+    }));
+    
+    setReturnproductCode(''); // Reset product code field
+    setReturnLength(''); // Reset length field
+  };
+  
+  const handleRemoveProduct = (index) => {
+    setReturnproducts((prevProducts) => ({
+      returns: prevProducts.returns.filter((_, i) => i !== index),
+    }));
+  };
 
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -463,6 +512,7 @@ const ViewOrders = () => {
     setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
   };
   console.log(selectedOrders)
+  console.log(returnproducts)
 
   return (
     <Box sx={{ p: 3 }}>
@@ -683,7 +733,7 @@ const ViewOrders = () => {
                 <TableCell><b>Product Id</b></TableCell>
                 <TableCell><b>Product Code</b></TableCell>
                 <TableCell><b>Product Name</b></TableCell>
-                <TableCell><b>Product Color</b></TableCell>
+               
                 <TableCell><b>Quantity</b></TableCell>
                 <TableCell><b>Size</b></TableCell>
                 <TableCell><b>Sleeve</b></TableCell>
@@ -700,7 +750,7 @@ const ViewOrders = () => {
                       <TableCell>{item.product?.id}</TableCell>
                       <TableCell>{item.product?.product_code}</TableCell>
                       <TableCell>{item.product?.name}</TableCell>
-                      <TableCell>{item.product?.color}</TableCell>
+                      
                       <TableCell>{item.quantity}</TableCell>
                       <TableCell>{item.size}</TableCell>
                       <TableCell>{item.sleeve}</TableCell>
@@ -771,9 +821,10 @@ const ViewOrders = () => {
             <Typography>
               <b>Email:</b>{selectedOrder?.user?.email}
             </Typography>
-            <Typography>
-              <b>Phone:</b>{selectedOrder?.user?.mobile_number}
-            </Typography>
+            <Typography sx={{ fontFamily: "Libre Barcode 39, serif" }}>
+  <b>Phone:</b> {selectedOrder?.user?.mobile_number}
+</Typography>
+
           </>
 
         </Box>
@@ -941,29 +992,86 @@ const ViewOrders = () => {
                 </FormControl>
               </Grid>
               {updatedCustomer.status === 'Reject' && (
-  <Grid item xs={12} mt={3}>
-    <TextField
-      fullWidth
-      label="Reason for Reject"
-      variant="outlined"
-      multiline
-      rows={4} // Adjust the number of rows to control the height of the textarea
-      placeholder="Enter the reason here"
-      value={updatedCustomer.rejected_reason}
-      onChange={(e) =>
-        setUpdatedCustomer({ ...updatedCustomer, rejected_reason: e.target.value })
-      }
-    />
-  </Grid>
-)}
+                <Grid item xs={12} mt={3}>
+                  <TextField
+                    fullWidth
+                    label="Reason for Reject"
+                    variant="outlined"
+                    multiline
+                    rows={4} // Adjust the number of rows to control the height of the textarea
+                    placeholder="Enter the reason here"
+                    value={updatedCustomer.rejected_reason}
+                    onChange={(e) =>
+                      setUpdatedCustomer({ ...updatedCustomer, rejected_reason: e.target.value })
+                    }
+                  />
+                </Grid>
+              )}
 
+
+              {updatedCustomer.status === 'Return' && (<Box sx={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+  <Box sx={{ display: 'flex', gap: '5px' }}>
+    <Grid item xs={5}>
+      <TextField
+        fullWidth
+        label="Product Code"
+        variant="outlined"
+        placeholder="Enter product code"
+        value={returnproductCode}
+        onChange={(e) => setReturnproductCode(e.target.value)}
+      />
+    </Grid>
+    <Grid item xs={5}>
+      <TextField
+        fullWidth
+        label="Length"
+        variant="outlined"
+        placeholder="Enter product length"
+        value={returnlength}
+        onChange={(e) => setReturnLength(e.target.value)}
+      />
+    </Grid>
+    <Grid item xs={2}>
+      <Button
+        sx={{ width: '100%', height: '100%', backgroundColor: 'lightblue' }}
+        variant="contained"
+        onClick={handleAddProduct}
+      >
+        Add
+      </Button>
+    </Grid>
+  </Box>
+
+  {/* List of added products */}
+  <List>
+    {returnproducts.returns?.map((product, index) => (
+      <ListItem
+        key={index}
+        secondaryAction={
+          <IconButton edge="end" onClick={() => handleRemoveProduct(index)}>
+            <DeleteIcon />
+          </IconButton>
+        }
+      >
+        <ListItemText
+          primary={`Product Code: ${product.product_code}, Length: ${product.returned_length}`}
+        />
+      </ListItem>
+    ))}
+  </List>
+</Box>
+)
+
+              }
 
             </Grid>
 
 
 
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Button variant='success' sx={{ backgroundColor: "green", marginTop: '5px' }} onClick={() => handleEditorders(selectedOrder.id)}  > save Changes</Button>
+              {updatedCustomer.status === 'Return' ? <Button variant='success' sx={{ backgroundColor: "blue", marginTop: '5px' }} onClick={() => handleReturns(selectedOrder.id)}  > Save Changes</Button>
+                : <Button variant='success' sx={{ backgroundColor: "green", marginTop: '5px' }} onClick={() => handleEditorders(selectedOrder.id)}  > save Changes</Button>
+              }
             </Box>
 
 

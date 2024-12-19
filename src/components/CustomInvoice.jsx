@@ -9,7 +9,7 @@ const CustomInvoice = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
   const getCurrentDateIST = () => {
     const date = new Date();
     const options = { timeZone: 'Asia/Kolkata' };
-    const istDate = new Date(date.toLocaleString('en-US', options)); // Convert to IST
+    const istDate = new Date(date.toLocaleString('en-US', options)); 
     return istDate;
   };
 
@@ -40,9 +40,9 @@ const CustomInvoice = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
     );
   };
   return (
-    <Box sx={{ width: '370mm', height: '320mm', margin: 'auto', padding: 4, backgroundColor: '#f9f9f6', borderRadius: 2 }} ref={ref}>
-      <Box sx={{ height: 'auto' }}>
-        <Grid container justifyContent="space-between" alignItems="center">
+    <Box sx={{ width: '85%', height: '100%', margin: 'auto', padding: 4, backgroundColor: '#f9f9f6', borderRadius: 2 }} ref={ref}>
+      <Box sx={{ height: '100%' }}>
+        <Grid container justifyContent="center" alignItems="center">
           {/* Logo and Manufacturer Info */}
           <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
             <Box
@@ -61,17 +61,18 @@ const CustomInvoice = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
           </Box>
 
           {/* Invoice Title */}
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+          
+        </Grid>
+        <Box sx={{ display: "flex", justifyContent: "end", alignItems: "center" }}>
             <Typography variant="h5" sx={{ fontWeight: 'bold' }}>INVOICE</Typography>
           </Box>
-        </Grid>
 
         {/* User and Invoice Details */}
-        <Grid container justifyContent="space-between" mt={2}>
-          <Box>
+        <Grid container justifyContent="end" mt={2}>
+          {/* <Box>
             <Typography variant="subtitle1" fontWeight="bold">BILLED TO:</Typography>
             <Box>
-              {/* Name and Phone Number Section */}
+              
               <Typography sx={{ fontSize: '1rem', lineHeight: 1.4 }}>
                 {orderDetails?.name || 'NA'}
               </Typography>
@@ -79,17 +80,17 @@ const CustomInvoice = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
                 Ph: {orderDetails?.mobile_number || 'NA'}
               </Typography>
 
-              {/* Structured Address Section */}
+             
               {orderDetails?.address && (
                 <Box sx={{ marginTop: 2 }}>
-                  {/* <Typography sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Address:</Typography> */}
+                  
                   <Typography sx={{ fontSize: '1rem', lineHeight: 1.4 }}>
                     {formatAddress(orderDetails?.address)}
                   </Typography>
                 </Box>
               )}
             </Box>
-          </Box>
+          </Box> */}
           <Box>
             <Typography variant="body1" fontWeight="bold">Invoice No.{orderDetails.id || 'NA'}</Typography>
             <Typography variant="body1">{formatDate(getCurrentDateIST())}</Typography>
@@ -240,7 +241,7 @@ const CustomInvoice = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
                 alt="Own Weave"
                 sx={{
                   width: '100%',
-                  maxWidth: 130,
+                  maxWidth: 150,
                   height: 'auto'
                 }}
               />
@@ -257,9 +258,9 @@ const CustomInvoice = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
             minHeight: '100px'
           }}>
             <Box>
-              <Typography variant="body1" fontWeight="bold" sx={{ mb: 0.5, fontSize: '0.9rem' }}>
+              {/* <Typography variant="body1" fontWeight="bold" sx={{ mb: 0.5, fontSize: '0.9rem' }}>
                 From:
-              </Typography>
+              </Typography> */}
               <Typography sx={{ whiteSpace: 'pre-line', fontSize: '0.8rem', lineHeight: 1.4 }}>
                 <b>OWN WEAVE</b>
                 {'\n'}

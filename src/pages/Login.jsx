@@ -28,6 +28,7 @@ function LoginPage() {
         localStorage.setItem('refresh', result.data.token.refresh); 
         localStorage.setItem('access', result.data.token.access);
         localStorage.setItem('role', result.data.role);
+        localStorage.setItem('permissions', JSON.stringify(result.data.permissions));
         navigate('/home')
        
       } else {

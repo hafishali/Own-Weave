@@ -4,7 +4,7 @@ import { BASE_URL } from "./baseUrl";
 
 // admin login
 export const adminLogin = async (reqBody) => {
-    return await commonApi('POST', `${BASE_URL}/accounts/admin-staff-login/`,reqBody,{})
+    return await commonApi('POST', `${BASE_URL}accounts/admin-staff-login/`,reqBody,{})
 }
 
 // admin logout
@@ -117,7 +117,15 @@ export const BulkEditOrder=async(reqBody)=>{
     return await commonApi('PATCH', `${BASE_URL}orders/bulk-update/`,reqBody,null)
 }
 
+// return products
+export const returnProducts=async(id,reqBody)=>{
+    return await commonApi('POST', `${BASE_URL}orders/${id}/returns/`,reqBody,null)
+}
 
+// get returned products
+export const ViewreturnProducts=async()=>{
+    return await commonApi('GET', `${BASE_URL}orders/returns/`,null)
+}
 
 
 // view returns-------------------------------------------------------------------------------------------------------------
@@ -148,7 +156,16 @@ export const bulkeditStatus=async(reqBody)=>{
     return await commonApi('PATCH', `${BASE_URL}orders/admin-orders/bulk-update/`,reqBody,null)
     
 }
+// return products -admin orders
+export const returnCustomProducts=async(id,reqBody)=>{
+    return await commonApi('POST', `${BASE_URL}orders/admin-orders/${id}/process-return/`,reqBody,null)
+}
 
+// get return products admin
+
+export const ViewreturnProductsCustom=async()=>{
+    return await commonApi('GET', `${BASE_URL}orders/admin-orders/returns/`,null)
+}
 
 // -------------------------------------------------------------------------------------------------------------------------
 // get all customers

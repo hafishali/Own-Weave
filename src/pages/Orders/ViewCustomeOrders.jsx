@@ -54,7 +54,7 @@ function ViewCustomeOrders() {
     custom_total_price: "",
     payment_status: '',
     payment_method: '',
-    is_online:true,
+    Order_options: "",
     Track_id: "",
 
   });
@@ -204,10 +204,11 @@ function ViewCustomeOrders() {
         if (response.status === 201) {
           toast.success("Order created successfully");
           handleClose();
-          if(response?.data?.order_details?.is_online===false){
-            generatePDF(response.data.order_details );
+          if (response?.data?.order_details?.Order_options === "False") {
+            generatePDF(response.data.order_details);
           }
-          
+          // generatePDF(response.data.order_details );
+
           setCurrentProduct({
             product_code: '',
             custom_length: '',
@@ -222,7 +223,8 @@ function ViewCustomeOrders() {
             custom_total_price: '',
             payment_method: '',
             payment_status: '',
-            Track_id: ''
+            Track_id: '',
+            Order_options: ""
           });
           handleGetCustom();
           setAddOrderModal(false)
@@ -246,35 +248,34 @@ function ViewCustomeOrders() {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
-    const BillComponentToRender =  CustomInvoice ;
+    const BillComponentToRender = CustomInvoice;
+
+    // Dynamically style the container to match the PDF page size
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth(); // Width in mm
+    const pdfHeight = pdf.internal.pageSize.getHeight(); // Height in mm
+
+    const mmToPx = (mm) => mm * (96 / 25.4); // Convert mm to px (96 DPI)
+    const pageWidthPx = mmToPx(pdfWidth);
+    const pageHeightPx = mmToPx(pdfHeight);
+
+    container.style.width = `${pageWidthPx - 50}px`;
+    container.style.height = `${pageHeightPx + 50}px`;
+    container.style.position = 'absolute';
+    container.style.top = '0';
+    container.style.left = '0';
 
     ReactDOM.render(<BillComponentToRender orderDetails={orderDetails} />, container);
 
     setTimeout(() => {
       html2canvas(container, {
-        scale: 2,  // Increase the scale for better resolution
+        scale: 3, // Scale for better quality
         useCORS: true,
-        logging: false,
-        dpi: 300,  // High DPI for better image quality
       }).then((canvas) => {
-        const pdf = new jsPDF('p', 'mm', 'a5', true); // Higher resolution pdf
-
-        const margin = 5;
-        const pageWidth = pdf.internal.pageSize.getWidth() - 2 * margin;
-        const pageHeight = pdf.internal.pageSize.getHeight() - 2 * margin;
-
         const imgData = canvas.toDataURL('image/png');
 
-        // Set image width and height based on billType
-        // let imageWidth, imageHeight;
-
-      
-         const imageWidth = pageWidth;
-         const  imageHeight = pageHeight;
-       
-
-        // Add the image with better resolution
-        pdf.addImage(imgData, 'PNG', margin, margin, imageWidth, imageHeight, undefined, 'FAST');
+        // Add the image to fill the entire PDF page
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
         // Save the PDF with the order number
         pdf.save(`order-${orderDetails.phone_number}.pdf`);
@@ -283,8 +284,10 @@ function ViewCustomeOrders() {
         ReactDOM.unmountComponentAtNode(container);
         document.body.removeChild(container);
       });
-    }, 1000);  // Wait for rendering to complete
+    }, 1000); // Wait for rendering to complete
   };
+
+
 
 
 
@@ -943,7 +946,8 @@ function ViewCustomeOrders() {
                         value={formData.payment_method}
                         onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
                       >
-                        <MenuItem value="COD">CASH</MenuItem>
+                        <MenuItem value="ShopPayment">Shop Payment</MenuItem>
+                        <MenuItem value="COD">COD</MenuItem>
                         <MenuItem value="Online">UPI</MenuItem>
                       </Select>
                     </FormControl>
@@ -967,13 +971,13 @@ function ViewCustomeOrders() {
                     <FormControl fullWidth variant="outlined">
                       <InputLabel>Select Order Type</InputLabel>
                       <Select
-        label="Order Type"
-        value={formData.is_online}
-        onChange={(e) => setFormData({ ...formData, is_online: e.target.value === "true" })}
-      >
-        <MenuItem value="true">ONLINE ORDER</MenuItem>
-        <MenuItem value="false">SHOP INVOICE</MenuItem>
-      </Select>
+                        label="Order Type"
+                        value={formData.Order_options}
+                        onChange={(e) => setFormData({ ...formData, Order_options: e.target.value })}
+                      >
+                        <MenuItem value="True">ONLINE ORDER</MenuItem>
+                        <MenuItem value="False">SHOP INVOICE</MenuItem>
+                      </Select>
                     </FormControl>
                   </Grid>
                   <Grid item xs={12}>
@@ -983,11 +987,34 @@ function ViewCustomeOrders() {
                       label="Track id"
                       variant="outlined"
                       type="text"
-                      disabled={formData.is_online === false}
+                      disabled={formData.Order_options === 'False'}
                       value={formData.Track_id}
                       onChange={handleChange}
                     />
                   </Grid>
+
+                  {/* <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      name='return'
+                      label="Price"
+                      variant="outlined"
+                      type="number"
+                      value={formData.custom_total_price}
+                      onChange={handleChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      name='custom_total_price'
+                      label="Price"
+                      variant="outlined"
+                      type="number"
+                      value={formData.custom_total_price}
+                      onChange={handleChange}
+                    />
+                  </Grid> */}
                 </Grid>
               </Box>
             </Grid>
@@ -1071,15 +1098,15 @@ function ViewCustomeOrders() {
 
 
               </TableRow>
-              {item?.product_details?.free_product_details && <TableRow sx={{backgroundColor:'green'}}>
-              <TableCell >{item?.product_details?.free_product_details?.product_code}</TableCell>
-                <TableCell>{item?.product_details?.free_product_details?.name}</TableCell>
-                <TableCell>{item?.product_details?.free_product_details?.category_name}</TableCell>
-                <TableCell>RS.{item?.length}</TableCell>
-                <TableCell>RS.{item?.product_details?.free_product_details?.price_per_meter}</TableCell>
-              </TableRow> }
-              
-            </>))}
+                {item?.product_details?.free_product_details && <TableRow sx={{ backgroundColor: 'green' }}>
+                  <TableCell >{item?.product_details?.free_product_details?.product_code}</TableCell>
+                  <TableCell>{item?.product_details?.free_product_details?.name}</TableCell>
+                  <TableCell>{item?.product_details?.free_product_details?.category_name}</TableCell>
+                  <TableCell>RS.{item?.length}</TableCell>
+                  <TableCell>RS.{item?.product_details?.free_product_details?.price_per_meter}</TableCell>
+                </TableRow>}
+
+              </>))}
 
 
             </TableBody>
@@ -1252,14 +1279,14 @@ function ViewCustomeOrders() {
               Edit Custom Orders
             </Typography>
             <Grid container mt={2} >
-            <Grid item xs={12} mt={3} sx={{ "marginLeft": "5px" }}>
-            <TextField
+              <Grid item xs={12} mt={3} sx={{ "marginLeft": "5px" }}>
+                <TextField
                   fullWidth
                   label="Track Id"
                   variant="outlined"
                   placeholder='paste track id here'
-                  /* value={updatedCustomer.Track_id}
-                  onChange={(e) => setUpdatedCustomer({ ...updatedCustomer, Track_id: e.target.value })} */
+                /* value={updatedCustomer.Track_id}
+                onChange={(e) => setUpdatedCustomer({ ...updatedCustomer, Track_id: e.target.value })} */
                 />
               </Grid>
 

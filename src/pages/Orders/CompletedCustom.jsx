@@ -17,7 +17,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField, Grid, MenuItem, Select, FormControl, InputLabel, Checkbox
+  TextField, Grid, MenuItem, Select, FormControl, InputLabel, Checkbox,ListItemText,ListItem,List
 
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -35,7 +35,7 @@ import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { BulkEditOrder, editOrder, ViewallOrder,viewCustomOrders } from '../../services/allApi';
+import { BulkEditOrder, editOrder, returnProducts, ViewallOrder,viewCustomOrders } from '../../services/allApi';
 import { Label } from 'recharts';
 import { toast, ToastContainer } from 'react-toastify';
 import html2canvas from 'html2canvas';
@@ -72,6 +72,9 @@ const CompletedCustom = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExcelDisable, setIsExcelDisable] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [returnproducts, setReturnproducts] = useState([]);
+  const [returnproductCode, setReturnproductCode] = useState('');
+  const [returnlength, setReturnLength] = useState('');
 
 
   const handleGetallorders = async () => {
@@ -80,7 +83,8 @@ const CompletedCustom = () => {
       if (response.status === 200) {
         const sortedOrders = response.data
           .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))  // Sorting by created_at
-           .filter(order => order.custom_status === 'Completed'); 
+           .filter(order => order.custom_status === 'Completed')
+           .filter(order => order.Order_options === 'True');
 
         setOrders(sortedOrders);
       }
@@ -91,6 +95,29 @@ const CompletedCustom = () => {
   useEffect(() => {
     handleGetallorders()
   }, [])
+
+  
+  const handleAddProduct = () => {
+    if (!returnproductCode || !returnlength) return alert('Please enter a valid product code and length');
+  
+    setReturnproducts((prevProducts) => ({
+      returns: [
+        ...prevProducts.returns || [],
+        { product_code: returnproductCode, returned_length: parseFloat(returnlength) },
+      ],
+    }));
+    
+    setReturnproductCode(''); // Reset product code field
+    setReturnLength(''); // Reset length field
+  };
+  
+  const handleRemoveProduct = (index) => {
+    setReturnproducts((prevProducts) => ({
+      returns: prevProducts.returns.filter((_, i) => i !== index),
+    }));
+  };
+
+
   
 
   const downloadExcel = (exportAll = false) => {
@@ -265,15 +292,17 @@ const clearFilters = () => {
     }
 
   }
-  const handleCloseEdit = () => {
+   const handleCloseEdit = () => {
     setTrackmodal(false)
     setUpdatedCustomer({
       payment_status: "",
-    status: "",
-    Track_id: "",
-    rejected_reason: ""
+      status: "",
+      Track_id: ""
     })
     setIsEnabled(false)
+    setReturnproducts([])
+    setReturnproductCode('')
+    setReturnLength('') 
   }
 
   const handlePaymentStatusChange = (event) => {
@@ -312,6 +341,27 @@ const clearFilters = () => {
 
     }
   }
+  const handleReturns = async (id) => {
+    try {
+      await handleEditorders(id);
+      const results = await returnProducts(id, returnproducts);
+      if (results.status === 200) {
+        toast.success("Order has been edited successfully");
+        handleCloseEdit();
+        handleGetallorders();
+        setReturnproducts([]);
+        setReturnproductCode('');
+        setReturnLength('');
+          
+      }
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message); // Display backend error message
+      } else {
+        toast.error("Something went wrong while adding the category.");
+      }
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -944,6 +994,61 @@ const clearFilters = () => {
     />
   </Grid>
 )}
+
+{updatedCustomer.status === 'Return' && (<Box sx={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+  <Box sx={{ display: 'flex', gap: '5px' }}>
+    <Grid item xs={5}>
+      <TextField
+        fullWidth
+        label="Product Code"
+        variant="outlined"
+        placeholder="Enter product code"
+        value={returnproductCode}
+        onChange={(e) => setReturnproductCode(e.target.value)}
+      />
+    </Grid>
+    <Grid item xs={5}>
+      <TextField
+        fullWidth
+        label="Length"
+        variant="outlined"
+        placeholder="Enter product length"
+        value={returnlength}
+        onChange={(e) => setReturnLength(e.target.value)}
+      />
+    </Grid>
+    <Grid item xs={2}>
+      <Button
+        sx={{ width: '100%', height: '100%', backgroundColor: 'lightblue' }}
+        variant="contained"
+        onClick={handleAddProduct}
+      >
+        Add
+      </Button>
+    </Grid>
+  </Box>
+
+  {/* List of added products */}
+  <List>
+    {returnproducts.returns?.map((product, index) => (
+      <ListItem
+        key={index}
+        secondaryAction={
+          <IconButton edge="end" onClick={() => handleRemoveProduct(index)}>
+            <DeleteIcon />
+          </IconButton>
+        }
+      >
+        <ListItemText
+          primary={`Product Code: ${product.product_code}, Length: ${product.returned_length}`}
+        />
+      </ListItem>
+    ))}
+  </List>
+</Box>
+)
+
+              }
             </Grid>
 
 

@@ -42,7 +42,7 @@ function App() {
         <Route path='/' element={<LoginPage></LoginPage>}></Route>
         <Route path='/bill' element={<BillComponent></BillComponent>}></Route>
         <Route path='/bill/orders' element={<BillComponentOrders></BillComponentOrders>}></Route>
-        <Route path='/invoice' element={<InvoicePrint></InvoicePrint>}></Route>
+        <Route path='/invoice' element={<CustomInvoice></CustomInvoice>}></Route>
         <Route path='/online/bill' element={<OnlineInvoice></OnlineInvoice>}></Route>
         
         {/* <Route path='/dashboard' element={<AdminRoute element={<Dashboard></Dashboard>}/> }></Route>

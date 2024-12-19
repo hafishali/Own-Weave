@@ -17,7 +17,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField, Grid, MenuItem, Select, FormControl, InputLabel,CircularProgress
+  TextField, Grid, MenuItem, Select, FormControl, InputLabel,CircularProgress,ListItemText,ListItem,List
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneIcon from '@mui/icons-material/Done';
@@ -29,7 +29,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import dayjs from 'dayjs'
-import { editOrder, viewReturn } from '../../services/allApi';
+import { editOrder, returnProducts, viewReturn, ViewreturnProducts } from '../../services/allApi';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { toast, ToastContainer } from 'react-toastify';
@@ -41,6 +41,7 @@ import { Label } from 'recharts';
 function ViewReturn() {
   const [openCustomer, setOpenCustomer] = useState(false)
   const [open, setOpen] = useState(false);
+  const [returnModal, setReturnModal] = useState(false);
   const [trackmodal, setTrackmodal] = useState(false)
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [addressModal, setAddressModal] = useState(false)
@@ -53,6 +54,11 @@ function ViewReturn() {
   const [currentPage, setCurrentPage] = useState(1);
   const [filterTrackingID, setFilterTrackingID] = useState("")
   const [searchQuery, setSearchQuery] = useState('')
+  const [returnedProduct,setReturnedProduct]=useState([])
+  const [returnproducts, setReturnproducts] = useState([]);
+  const [returnproductCode, setReturnproductCode] = useState('');
+  const [returnlength, setReturnLength] = useState('');
+
 
   // State to manage date pickers
   const [startDate, setStartDate] = useState(null);
@@ -69,15 +75,36 @@ function ViewReturn() {
   const openConfirmDialog = () => {
     setConfirmDialogOpen(true);
   };
+  const handleAddProduct = () => {
+    if (!returnproductCode || !returnlength) return alert('Please enter a valid product code and length');
+  
+    setReturnproducts((prevProducts) => ({
+      returns: [
+        ...prevProducts.returns || [],
+        { product_code: returnproductCode, returned_length: parseFloat(returnlength) },
+      ],
+    }));
+    
+    setReturnproductCode(''); // Reset product code field
+    setReturnLength(''); // Reset length field
+  };
+  
+  const handleRemoveProduct = (index) => {
+    setReturnproducts((prevProducts) => ({
+      returns: prevProducts.returns.filter((_, i) => i !== index),
+    }));
+  };
 
 
 
   const handleGetReturnorders = async () => {
     try {
-      const response = await viewReturn()
+      const response = await ViewreturnProducts()
       if (response.status === 200) {
-        const sortedreturns = response.data.sort((a, b) => new Date(b.created_at	) - new Date(a.created_at));
-        setReturnOrders(sortedreturns)
+        const sortedReturns = response.data?.sort((a, b) => {
+          return new Date(b['updated at']) - new Date(a['updated at']);
+      });
+        setReturnedProduct(sortedReturns)
       }
     } catch (error) {
       console.log(error)
@@ -86,7 +113,7 @@ function ViewReturn() {
   useEffect(() => {
     handleGetReturnorders()
   }, [])
-  console.log(returnOrders)
+  console.log(returnedProduct)
 
   const downloadExcel = () => {
     if (!returnOrders || returnOrders.length === 0) {
@@ -177,6 +204,14 @@ function ViewReturn() {
     setSelectedReturn(item)
 
   }
+  const handleReturnopen=(item)=>{
+    setReturnModal(true)
+    setSelectedReturn(item)
+  }
+  const handleReturnClose=()=>{
+    setReturnModal(false)
+    setSelectedReturn(null)
+  }
   const handleaddressOpen = (item) => {
     setSelectedReturn(item)
     setAddressModal(true)
@@ -203,6 +238,9 @@ function ViewReturn() {
   const handleCloseEdit=()=>{
     setTrackmodal(false)
     setSelectedReturn(null)
+    setReturnproducts([])
+    setReturnproductCode('')
+    setReturnLength('') 
   }
 
   // edit return status
@@ -221,6 +259,27 @@ function ViewReturn() {
     
   }
 
+  const handleReturns = async (id) => {
+    try {
+      const results = await returnProducts(id, returnproducts);
+      if (results.status === 200) {
+        toast.success("Order has been edited successfully");
+        handleCloseEdit();
+        handleGetReturnorders();
+        setReturnproducts([]);
+        setReturnproductCode('');
+        setReturnLength('');
+          
+      }
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message); // Display backend error message
+      } else {
+        toast.error("Something went wrong while returning products.");
+      }
+    }
+  };
+
   const getStatusColor = (return_status) => {
     switch (return_status) {
       case 'Return Initiated':
@@ -238,12 +297,13 @@ function ViewReturn() {
     setFilterStatus(event.target.value);
   };
 
-  const filteredorders = returnOrders.filter(order => {
+  const filteredorders = returnedProduct.filter(order => {
     // Status filter
     const statusMatch = filterstatus === 'All' || order.status === filterstatus;
 
     // Date range filter
-    const orderDate = dayjs(order.created_at.split("T")[0]);
+    const orderDate = dayjs(order['updated at'].split("T")[0]);
+
     const startDateMatch = startDate ? orderDate.isAfter(dayjs(startDate).subtract(1, 'day')) : true;
     const endDateMatch = endDate ? orderDate.isBefore(dayjs(endDate).add(1, 'day')) : true;
 
@@ -294,7 +354,7 @@ const clearFilters = () => {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" gutterBottom>
-          View Return Orders
+          View Return products
         </Typography>
         {/* <Button variant="contained" color="primary" onClick={downloadExcel}>
           Export as excel <DescriptionIcon sx={{ ml: 1 }} />
@@ -367,12 +427,13 @@ const clearFilters = () => {
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Customer</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Date</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Time</b></TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Return Products</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Shipping Address</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Payment Method</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Payment Status</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Track id</b></TableCell>
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b> Order Status</b></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b> Return Status</b></TableCell>
+              
 
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}><b>Actions</b></TableCell>
             </TableRow>
@@ -385,7 +446,7 @@ const clearFilters = () => {
                 sx={{ color: "blue", cursor: "pointer" }}
                 onClick={() => handleopenorder(item)}
               >
-                <u>{item.id}</u>
+                <u>{item.order_id}</u>
               </TableCell>
 
               {/* Customer Name Column */}
@@ -398,11 +459,13 @@ const clearFilters = () => {
               </TableCell>
 
               {/* Additional Empty Columns */}
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item.created_at.split("T")[0]}</TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item.created_at.split("T")[1].split(".")[0]}</TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item['updated at'].split("T")[0]}</TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item['updated at'].split("T")[1].split(".")[0]}</TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center', color: "blue", cursor: "pointer" }} onClick={() => handleReturnopen(item)}><u>View</u></TableCell>
+
               <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center', color: "blue", cursor: "pointer" }} onClick={() => handleaddressOpen(item)}><u>View</u></TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item.payment_option}</TableCell>
-              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item.payment_status}</TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item['paymet method']}</TableCell>
+              <TableCell style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>{item['payment status']}</TableCell>
 
 
               {/* Track ID Column */}
@@ -416,12 +479,9 @@ const clearFilters = () => {
 
               {/* Status Dropdown */}
               <TableCell style={{ textAlign: 'center' }}>
-                {item.status}
+                {item['order status']}
               </TableCell>
-              <TableCell style={{ textAlign: 'center'  }}>
-    <Button  style={{color: getStatusColor(item.return_status)}}>{item.return_status}</Button>
-  
-</TableCell>
+             
 
               {/* Action Buttons Based on Status */}
               <TableCell><IconButton aria-label="Edit" onClick={() => handleEdit(item)}>
@@ -504,12 +564,12 @@ const clearFilters = () => {
           </Typography>
 
           {/* Order Information */}
-          <Typography><b>Order ID:</b> {selectedReturn?.id}</Typography>
+          <Typography><b>Order ID:</b> {selectedReturn?.order_id}</Typography>
           <Typography><b>Customer:</b> {selectedReturn?.user?.name}</Typography>
-          <Typography><b>Status:</b> {selectedReturn?.status}</Typography>
-          <Typography><b>Payment Method:</b> payment</Typography>
+          <Typography><b>Status:</b> {selectedReturn?.['order status']}</Typography>
+          <Typography><b>Payment Method:</b>{selectedReturn?.['paymet method']}</Typography>
           <Typography><b>Total Price:</b> RS. {selectedReturn?.total_price}</Typography>
-          <Typography><b>Order Time:</b> {new Date(selectedReturn?.created_at).toLocaleString()}</Typography>
+          
 
           <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
             Products:
@@ -522,7 +582,6 @@ const clearFilters = () => {
                 <TableCell><b>Product Id</b></TableCell>
                 <TableCell><b>Product Code</b></TableCell>
                 <TableCell><b>Product Name</b></TableCell>
-                <TableCell><b>Product Color</b></TableCell>
                 <TableCell><b>Quantity</b></TableCell>
                 <TableCell><b>Size</b></TableCell>
                 <TableCell><b>Sleeve</b></TableCell>
@@ -531,25 +590,36 @@ const clearFilters = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {selectedReturn?.items && selectedReturn?.items.length > 0 ? (
-                selectedReturn.items.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.product?.id}</TableCell>
-                    <TableCell>{item.product?.product_code}</TableCell>
-                    <TableCell>{item.product?.name}</TableCell>
-                    <TableCell>{item.product?.color}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell>{item.size}</TableCell>
-                    <TableCell>{item.sleeve}</TableCell>
-                    <TableCell>RS. {item.price}</TableCell>
-                    <TableCell>RS. {item.product?.offer_price_per_meter}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={4} align="center">No products for this order</TableCell>
-                </TableRow>
-              )}
+            {selectedReturn?.['ordered product details'] && selectedReturn?.['ordered product details'].length > 0 ? (
+  selectedReturn['ordered product details'].map((item, index) => (
+    <React.Fragment key={index}>
+      <TableRow>
+        <TableCell>{item?.id}</TableCell>
+        <TableCell>{item?.product_code}</TableCell>
+        <TableCell>{item?.product_name}</TableCell>
+        <TableCell>{item?.quantity}</TableCell>
+        <TableCell>{item?.size}</TableCell>
+        <TableCell>{item?.sleeve}</TableCell>
+        <TableCell>RS. {item?.price}</TableCell>
+        <TableCell>RS. {item?.offer_price_per_meter}</TableCell>
+      </TableRow>
+      {item.free_product && (
+        <TableRow>
+          <TableCell colSpan={9} sx={{ backgroundColor: '#f0f0f0', color: '#4caf50' }}>
+            <Typography variant="body2">
+              <b>Free Product: </b> NAME: {item.free_product?.name} || CODE: {item.free_product?.product_code} {/* || PRICE: {item.free_product?.offer_price_per_meter} */}
+            </Typography>
+          </TableCell>
+        </TableRow>
+      )}
+    </React.Fragment>
+  ))
+) : (
+  <TableRow>
+    <TableCell colSpan={9} align="center">No products for this order</TableCell>
+  </TableRow>
+)}
+
             </TableBody>
           </Table>
         </Box>
@@ -591,9 +661,7 @@ const clearFilters = () => {
             <Typography>
               <b>Customer Name:</b>{selectedReturn?.user?.name}
             </Typography>
-            <Typography>
-              <b>Email:</b>{selectedReturn?.user?.email}
-            </Typography>
+            
             <Typography>
               <b>Phone:</b>{selectedReturn?.user?.mobile_number}
             </Typography>
@@ -638,9 +706,6 @@ const clearFilters = () => {
 
             <Typography>
               <b> Name:</b>{selectedReturn?.shipping_address?.name}
-            </Typography>
-            <Typography>
-              <b>Email:</b>{selectedReturn?.shipping_address?.email}
             </Typography>
             <Typography>
               <b>Phone:</b>{selectedReturn?.shipping_address?.mobile_number}
@@ -716,28 +781,140 @@ const clearFilters = () => {
             <Typography sx={{ display: "flex", justifyContent: "center" }} variant="h6" gutterBottom>
               Edit Return Orders
             </Typography>
-            <Grid container mt={2} >
-              <Grid item xs={12} mt={3} sx={{ "marginLeft": "5px" }}>
-                <FormControl fullWidth>
-                  <InputLabel id="status-select-label">Return Status</InputLabel>
-                  <Select
-                    labelId="status-select-label"
-                    label="Choose Status"
-                    value={updatedReturns.return_status} 
-            onChange={(e)=>setUpdatedReturns({...updatedReturns,return_status:e.target.value})} 
-                  >
-                    <MenuItem value="Return Initiated">Return Initiated</MenuItem>
-                    <MenuItem value="Pending">Pending</MenuItem>
-                    <MenuItem value="Completed">Return Completed</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
+            <Box sx={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+  <Box sx={{ display: 'flex', gap: '5px' }}>
+    <Grid item xs={5}>
+      <TextField
+        fullWidth
+        label="Product Code"
+        variant="outlined"
+        placeholder="Enter product code"
+        value={returnproductCode}
+        onChange={(e) => setReturnproductCode(e.target.value)}
+      />
+    </Grid>
+    <Grid item xs={5}>
+      <TextField
+        fullWidth
+        label="Length"
+        variant="outlined"
+        placeholder="Enter product length"
+        value={returnlength}
+        onChange={(e) => setReturnLength(e.target.value)}
+      />
+    </Grid>
+    <Grid item xs={2}>
+      <Button
+        sx={{ width: '100%', height: '100%', backgroundColor: 'lightblue' }}
+        variant="contained"
+        onClick={handleAddProduct}
+      >
+        Add
+      </Button>
+    </Grid>
+  </Box>
+
+  {/* List of added products */}
+  <List>
+    {returnproducts.returns?.map((product, index) => (
+      <ListItem
+        key={index}
+        secondaryAction={
+          <IconButton edge="end" onClick={() => handleRemoveProduct(index)}>
+            <DeleteIcon />
+          </IconButton>
+        }
+      >
+        <ListItemText
+          primary={`Product Code: ${product.product_code}, Length: ${product.returned_length}`}
+        />
+      </ListItem>
+    ))}
+  </List>
+</Box>
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Button variant='success' sx={{ backgroundColor: "green", marginTop: '5px' }} onClick={()=>handleEditorders(selectedReturn.id)}   > save Changes</Button>
+              <Button variant='success' sx={{ backgroundColor: "green", marginTop: '5px' }} onClick={()=>handleReturns(selectedReturn.id)}   > save Changes</Button>
             </Box>
           </>
 
+        </Box>
+      </Modal>
+
+      {/* modal for return products */}
+      <Modal open={returnModal} onClose={handleReturnClose}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 600,
+            bgcolor: 'background.paper',
+            p: 4,
+            boxShadow: 24,
+            maxHeight: '80vh', // Limit height of modal
+            overflowY: 'auto',  // Enable vertical scrolling
+          }}
+        >
+          <IconButton
+            aria-label="close"
+            onClick={handleReturnClose}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'grey.500',
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+
+          <Typography variant="h6" gutterBottom>
+          Return Products
+          </Typography>
+
+          {/* Order Information */}
+      {/*     <Typography><b>Order ID:</b> {selectedReturn?.id}</Typography>
+          <Typography><b>Customer:</b> {selectedReturn?.user?.name}</Typography>
+          <Typography><b>Status:</b> {selectedReturn?.status}</Typography>
+          <Typography><b>Payment Method:</b> payment</Typography>
+          <Typography><b>Total Price:</b> RS. {selectedReturn?.total_price}</Typography>
+          <Typography><b>Order Time:</b> {new Date(selectedReturn?.created_at).toLocaleString()}</Typography> */}
+
+         
+
+          {/* Product Table */}
+          <Table>
+            <TableHead>
+              <TableRow>
+              {/* <TableCell><b>Return id</b></TableCell> */}
+                <TableCell><b>Product Code</b></TableCell>
+                <TableCell><b>Product Name</b></TableCell>
+                <TableCell><b>Length</b></TableCell>
+                <TableCell><b>Price</b></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+    {selectedReturn?.returns && selectedReturn?.returns.length > 0 ? (
+      selectedReturn.returns.map((returnItem, returnIndex) =>
+        returnItem.items.map((item, itemIndex) => (
+          <TableRow key={`${returnIndex}-${itemIndex}`}>
+            <TableCell>{item['return product code']}</TableCell>
+            <TableCell>{item.product_name}</TableCell>
+            <TableCell>{item.returned_length}</TableCell>
+            <TableCell>{item.refund_price}</TableCell>
+          </TableRow>
+        ))
+      )
+    ) : (
+      <TableRow>
+        <TableCell colSpan={3} align="center">
+          No products for this order
+        </TableCell>
+      </TableRow>
+    )}
+  </TableBody>
+          </Table>
         </Box>
       </Modal>
 

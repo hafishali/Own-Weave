@@ -579,7 +579,7 @@ function RejectedOrders() {
                   <TableCell><b>Product Id</b></TableCell>
                   <TableCell><b>Product Code</b></TableCell>
                   <TableCell><b>Product Name</b></TableCell>
-                  <TableCell><b>Product Color</b></TableCell>
+                 
                   <TableCell><b>Quantity</b></TableCell>
                   <TableCell><b>Size</b></TableCell>
                   <TableCell><b>Sleeve</b></TableCell>
@@ -596,7 +596,7 @@ function RejectedOrders() {
                         <TableCell>{item.product?.id}</TableCell>
                         <TableCell>{item.product?.product_code}</TableCell>
                         <TableCell>{item.product?.name}</TableCell>
-                        <TableCell>{item.product?.color}</TableCell>
+                        
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell>{item.size}</TableCell>
                         <TableCell>{item.sleeve}</TableCell>
@@ -846,7 +846,7 @@ function RejectedOrders() {
                       onChange={(e) => setUpdatedCustomer({ ...updatedCustomer, status: e.target.value })} // Update state on change
                     >
                       <MenuItem value="Reject">Reject</MenuItem>
-                      <MenuItem value="Return">Return</MenuItem>
+                      {/* <MenuItem value="Return">Return</MenuItem> */}
                       <MenuItem value="Completed">Completed</MenuItem>
                     </Select>
                   </FormControl>

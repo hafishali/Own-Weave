@@ -124,6 +124,7 @@ console.log(subAdmins)
               <TableCell><b>Name</b></TableCell>
               <TableCell><b>Email</b></TableCell>
               <TableCell><b>Phone Number</b></TableCell>
+              <TableCell><b>Permissions</b></TableCell>
               <TableCell><b>Actions</b></TableCell>
             </TableRow>
           </TableHead>
@@ -137,6 +138,17 @@ console.log(subAdmins)
         <TableCell>{item.name}</TableCell>
         <TableCell>{item.email}</TableCell>
         <TableCell>{item.mobile_number}</TableCell>
+        <TableCell>
+  <ul style={{ margin: 0, padding: "0 16px" }}>
+    {item.permissions && item.permissions.length > 0
+      ? item.permissions.map((permission, idx) => (
+          <li key={idx} style={{ listStyleType: "disc" }}>{permission}</li>
+        ))
+      : <li>No permissions assigned</li>
+    }
+  </ul>
+</TableCell>
+
         <TableCell>
           {/* <IconButton onClick={() => handleOpenEditDialog(true)} aria-label={`Edit `}>
             <EditIcon />
@@ -199,6 +211,7 @@ console.log(subAdmins)
           </Button>
         </DialogActions>
       </Dialog>
+
 
 <ToastContainer/>
     </Box>

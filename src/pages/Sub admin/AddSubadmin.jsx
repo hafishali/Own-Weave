@@ -9,26 +9,42 @@ function AddSubAdmin() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    mobile_number:'',
+    mobile_number: '',
     email: '',
     password: '',
-    
+    permissions: []
+
   });
   const [errors, setErrors] = useState({
     name: '',
-    mobile_number:'',
+    mobile_number: '',
     email: '',
     password: '',
   });
 
- 
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  
-  
+  const handlePermissionChange = (event) => {
+    const { name, checked } = event.target;
+
+    setFormData((prevData) => {
+      let updatedPermissions;
+      if (checked) {
+        // Add the permission if checked
+        updatedPermissions = [...prevData.permissions, name];
+      } else {
+        // Remove the permission if unchecked
+        updatedPermissions = prevData.permissions.filter((perm) => perm !== name);
+      }
+      return { ...prevData, permissions: updatedPermissions };
+    });
+  };
+
+
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -47,7 +63,7 @@ function AddSubAdmin() {
       newErrors.mobile_number = 'Mobile number must be exactly 10 digits';
       valid = false;
     }
-  
+
 
     if (!validateEmail(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
@@ -89,8 +105,8 @@ function AddSubAdmin() {
       }
     }
   };
+console.log(formData)
 
- 
   console.log(formData)
 
   return (
@@ -148,7 +164,7 @@ function AddSubAdmin() {
       </Dialog> */}
 
       <form onSubmit={handleAdd} >
-        <Grid container spacing={2} sx={{mt:1}}>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid item xs={12}>
             <TextField
               fullWidth
@@ -161,20 +177,20 @@ function AddSubAdmin() {
               variant="outlined"
             />
           </Grid>
-          
+
           <Grid item xs={12}>
-  <TextField
-    fullWidth
-    label="Mobile Number"
-    name="mobile_number"
-    value={formData.mobile_number}
-    type="number"
-    onChange={handleInputChange}
-    error={!!errors.mobile_number}
-    helperText={errors.mobile_number}
-    variant="outlined"
-  />
-</Grid>
+            <TextField
+              fullWidth
+              label="Mobile Number"
+              name="mobile_number"
+              value={formData.mobile_number}
+              type="number"
+              onChange={handleInputChange}
+              error={!!errors.mobile_number}
+              helperText={errors.mobile_number}
+              variant="outlined"
+            />
+          </Grid>
 
 
           <Grid item xs={12}>
@@ -205,7 +221,7 @@ function AddSubAdmin() {
             />
           </Grid>
 
-          {/* <Grid item xs={12}>
+          <Grid item xs={12}>
             <Typography variant="h6" gutterBottom>
               <b>Permissions</b>
             </Typography>
@@ -213,9 +229,39 @@ function AddSubAdmin() {
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={formData.permissions.products}
-                    
-                    name="products"
+                    checked={formData.permissions?.includes("Offers")}
+                    onChange={handlePermissionChange}
+                    name="Offers"
+                  />
+                }
+                label="Offers"
+              />
+              {/* <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.permissions?.includes("subCategory")}
+                    onChange={handlePermissionChange}
+                    name="subCategory"
+                  />
+                }
+                label="subCategory"
+              /> */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.permissions?.includes("Category")}
+                    onChange={handlePermissionChange}
+                    name="Category"
+                  />
+                }
+                label="Category"
+              />
+               <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.permissions?.includes("Products")}
+                    onChange={handlePermissionChange}
+                    name="Products"
                   />
                 }
                 label="Products"
@@ -223,31 +269,65 @@ function AddSubAdmin() {
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={formData.permissions.users}
-                    
-                    name="users"
-                  />
-                }
-                label="Users"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.permissions.orders}
-                    
-                    name="orders"
+                    checked={formData.permissions?.includes("Orders")}
+                    onChange={handlePermissionChange}
+                    name="Orders"
                   />
                 }
                 label="Orders"
               />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.permissions?.includes("custom_orders")}
+                    onChange={handlePermissionChange}
+                    name="custom_orders"
+                  />
+                }
+                label="Custom Orders"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.permissions?.includes("website_Customers")}
+                    onChange={handlePermissionChange}
+                    name="website_Customers"
+                  />
+                }
+                label="Website Users"
+              />
+               <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.permissions?.includes("custom_Users")}
+                    onChange={handlePermissionChange}
+                    name="custom_Users"
+                  />
+                }
+                label="Custom Users"
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.permissions?.includes("Testimonials")}
+                    onChange={handlePermissionChange}
+                    name="Testimonials"
+                  />
+                }
+                label="Testimonials"
+              />
             </FormGroup>
-          </Grid> */}
+            
+          </Grid>
 
           <Grid item xs={12}>
             <Button type="submit" variant="contained" color="primary">
               Add Sub Admin
             </Button>
           </Grid>
+
+
         </Grid>
       </form>
 

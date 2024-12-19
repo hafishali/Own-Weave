@@ -35,6 +35,7 @@ import RejectedCustom from './Orders/RejectedCustom';
 import CompletedCustom from './Orders/CompletedCustom';
 import ShopOrders from './Orders/ShopOrders';
 import Users from './Custom users/Users';
+import OnlineReturns from './Orders/OnlineReturns';
 
 function Home() {
     const location = useLocation();
@@ -131,6 +132,8 @@ function Home() {
                 return <CompletedCustom />;
                 case 'viewCustomeUsers':
                 return <Users/>
+                case 'ReturnedCustom':
+                    return <OnlineReturns/>
 
             case 'shopOrders':
                 return <ShopOrders />;

@@ -31,6 +31,7 @@ function ViewCustomers() {
   const [originalAddresses, setOriginalAddresses] = useState(updatedAddresses); // Store original addresses
   const [isSaveEnabled, setIsSaveEnabled] = useState(false);
   const [displayedCustomer, setDisplayedCustomer] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [customerdts, setCustomerdts] = useState({
     email: "",
     name: "",
@@ -61,25 +62,35 @@ function ViewCustomers() {
   useEffect(() => {
     // Filter customers based on selected category
     let filteredCustomers = customers;
+
+    // Apply category filter
     if (customerCategory) {
-      filteredCustomers = customers.filter((customer) => {
-        if (customerCategory === 'VIP') return customer.is_vip;
-        if (customerCategory === 'Favourite') return customer.is_favorite;
-        return true; 
-      });
+        filteredCustomers = customers.filter((customer) => {
+            if (customerCategory === 'VIP') return customer.is_VIP;
+            if (customerCategory === 'Favourite') return customer.is_favorite;
+            return true; // If no category is selected, show all customers
+        });
     }
 
-
-    
+    // Apply search filter
+    if (searchTerm) {
+        const searchLowerCase = searchTerm.toLowerCase();
+        filteredCustomers = filteredCustomers.filter((customer) => {
+            return (
+                customer.name.toLowerCase().includes(searchLowerCase) ||
+                customer.mobile_number.toString().includes(searchLowerCase)
+            );
+        });
+    }
 
     // Paginate the filtered customers
     const paginatedCustomers = filteredCustomers.slice(
-      (currentPage - 1) * pageSize,
-      currentPage * pageSize
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
     );
 
     setDisplayedCustomer(paginatedCustomers); // Set paginated customers
-  }, [customerCategory,  currentPage]);
+}, [customerCategory, customers, currentPage, searchTerm]);
 
   const handleCategoryChange = (event) => {
     const value = event.target.value;
@@ -326,6 +337,14 @@ function ViewCustomers() {
             <MenuItem value="Favourite">Favourite</MenuItem>
           </Select>
         </FormControl>
+        <Grid item xs={3}>
+                    <TextField
+                        fullWidth
+                        label="Search"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </Grid>
         <Box><Button variant="contained" sx={{ "marginRight": "10px" }} color="primary" onClick={downloadExcelVip}>
           Export VIP
         </Button>

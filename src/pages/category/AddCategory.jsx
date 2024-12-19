@@ -105,7 +105,9 @@ function AddCategory() {
       formData.append("name", name);
       formData.append("heading", heading);
       formData.append("description", description);
-      formData.append("offer_id", offer_id);
+      if (offer_id) {
+        formData.append("offer_id", offer_id);
+      }
       formData.append("image", image); 
       formData.append("status", status);
   

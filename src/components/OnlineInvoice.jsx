@@ -46,6 +46,36 @@ const OnlineInvoice = React.forwardRef(({ orderDetails = [], logo }, ref) => {
     )
     .join(', ');
 
+    const numberToWords = (num) => {
+      const a = [
+        '', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+        'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen',
+      ];
+      const b = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+      const c = ['hundred', 'thousand', 'lakh', 'crore'];
+    
+      if (num === 0) return 'zero rupees only';
+    
+      const toWords = (n) => {
+        if (n < 20) return a[n];
+        if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : '');
+        if (n < 1000) return a[Math.floor(n / 100)] + ' ' + c[0] + (n % 100 !== 0 ? ' ' + toWords(n % 100) : '');
+        if (n < 100000) return toWords(Math.floor(n / 1000)) + ' ' + c[1] + (n % 1000 !== 0 ? ' ' + toWords(n % 1000) : '');
+        if (n < 10000000) return toWords(Math.floor(n / 100000)) + ' ' + c[2] + (n % 100000 !== 0 ? ' ' + toWords(n % 100000) : '');
+        return toWords(Math.floor(n / 10000000)) + ' ' + c[3] + (n % 10000000 !== 0 ? ' ' + toWords(n % 10000000) : '');
+      };
+    
+      // Split the number into integer and fractional parts
+      const [integerPart, fractionalPart] = num.toString().split('.');
+    
+      let words = toWords(Number(integerPart)) + ' rupees';
+    
+      if (fractionalPart && Number(fractionalPart) > 0) {
+        words += ' and ' + toWords(Number(fractionalPart)) + ' paise';
+      }
+    
+      return words + ' only';
+    };
   // const itemCodes = userObject.items
   //   ?.flatMap(item => [
   //     item.product_code,                     
@@ -123,14 +153,26 @@ const OnlineInvoice = React.forwardRef(({ orderDetails = [], logo }, ref) => {
                   Size: {userObject.items?.[0]?.product?.name || 'NA'}
                 </Typography> */}
               {/* COD */}
-              <Typography variant="body1" sx={{ fontSize: '1rem' }}>
-                 {userObject.payment_method || 'NA'} Rs :{' '}
-                {/* <Box component="span" sx={{ textDecoration: 'line-through', color: 'red', display: 'inline-block' }}>
-                    {userObject.total_price || '0000'}/-
-                  </Box> */}
-                {/* <br /> */}
-                {userObject.custom_total_price || '0000'}/-
-              </Typography>
+              <Typography variant="body1" sx={{ fontSize: '1.3rem' }}>
+  {userObject.payment_method	 || 'NA'} Rs :{' '}
+  <Box component="span" sx={{ fontSize: '2rem', fontWeight: 'bold', display: 'block' }}>
+    {userObject.total_price || '0000'}
+  </Box>
+  <Box 
+    component="span" 
+    sx={{ 
+      fontSize: '0.9rem', 
+      fontWeight: 'bold', 
+      textTransform: 'capitalize', 
+      display: 'block', // Ensures the text starts on a new line
+      marginTop: '0.5rem' // Optional: Adds some spacing between price and words
+    }}
+  >
+    {userObject.total_price 
+      ? numberToWords(Number(userObject.total_price)) 
+      : 'zero rupees only'}
+  </Box>
+</Typography>
               {/* Order ID */}
               <Typography sx={{ fontSize: '1rem' }}>
                 Order ID: {userObject.id || 'NA'}
