@@ -79,20 +79,33 @@ const BillComponentOrders = React.forwardRef(({ ordersArray = [], logo }, ref) =
       margin: 0,
     }}>
       {ordersArray.map((userObject, index) => {  
-        const itemCodes = userObject.items
-          ?.flatMap(item => [
-            item.product_code,                    
-            item.free_product?.product_code        
-          ])
-          .filter(code => code)                    
-          .join(', ');                              
+        const itemLengths = userObject.items?.map(item => {
+          const productData = {
+            code: item.product_code,
+            length: item.length
+          };
+              if (item.free_product) {
+            return [
+              productData, // For the main product
+              {
+                code: item.free_product.product_code,
+                length: item.length // Use the length of the parent item for free product
+              }
+            ];
+          }
+      
+          return productData; // Just return the product data if no free product
+        }).flat(); // Flatten to a single array of objects
+      
+        // Join the product codes and lengths in the format code(length), code(length)
+        const itemCodes = itemLengths?.map(item => `${item.code}(${item.length})`).join(', ');                           
         return (
       <Paper
       ref={ref}
       elevation={0}
       sx={{
-        width: '95%',       
-        height: '95%',      
+        width: '100%',       
+        height: '100%',      
         padding: 2,
         border: '2px solid #000',
         borderRadius: '12px',
@@ -106,11 +119,11 @@ const BillComponentOrders = React.forwardRef(({ ordersArray = [], logo }, ref) =
           {/* Shipping and COD Section */}
           <Grid item xs={8}>
             <Box>
-              <Typography variant="body1" fontWeight="bold" sx={{ mb: 0.5, fontSize: '0.9rem' }}>
+              <Typography variant="body1" fontWeight="bold" sx={{ mb: 0.5, fontSize: '1.4rem' }}>
                 Shipping To:
               </Typography>
               <Box sx={{marginLeft:'5.5rem'}}>
-              <Typography sx={{ whiteSpace: 'pre-line', fontSize: '1rem', lineHeight: 1.4 }}>
+              <Typography sx={{ whiteSpace: 'pre-line', fontSize: '1.3rem', lineHeight: 1.4 }}>
                 {userObject.user?.name || 'NA'}
                 {'\n'}
                 {userObject.shipping_address?.address || 'NA'}
@@ -128,44 +141,63 @@ const BillComponentOrders = React.forwardRef(({ ordersArray = [], logo }, ref) =
             </Box>
           </Grid>
           <Grid item xs={4}>
-            <Box sx={{ textAlign: 'right' }}>
-              {/* Length */}
-              {/* <Typography variant="body1" sx={{ fontSize: '1rem' }}>
-                  Size: {userObject.items?.[0]?.product?.name || 'NA'}
-                </Typography> */}
-              {/* COD */}
-              <Typography variant="body1" sx={{ fontSize: '1.3rem' }}>
-  {userObject.payment_option || 'NA'} Rs :{' '}
-  <Box component="span" sx={{ fontSize: '2rem', fontWeight: 'bold', display: 'block' }}>
-    {userObject.total_price || '0000'}
-  </Box>
-  <Box 
-    component="span" 
-    sx={{ 
-      fontSize: '0.9rem', 
-      fontWeight: 'bold', 
-      textTransform: 'capitalize', 
-      display: 'block', // Ensures the text starts on a new line
-      marginTop: '0.5rem' // Optional: Adds some spacing between price and words
-    }}
-  >
-    {userObject.total_price 
-      ? numberToWords(Number(userObject.total_price)) 
-      : 'zero rupees only'}
-  </Box>
-</Typography>
+  <Box sx={{ textAlign: 'right' }}>
+    {/* Payment Method and Total Price */}
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        fontSize: '1.3rem',
+        marginBottom: '0.5rem' 
+      }}
+    >
+      <Typography variant="body1" sx={{ fontSize: '1.3rem', flexShrink: 0 }}>
+        {userObject.payment_option || 'NA'}:
+      </Typography>
+      <Typography 
+        sx={{ 
+          fontSize: '2rem', 
+          fontWeight: 'bold', 
+          whiteSpace: 'nowrap', 
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}
+      >
+        Rs-{userObject.total_price || '0000'}
+      </Typography>
+    </Box>
 
-              {/* Order ID */}
-              <Typography sx={{ fontSize: '1rem' }}>
-                Order ID: {userObject.id || 'NA'}
-              </Typography>
-              
-             {userObject?.payment_method==='COD' && <Typography sx={{ fontSize: '1rem' }}>
-                Post Code: 55220
-              </Typography>}
-             
-            </Box>
-          </Grid>
+    {/* Total Price in Words */}
+    <Box 
+      component="span" 
+      sx={{ 
+        fontSize: '1.3rem', 
+        fontWeight: 'bold', 
+        textTransform: 'capitalize', 
+        display: 'block',
+        marginTop: '0.5rem'
+      }}
+    >
+      {userObject.total_price 
+        ? numberToWords(Number(userObject.total_price)) 
+        : 'zero rupees only'}
+    </Box>
+
+    {/* Order ID */}
+    <Typography sx={{ fontSize: '1rem', marginTop: '1rem' }}>
+      Order ID: {userObject.id || 'NA'}
+    </Typography>
+
+    {/* Post Code if COD */}
+    {userObject?.payment_method === 'COD' && (
+      <Typography sx={{ fontSize: '1rem', marginTop: '0.5rem' }}>
+        Post Code: 55220
+      </Typography>
+    )}
+  </Box>
+</Grid>
+
 
           {/* Horizontal Line */}
           <Grid item xs={12}>
@@ -257,7 +289,7 @@ const BillComponentOrders = React.forwardRef(({ ordersArray = [], logo }, ref) =
                         height: 'auto'
                       }}
                     />
-                    <Typography sx={{ fontSize: '0.7rem' }}>
+                    <Typography sx={{ fontSize: '0.7rem',marginTop:'-27px' }}>
                       Handloom Cloth Manufactor
                     </Typography>
                   </Box>

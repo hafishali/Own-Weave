@@ -203,7 +203,7 @@ const BillComponent = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
                         height: 'auto'
                       }}
                     />
-                    <Typography sx={{ fontSize: '-0.10rem' }}>
+                    <Typography sx={{ fontSize: '-0.10rem',marginTop:'-27px' }}>
                       Handloom Cloth Manufactor
                     </Typography>
                   </Box>

@@ -68,34 +68,42 @@ const CustomInvoice = React.forwardRef(({ orderDetails = {}, logo }, ref) => {
           </Box>
 
         {/* User and Invoice Details */}
-        <Grid container justifyContent="end" mt={2}>
-          {/* <Box>
-            <Typography variant="subtitle1" fontWeight="bold">BILLED TO:</Typography>
-            <Box>
-              
-              <Typography sx={{ fontSize: '1rem', lineHeight: 1.4 }}>
-                {orderDetails?.name || 'NA'}
-              </Typography>
-              <Typography sx={{ fontSize: '1rem', lineHeight: 1.4 }}>
-                Ph: {orderDetails?.mobile_number || 'NA'}
-              </Typography>
-
+        <Grid sx={{display:'flex'}}>
+        <Grid container justifyContent="start" mt={2}>
+        
+        <Box>
+           
+           <Box>
              
-              {orderDetails?.address && (
-                <Box sx={{ marginTop: 2 }}>
-                  
-                  <Typography sx={{ fontSize: '1rem', lineHeight: 1.4 }}>
-                    {formatAddress(orderDetails?.address)}
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          </Box> */}
+             <Typography sx={{ fontSize: '1rem', lineHeight: 1.4 }}>
+               Name:{orderDetails?.name || 'NA'}
+             </Typography>
+             <Typography sx={{ fontSize: '1rem', lineHeight: 1.4 }}>
+               Phone: {orderDetails?.phone_number || 'NA'}
+             </Typography>
+
+            
+             {/* {orderDetails?.address && (
+               <Box sx={{ marginTop: 2 }}>
+                 
+                 <Typography sx={{ fontSize: '1rem', lineHeight: 1.4 }}>
+                   {formatAddress(orderDetails?.address)}
+                 </Typography>
+               </Box>
+             )} */}
+           </Box>
+         </Box>
+      </Grid>
+        <Grid container justifyContent="end" mt={2}>
+        
           <Box>
             <Typography variant="body1" fontWeight="bold">Invoice No.{orderDetails.id || 'NA'}</Typography>
             <Typography variant="body1">{formatDate(getCurrentDateIST())}</Typography>
           </Box>
+        </Grid>   
         </Grid>
+
+       
 
         <Divider sx={{ my: 2 }} />
 

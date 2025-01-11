@@ -440,7 +440,7 @@ const PendingCustom = () => {
 
     const generatePDF = async (selectedOrders) => {
         if (isGenerating) return; // Prevent multiple calls during generation
-
+    
         try {
             setIsGenerating(true); // Prevent multiple calls during generation
             const pdf = new jsPDF('p', 'mm', 'a4'); // Portrait, A4 size
@@ -449,20 +449,23 @@ const PendingCustom = () => {
             const pageHeight = 277; // A4 height minus margins
             const ordersPerPage = 1; // Number of orders per page
             const selectedOrderIds = selectedOrders.map(order => order.id);
-
+    
+            // Hide the content by adding a temporary class to hide it
+            const container = document.createElement('div');
+            container.style.display = 'none'; // Initially hide the container
+    
             // Loop through the orders in batches of 2
             for (let i = 0; i < selectedOrders.length; i += ordersPerPage) {
-                const batchOrders = selectedOrders.slice(i, i + ordersPerPage); // Get two orders for this page
-
-                // Create a container div for rendering the batch of orders
-                const container = document.createElement('div');
+                const batchOrders = selectedOrders.slice(i, i + ordersPerPage); // Get orders for this page
+    
+                // Set up the container with necessary styles
                 container.style.width = `${pageWidth}mm`;
                 container.style.height = `${pageHeight}mm`;
                 container.style.padding = `${margin}mm`;
                 container.style.display = 'flex';
                 container.style.flexDirection = 'column';
                 container.style.justifyContent = 'space-between'; // Space between orders
-
+    
                 // Add each order to the container
                 batchOrders.forEach((order, index) => {
                     const orderElement = document.createElement('div');
@@ -470,39 +473,43 @@ const PendingCustom = () => {
                     ReactDOM.render(<OnlineInvoice orderDetails={[order]} />, orderElement);
                     container.appendChild(orderElement);
                 });
-
-                // Append the container to the body for rendering
+    
+                // Append the container to the body
                 document.body.appendChild(container);
-
+    
+                // Wait until the content is rendered, then capture the screenshot
+                await new Promise(resolve => setTimeout(resolve, 200)); // Wait for 200ms for rendering
+    
                 // Convert the container to a canvas image
                 const canvas = await html2canvas(container, { scale: 2 });
                 const imgData = canvas.toDataURL('image/png'); // Convert canvas to image
-
+    
                 // Add the image of the rendered orders to the PDF
                 pdf.addImage(imgData, 'PNG', margin, margin, pageWidth, pageHeight);
-
+    
                 // Clean up by removing the container from the DOM
                 document.body.removeChild(container);
-
+    
                 // If there are more orders, add a new page for the next batch
                 if (i + ordersPerPage < selectedOrders.length) {
                     pdf.addPage(); // Add a new page only if necessary
                 }
             }
             pdf.save('Orders_Batch.pdf');
-            // calling the api for update status
+    
+            // Calling the API for status update
             await handleBulkEdit(selectedOrderIds);
-            handleGetallorders()
-
+            handleGetallorders();
+    
         } catch (error) {
-            toast.error("something went wrong")
+            toast.error("Something went wrong");
             console.error('Error generating PDF:', error);
         } finally {
             setIsGenerating(false); // Reset generating state
-            setSelectedOrders([])
+            setSelectedOrders([]); // Reset selected orders
         }
     };
-
+    
 
 
     const itemsPerPage = 10;

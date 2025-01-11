@@ -98,15 +98,26 @@ const OnlineInvoice = React.forwardRef(({ orderDetails = [], logo }, ref) => {
       margin: 0,
     }}>
       {orderDetails.map((userObject, index) => {  
-        const itemCodes = userObject?.order_products
-        ?.map(product => product?.product_details?.['product_code']) 
-        .filter(code => code) 
-        .concat(
-          orderDetails?.order_products
-            ?.map(product => product?.free_product_details?.['product_code']) 
-            .filter(code => code) 
-        )
-        .join(', ');                            
+         const itemCodes = [
+          // Map through the main products
+          ...userObject?.order_products?.map(product => {
+            return {
+              code: product?.product_details?.['product_code'],
+              length: product?.length || product?.custom_length // Use 'length' or 'custom_length'
+            };
+          }),
+      
+          // Map through the free products
+          ...userObject?.order_products?.map(product => {
+            return {
+              code: product?.free_product_details?.['product_code'],
+              length: product?.free_product_details?.['length'] || product?.custom_length // Use 'length' or 'custom_length'
+            };
+          })
+        ]
+        .filter(item => item.code) // Filter out invalid items without product codes
+        .map(item => `${item.code}(${item.length})`) // Format as 'code(length)'
+        .join(', '); // Join the codes and lengths with commas                          
         return (
       <Paper
       ref={ref}
@@ -156,7 +167,7 @@ const OnlineInvoice = React.forwardRef(({ orderDetails = [], logo }, ref) => {
               <Typography variant="body1" sx={{ fontSize: '1.3rem' }}>
   {userObject.payment_method	 || 'NA'} Rs :{' '}
   <Box component="span" sx={{ fontSize: '2rem', fontWeight: 'bold', display: 'block' }}>
-    {userObject.total_price || '0000'}
+    {userObject.custom_total_price || '0000'}
   </Box>
   <Box 
     component="span" 

@@ -435,12 +435,22 @@ const handleClose = () => {
         <Typography><b>Style:</b> {selectedProduct.style || 'N/A'}</Typography>
         {/* <Typography><b>Size L full length:</b> {selectedProduct.available_lengths.size_L_full_length || 'N/A'}</Typography>
         <Typography><b>Size L half length:</b> {selectedProduct.available_lengths.size_L_half_length || 'N/A'}</Typography> */}
-        <Typography><b>Size XL full length:</b> {selectedProduct.available_lengths.size_XL_full_length || 'N/A'}</Typography>
-        <Typography><b>Size XL half length:</b> {selectedProduct.available_lengths.size_XL_half_length || 'N/A'}</Typography>
-        <Typography><b>Size XXL full length:</b> {selectedProduct.available_lengths.size_XXL_full_length || 'N/A'}</Typography>
-        <Typography><b>Size XXL half length:</b> {selectedProduct.available_lengths.size_XXL_half_length || 'N/A'}</Typography>
-        <Typography><b>Size XXXL full length:</b> {selectedProduct.available_lengths.size_XXXL_full_length || 'N/A'}</Typography>
-        <Typography><b>Size XXXL half length:</b> {selectedProduct.available_lengths.size_XXXL_half_length || 'N/A'}</Typography>
+      {selectedProduct?.available_lengths?.length > 0 ? (
+  selectedProduct?.available_lengths.map((item) => (
+    <div key={item.id}> {/* Assuming each item has a unique id */}
+      <Typography><b>Size XL full length:</b> {item.size_XL_full_length || 'N/A'}</Typography>
+      <Typography><b>Size XL half length:</b> {item.size_XL_half_length || 'N/A'}</Typography>
+      <Typography><b>Size XXL full length:</b> {item.size_XXL_full_length || 'N/A'}</Typography>
+      <Typography><b>Size XXL half length:</b> {item.size_XXL_half_length || 'N/A'}</Typography>
+      <Typography><b>Size XXXL full length:</b> {item.size_XXXL_full_length || 'N/A'}</Typography>
+      <Typography><b>Size XXXL half length:</b> {item.size_XXXL_half_length || 'N/A'}</Typography>
+    </div>
+  ))
+) : (
+  <Typography>no sizes</Typography>
+)}
+
+        
 
         {/* <Typography><b>State:</b> {selectedProduct.state || 'N/A'}</Typography>
         <Typography><b>Sleeve Type:</b> {selectedProduct.sleeve_type || 'N/A'}</Typography> */}

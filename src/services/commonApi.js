@@ -16,9 +16,10 @@ export const commonApi = async (httprequest, url, reqBody, reqHeader) => {
         method: httprequest,
         url,
         data: reqBody,
-        headers: reqHeader ? reqHeader : { 'Authorization': `Bearer ${getAccessToken()}` }
-        
-    };
+        ...(reqHeader && Object.keys(reqHeader).length === 0
+        ? {} // Omit the headers key if reqHeader is an empty object
+        : { headers: reqHeader ?? { 'Authorization': `Bearer ${getAccessToken()}` } }
+    ),    };
     try {
     
         const result = await axios(reqConfig);

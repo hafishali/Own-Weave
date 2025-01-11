@@ -247,45 +247,46 @@ function ViewCustomeOrders() {
   const generatePDF = (orderDetails) => {
     const container = document.createElement('div');
     document.body.appendChild(container);
-
-    const BillComponentToRender = CustomInvoice;
-
-    // Dynamically style the container to match the PDF page size
+  
+    // Dynamically style the container to hide it
+    container.style.position = 'absolute';
+    container.style.top = '-9999px'; // Position it offscreen
+    container.style.left = '-9999px';
+  
+    // Optionally, set fixed dimensions matching the PDF page size
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth(); // Width in mm
     const pdfHeight = pdf.internal.pageSize.getHeight(); // Height in mm
-
+  
     const mmToPx = (mm) => mm * (96 / 25.4); // Convert mm to px (96 DPI)
     const pageWidthPx = mmToPx(pdfWidth);
     const pageHeightPx = mmToPx(pdfHeight);
-
+  
     container.style.width = `${pageWidthPx - 50}px`;
     container.style.height = `${pageHeightPx + 50}px`;
-    container.style.position = 'absolute';
-    container.style.top = '0';
-    container.style.left = '0';
-
-    ReactDOM.render(<BillComponentToRender orderDetails={orderDetails} />, container);
-
+  
+    ReactDOM.render(<CustomInvoice orderDetails={orderDetails} />, container);
+  
     setTimeout(() => {
       html2canvas(container, {
         scale: 3, // Scale for better quality
         useCORS: true,
       }).then((canvas) => {
         const imgData = canvas.toDataURL('image/png');
-
+  
         // Add the image to fill the entire PDF page
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-
+  
         // Save the PDF with the order number
         pdf.save(`order-${orderDetails.phone_number}.pdf`);
-
+  
         // Clean up
         ReactDOM.unmountComponentAtNode(container);
         document.body.removeChild(container);
       });
     }, 1000); // Wait for rendering to complete
   };
+  
 
 
 

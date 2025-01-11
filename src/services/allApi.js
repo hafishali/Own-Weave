@@ -96,6 +96,11 @@ export const deleteProduct=async(id)=>{
     return await commonApi('DELETE', `${BASE_URL}product/products/${id}/`,"",null)
 }
 
+// view latest products
+export const viewallLatestproducts=async()=>{
+    return await commonApi('GET', `${BASE_URL}product/last-updated/`,"",{})
+}
+
 
 
 

@@ -240,7 +240,7 @@ const handleSave = async () => {
 };
 
 
-
+console.log(productData)
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -256,6 +256,18 @@ const handleSave = async () => {
             fullWidth
             variant="outlined"
             value={productData?.name || ''}
+            onChange={handleInputChange}
+            required
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            margin="dense"
+            label="Product code"
+            name="product_code"
+            fullWidth
+            variant="outlined"
+            value={productData?.product_code || ''}
             onChange={handleInputChange}
             required
           />

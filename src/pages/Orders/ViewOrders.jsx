@@ -41,7 +41,8 @@ import { toast, ToastContainer } from 'react-toastify';
 import html2canvas from 'html2canvas';
 import BillComponentOrders from '../../components/BillComponentOrders';
 import { createRoot } from 'react-dom/client';
-
+import "@fontsource/libre-barcode-39";
+import "@fontsource/life-savers";
 
 
 
@@ -815,14 +816,14 @@ const ViewOrders = () => {
               Customer Details
             </Typography>
 
-            <Typography>
+            <Typography >
               <b>Customer Name:</b>{selectedOrder?.user?.name}
             </Typography>
             <Typography>
               <b>Email:</b>{selectedOrder?.user?.email}
             </Typography>
-            <Typography sx={{ fontFamily: "Libre Barcode 39, serif" }}>
-  <b>Phone:</b> {selectedOrder?.user?.mobile_number}
+            <Typography >
+  <b>Phone:</b>  <span >{selectedOrder?.user?.mobile_number}</span>
 </Typography>
 
           </>

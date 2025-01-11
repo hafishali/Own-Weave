@@ -40,10 +40,10 @@ function App() {
         <Route path='/viewcategory' element={<AdminRoute element={<ViewCategory></ViewCategory>}/> }></Route>
         <Route path='/viewpayments' element={<AdminRoute element={<ViewPayments></ViewPayments>}/> }></Route> */}
         <Route path='/' element={<LoginPage></LoginPage>}></Route>
-        <Route path='/bill' element={<BillComponent></BillComponent>}></Route>
+        {/* <Route path='/bill' element={<BillComponent></BillComponent>}></Route>
         <Route path='/bill/orders' element={<BillComponentOrders></BillComponentOrders>}></Route>
         <Route path='/invoice' element={<CustomInvoice></CustomInvoice>}></Route>
-        <Route path='/online/bill' element={<OnlineInvoice></OnlineInvoice>}></Route>
+        <Route path='/online/bill' element={<OnlineInvoice></OnlineInvoice>}></Route> */}
         
         {/* <Route path='/dashboard' element={<AdminRoute element={<Dashboard></Dashboard>}/> }></Route>
         <Route path='/vieworders' element={<AdminRoute element={<ViewOrders></ViewOrders>}/> }></Route>
